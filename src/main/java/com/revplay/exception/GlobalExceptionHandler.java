@@ -1,7 +1,5 @@
 package com.revplay.exception;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -16,8 +14,8 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import jakarta.servlet.http.HttpServletRequest;
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 // ============================================================
@@ -25,11 +23,10 @@ import java.util.stream.Collectors;
 // ============================================================
 
 /**
- * Thrown when a requested resource is not found in the database.
+ * Thrown when a requested resource is not found.
  * Maps to HTTP 404 Not Found.
  *
  * Usage: throw new ResourceNotFoundException("Song", "id", 42L);
- *        → "Song not found with id: 42"
  */
 class ResourceNotFoundException extends RuntimeException {
     private final String resourceName;
@@ -52,7 +49,7 @@ class ResourceNotFoundException extends RuntimeException {
  * Thrown when a create/update operation violates a uniqueness rule.
  * Maps to HTTP 409 Conflict.
  *
- * Usage: throw new DuplicateResourceException("Email already registered: alice@mail.com");
+ * Usage: throw new DuplicateResourceException("Email already registered.");
  */
 class DuplicateResourceException extends RuntimeException {
     public DuplicateResourceException(String message) {
@@ -64,7 +61,7 @@ class DuplicateResourceException extends RuntimeException {
  * Thrown when a user attempts an action they are not permitted to perform.
  * Maps to HTTP 403 Forbidden.
  *
- * Usage: throw new UnauthorizedAccessException("You do not have permission to delete this playlist.");
+ * Usage: throw new UnauthorizedAccessException("You cannot delete this playlist.");
  */
 class UnauthorizedAccessException extends RuntimeException {
     public UnauthorizedAccessException(String message) {
@@ -73,8 +70,7 @@ class UnauthorizedAccessException extends RuntimeException {
 }
 
 /**
- * Thrown when the client sends a request that violates a business rule
- * not covered by Bean Validation annotations.
+ * Thrown when a request violates a business rule not covered by @Valid.
  * Maps to HTTP 400 Bad Request.
  *
  * Usage: throw new BadRequestException("Cannot delete an album that still has songs.");
@@ -86,93 +82,15 @@ class BadRequestException extends RuntimeException {
 }
 
 // ============================================================
-// ERROR RESPONSE DTO
-// ============================================================
-
-/**
- * Standard error response body returned for all exceptions.
- *
- * Example JSON:
- * {
- *   "status": 404,
- *   "error": "Not Found",
- *   "message": "Song not found with id: 99",
- *   "path": "/api/songs/99",
- *   "timestamp": "2024-06-01 14:32:00"
- * }
- */
-@JsonInclude(JsonInclude.Include.NON_NULL)
-class ErrorResponse {
-
-    private int status;
-    private String error;
-    private String message;
-    private String path;
-
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime timestamp;
-
-    /** Populated only for @Valid failures — lists each field-level error */
-    private List<FieldError> fieldErrors;
-
-    public ErrorResponse() {
-        this.timestamp = LocalDateTime.now();
-    }
-
-    public ErrorResponse(int status, String error, String message, String path) {
-        this();
-        this.status  = status;
-        this.error   = error;
-        this.message = message;
-        this.path    = path;
-    }
-
-    /** Inner class for field-level validation errors */
-    public static class FieldError {
-        private String field;
-        private String rejectedValue;
-        private String message;
-
-        public FieldError(String field, String rejectedValue, String message) {
-            this.field         = field;
-            this.rejectedValue = rejectedValue;
-            this.message       = message;
-        }
-
-        public String getField()         { return field; }
-        public String getRejectedValue() { return rejectedValue; }
-        public String getMessage()       { return message; }
-    }
-
-    public int              getStatus()      { return status; }
-    public void             setStatus(int status) { this.status = status; }
-    public String           getError()       { return error; }
-    public void             setError(String error) { this.error = error; }
-    public String           getMessage()     { return message; }
-    public void             setMessage(String message) { this.message = message; }
-    public String           getPath()        { return path; }
-    public void             setPath(String path) { this.path = path; }
-    public LocalDateTime    getTimestamp()   { return timestamp; }
-    public void             setTimestamp(LocalDateTime ts) { this.timestamp = ts; }
-    public List<FieldError> getFieldErrors() { return fieldErrors; }
-    public void             setFieldErrors(List<FieldError> fe) { this.fieldErrors = fe; }
-}
-
-// ============================================================
 // GLOBAL EXCEPTION HANDLER
 // ============================================================
 
 /**
  * Centralized exception handler for all RevPlay REST API controllers.
  *
- * Intercepts exceptions thrown from controllers and services,
- * logs them at the appropriate level, and returns a consistent
- * ErrorResponse JSON body with the correct HTTP status code.
- *
  * Logging standard:
- *   ERROR — unhandled server-side failures (5xx)
- *   WARN  — client errors / access violations (4xx)
- *   DEBUG — expected business exceptions (not found, duplicate)
+ *   WARN  — all 4xx client errors
+ *   ERROR — 5xx unhandled server errors (with stack trace)
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -182,135 +100,129 @@ public class GlobalExceptionHandler {
     // ── 404 Not Found ─────────────────────────────────────────────
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleResourceNotFound(
+    public ResponseEntity<Map<String, Object>> handleResourceNotFound(
             ResourceNotFoundException ex, HttpServletRequest request) {
 
-        log.debug("Resource not found: {} | path={}", ex.getMessage(), request.getRequestURI());
+        log.warn("Resource not found: {} | path={}", ex.getMessage(), request.getRequestURI());
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(
-                HttpStatus.NOT_FOUND.value(), "Not Found",
-                ex.getMessage(), request.getRequestURI()
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                "status",  404,
+                "error",   "Not Found",
+                "message", ex.getMessage(),
+                "path",    request.getRequestURI()
         ));
     }
 
     // ── 409 Conflict ──────────────────────────────────────────────
 
     @ExceptionHandler(DuplicateResourceException.class)
-    public ResponseEntity<ErrorResponse> handleDuplicateResource(
+    public ResponseEntity<Map<String, Object>> handleDuplicateResource(
             DuplicateResourceException ex, HttpServletRequest request) {
 
         log.warn("Duplicate resource: {} | path={}", ex.getMessage(), request.getRequestURI());
 
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(
-                HttpStatus.CONFLICT.value(), "Conflict",
-                ex.getMessage(), request.getRequestURI()
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "status",  409,
+                "error",   "Conflict",
+                "message", ex.getMessage(),
+                "path",    request.getRequestURI()
         ));
     }
 
     // ── 403 Forbidden ─────────────────────────────────────────────
 
     @ExceptionHandler(UnauthorizedAccessException.class)
-    public ResponseEntity<ErrorResponse> handleUnauthorizedAccess(
+    public ResponseEntity<Map<String, Object>> handleUnauthorizedAccess(
             UnauthorizedAccessException ex, HttpServletRequest request) {
 
         log.warn("Unauthorized access: {} | path={}", ex.getMessage(), request.getRequestURI());
 
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(
-                HttpStatus.FORBIDDEN.value(), "Forbidden",
-                ex.getMessage(), request.getRequestURI()
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                "status",  403,
+                "error",   "Forbidden",
+                "message", ex.getMessage(),
+                "path",    request.getRequestURI()
         ));
     }
 
     // ── 400 Bad Request — Business Rule ───────────────────────────
 
     @ExceptionHandler(BadRequestException.class)
-    public ResponseEntity<ErrorResponse> handleBadRequest(
+    public ResponseEntity<Map<String, Object>> handleBadRequest(
             BadRequestException ex, HttpServletRequest request) {
 
         log.warn("Bad request: {} | path={}", ex.getMessage(), request.getRequestURI());
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(
-                HttpStatus.BAD_REQUEST.value(), "Bad Request",
-                ex.getMessage(), request.getRequestURI()
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                "status",  400,
+                "error",   "Bad Request",
+                "message", ex.getMessage(),
+                "path",    request.getRequestURI()
         ));
     }
 
-    // ── 400 Bad Request — Bean Validation (@Valid) ─────────────────
+    // ── 400 Bad Request — @Valid Failures ─────────────────────────
 
-    /**
-     * Handles @Valid / @Validated failures on request DTOs.
-     * Returns a list of field-level errors in the response body.
-     *
-     * Example response:
-     * {
-     *   "status": 400,
-     *   "error": "Validation Failed",
-     *   "message": "Input validation failed. See fieldErrors for details.",
-     *   "fieldErrors": [
-     *     { "field": "email", "rejectedValue": "not-an-email", "message": "must be a valid email" }
-     *   ]
-     * }
-     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationErrors(
+    public ResponseEntity<Map<String, Object>> handleValidationErrors(
             MethodArgumentNotValidException ex, HttpServletRequest request) {
 
         BindingResult bindingResult = ex.getBindingResult();
 
-        List<ErrorResponse.FieldError> fieldErrors = bindingResult.getFieldErrors().stream()
-                .map(fe -> new ErrorResponse.FieldError(
-                        fe.getField(),
-                        fe.getRejectedValue() != null ? fe.getRejectedValue().toString() : null,
-                        fe.getDefaultMessage()
+        List<Map<String, String>> fieldErrors = bindingResult.getFieldErrors().stream()
+                .map(fe -> Map.of(
+                        "field",   fe.getField(),
+                        "message", fe.getDefaultMessage() != null ? fe.getDefaultMessage() : "Invalid value"
                 ))
                 .collect(Collectors.toList());
 
-        log.warn("Validation failed: {} field error(s) | path={}", fieldErrors.size(), request.getRequestURI());
+        log.warn("Validation failed: {} error(s) | path={}", fieldErrors.size(), request.getRequestURI());
 
-        ErrorResponse body = new ErrorResponse(
-                HttpStatus.BAD_REQUEST.value(), "Validation Failed",
-                "Input validation failed. See fieldErrors for details.",
-                request.getRequestURI()
-        );
-        body.setFieldErrors(fieldErrors);
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                "status",      400,
+                "error",       "Validation Failed",
+                "message",     "Input validation failed. See fieldErrors for details.",
+                "path",        request.getRequestURI(),
+                "fieldErrors", fieldErrors
+        ));
     }
 
     // ── 400 Bad Request — Malformed JSON ──────────────────────────
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponse> handleMessageNotReadable(
+    public ResponseEntity<Map<String, Object>> handleMessageNotReadable(
             HttpMessageNotReadableException ex, HttpServletRequest request) {
 
         log.warn("Malformed request body | path={}", request.getRequestURI());
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(
-                HttpStatus.BAD_REQUEST.value(), "Bad Request",
-                "Request body is malformed or missing.",
-                request.getRequestURI()
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                "status",  400,
+                "error",   "Bad Request",
+                "message", "Request body is malformed or missing.",
+                "path",    request.getRequestURI()
         ));
     }
 
     // ── 400 Bad Request — Missing Query Parameter ─────────────────
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
-    public ResponseEntity<ErrorResponse> handleMissingParam(
+    public ResponseEntity<Map<String, Object>> handleMissingParam(
             MissingServletRequestParameterException ex, HttpServletRequest request) {
 
-        log.warn("Missing request parameter: {} | path={}", ex.getParameterName(), request.getRequestURI());
+        log.warn("Missing parameter: {} | path={}", ex.getParameterName(), request.getRequestURI());
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(
-                HttpStatus.BAD_REQUEST.value(), "Bad Request",
-                String.format("Required parameter '%s' is missing.", ex.getParameterName()),
-                request.getRequestURI()
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                "status",  400,
+                "error",   "Bad Request",
+                "message", String.format("Required parameter '%s' is missing.", ex.getParameterName()),
+                "path",    request.getRequestURI()
         ));
     }
 
-    // ── 400 Bad Request — Path Variable / Param Type Mismatch ─────
+    // ── 400 Bad Request — Path Variable Type Mismatch ─────────────
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ErrorResponse> handleTypeMismatch(
+    public ResponseEntity<Map<String, Object>> handleTypeMismatch(
             MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
 
         String message = String.format("Parameter '%s' should be of type '%s'.",
@@ -319,40 +231,44 @@ public class GlobalExceptionHandler {
 
         log.warn("Type mismatch: {} | path={}", message, request.getRequestURI());
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(
-                HttpStatus.BAD_REQUEST.value(), "Bad Request",
-                message, request.getRequestURI()
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                "status",  400,
+                "error",   "Bad Request",
+                "message", message,
+                "path",    request.getRequestURI()
         ));
     }
 
-    // ── 413 Payload Too Large — File Upload ───────────────────────
+    // ── 413 Payload Too Large ──────────────────────────────────────
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ResponseEntity<ErrorResponse> handleMaxUploadSize(
+    public ResponseEntity<Map<String, Object>> handleMaxUploadSize(
             MaxUploadSizeExceededException ex, HttpServletRequest request) {
 
         log.warn("Upload size exceeded | path={}", request.getRequestURI());
 
-        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(new ErrorResponse(
-                HttpStatus.PAYLOAD_TOO_LARGE.value(), "Payload Too Large",
-                "File size exceeds the maximum allowed upload limit.",
-                request.getRequestURI()
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(Map.of(
+                "status",  413,
+                "error",   "Payload Too Large",
+                "message", "File size exceeds the maximum allowed upload limit.",
+                "path",    request.getRequestURI()
         ));
     }
 
     // ── 500 Internal Server Error — Catch-All ─────────────────────
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(
+    public ResponseEntity<Map<String, Object>> handleGenericException(
             Exception ex, HttpServletRequest request) {
 
         log.error("Unhandled exception at path={} | {}: {}",
                 request.getRequestURI(), ex.getClass().getSimpleName(), ex.getMessage(), ex);
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(), "Internal Server Error",
-                "An unexpected error occurred. Please try again later.",
-                request.getRequestURI()
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                "status",  500,
+                "error",   "Internal Server Error",
+                "message", "An unexpected error occurred. Please try again later.",
+                "path",    request.getRequestURI()
         ));
     }
 }

@@ -182,8 +182,9 @@
             <appender-ref ref="FILE_ROLLING" />
         </logger>
 
-        <!-- Exception handler — ERROR goes to both logs -->
-        <logger name="com.revplay.exception"          level="ERROR" additivity="false">
+        <!-- Exception handler — WARN and above logged to rolling file
+             ERROR level additionally captured in dedicated error log -->
+        <logger name="com.revplay.exception"          level="WARN"  additivity="false">
             <appender-ref ref="CONSOLE_PLAIN" />
             <appender-ref ref="FILE_ROLLING" />
             <appender-ref ref="FILE_ERROR" />
