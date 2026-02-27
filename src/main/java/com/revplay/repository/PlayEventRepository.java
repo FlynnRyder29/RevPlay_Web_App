@@ -11,7 +11,7 @@ public interface PlayEventRepository extends JpaRepository<PlayEvent, Long> {
 
     List<PlayEvent> findBySongId(Long songId);
 
-    List<PlayEvent> findByUserId(Long userId);
+        List<PlayEvent> findByUserId(Long userId);
 
     long countBySongId(Long songId);
 }
