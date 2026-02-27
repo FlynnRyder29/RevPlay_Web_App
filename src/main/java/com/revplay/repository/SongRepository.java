@@ -19,9 +19,18 @@ public interface SongRepository extends JpaRepository<Song, Long> {
 
     Page<Song> findByVisibility(Song.Visibility visibility, Pageable pageable);
 
+
     @Query("SELECT s FROM Song s WHERE " +
             "LOWER(s.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(s.genre) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(s.artist.artistName) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+
+        // NOTE FOR MEMBER 3:
+// Song.genre is a plain String (VARCHAR in songs table), NOT a FK to the Genre entity.
+// Use findByGenreIgnoreCase for ?genre= filter in SongController — plain string match only.
+// Do NOT attempt to join or resolve to Genre objects from this field.
+
     Page<Song> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
+
+    Page<Song> findByGenreIgnoreCase(String genre, Pageable pageable);
 }
