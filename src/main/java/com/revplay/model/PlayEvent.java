@@ -1,4 +1,4 @@
-package com.revplay.revplay_p2.model;
+package com.revplay.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;

@@ -1,6 +1,6 @@
-package com.revplay.revplay_p2.repository;
+package com.revplay.repository;
 
-import com.revplay.revplay_p2.model.PlayEvent;
+import com.revplay.model.PlayEvent;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

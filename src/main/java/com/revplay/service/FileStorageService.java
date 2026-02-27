@@ -1,4 +1,4 @@
-package com.revplay.revplay_p2.service;
+package com.revplay.service;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
