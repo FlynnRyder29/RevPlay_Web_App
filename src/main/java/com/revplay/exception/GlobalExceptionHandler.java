@@ -19,69 +19,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 // ============================================================
-// CUSTOM EXCEPTION CLASSES
-// ============================================================
-
-/**
- * Thrown when a requested resource is not found.
- * Maps to HTTP 404 Not Found.
- *
- * Usage: throw new ResourceNotFoundException("Song", "id", 42L);
- */
-class ResourceNotFoundException extends RuntimeException {
-    private final String resourceName;
-    private final String fieldName;
-    private final Object fieldValue;
-
-    public ResourceNotFoundException(String resourceName, String fieldName, Object fieldValue) {
-        super(String.format("%s not found with %s: %s", resourceName, fieldName, fieldValue));
-        this.resourceName = resourceName;
-        this.fieldName    = fieldName;
-        this.fieldValue   = fieldValue;
-    }
-
-    public String getResourceName() { return resourceName; }
-    public String getFieldName()    { return fieldName; }
-    public Object getFieldValue()   { return fieldValue; }
-}
-
-/**
- * Thrown when a create/update operation violates a uniqueness rule.
- * Maps to HTTP 409 Conflict.
- *
- * Usage: throw new DuplicateResourceException("Email already registered.");
- */
-class DuplicateResourceException extends RuntimeException {
-    public DuplicateResourceException(String message) {
-        super(message);
-    }
-}
-
-/**
- * Thrown when a user attempts an action they are not permitted to perform.
- * Maps to HTTP 403 Forbidden.
- *
- * Usage: throw new UnauthorizedAccessException("You cannot delete this playlist.");
- */
-class UnauthorizedAccessException extends RuntimeException {
-    public UnauthorizedAccessException(String message) {
-        super(message);
-    }
-}
-
-/**
- * Thrown when a request violates a business rule not covered by @Valid.
- * Maps to HTTP 400 Bad Request.
- *
- * Usage: throw new BadRequestException("Cannot delete an album that still has songs.");
- */
-class BadRequestException extends RuntimeException {
-    public BadRequestException(String message) {
-        super(message);
-    }
-}
-
-// ============================================================
 // GLOBAL EXCEPTION HANDLER
 // ============================================================
 
