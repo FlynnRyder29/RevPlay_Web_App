@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
 @ToString(exclude = {"genre", "artist", "album"})
 @EqualsAndHashCode(exclude = {"genre", "artist", "album"})
@@ -25,7 +26,7 @@ public class Song {
     private String title;
 
     // genre stored as plain String to match seed data (VARCHAR in songs table)
-    // genres table is for browsing/filtering via GET /api/genres — separate concern
+    // genres table is for browsing/filtering via GET /api/genres â€” separate concern
     @Column(name = "genre")
     private String genre;
 
