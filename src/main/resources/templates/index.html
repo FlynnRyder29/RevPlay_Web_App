@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head><title>RevPlay - Music Streaming</title></head>
+<body>
+<h1>Welcome to RevPlay!</h1>
+<div sec:authorize="isAuthenticated()">
+    <p>You are logged in.
+        <a th:href="@{/user/profile}">View Profile</a> |
+        <a th:href="@{/auth/logout}">Logout</a>
+    </p>
+</div>
+<div sec:authorize="!isAuthenticated()">
+    <p>
+        <a th:href="@{/auth/login}">Login</a> |
+        <a th:href="@{/auth/register}">Register</a>
+    </p>
+</div>
+</body>
+</html>
