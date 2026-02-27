@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Profile - RevPlay</title></head>
+<body>
+<h1>My Profile</h1>
+<div th:if="${success}" style="color:green" th:text="${success}"></div>
+<div th:if="${error}" style="color:red" th:text="${error}"></div>
+<form th:action="@{/user/profile}" method="post">
+    <p>Email: <span th:text="${user.email}"></span></p>
+    <p>Username: <span th:text="${user.username}"></span></p>
+    <p>Display Name: <input type="text" name="displayName" th:value="${user.displayName}"/></p>
+    <p>Bio: <textarea name="bio" th:text="${user.bio}"></textarea></p>
+    <button type="submit">Update Profile</button>
+</form>
+<a th:href="@{/auth/logout}">Logout</a>
+</body>
+</html>

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Login - RevPlay</title></head>
+<body>
+<h1>Login</h1>
+<div th:if="${param.error}" style="color:red">Invalid email/username or password.</div>
+<div th:if="${param.logout}" style="color:green">You have been logged out.</div>
+<div th:if="${success}" style="color:green" th:text="${success}"></div>
+<form th:action="@{/auth/login}" method="post">
+    <p>Email or Username: <input type="text" name="emailOrUsername" required/></p>
+    <p>Password: <input type="password" name="password" required/></p>
+    <button type="submit">Login</button>
+</form>
+<p>Don't have an account? <a th:href="@{/auth/register}">Register here</a></p>
+</body>
+</html>
