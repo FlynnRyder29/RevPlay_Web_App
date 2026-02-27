@@ -1,40 +1,36 @@
 package com.revplay.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "play_events")
+@Getter
+@Setter
 public class PlayEvent {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Using foreign key IDs directly (until Song/User entities exist)
     @Column(name = "song_id", nullable = false)
     private Long songId;
 
-    @Column(name = "user_id", nullable = false)
+    // Nullable because DB allows NULL (ON DELETE SET NULL)
+    @Column(name = "user_id")
     private Long userId;
 
     @Column(name = "played_at", nullable = false)
     private LocalDateTime playedAt;
 
-    public PlayEvent() {}
-
-    public Long getId() {
-        return id;
+    @PrePersist
+    protected void onCreate() {
+        if (playedAt == null) {
+            playedAt = LocalDateTime.now();
+        }
     }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public PlayEvent(Long songId, Long userId, LocalDateTime playedAt) {
-        this.songId = songId;
-        this.userId = userId;
-        this.playedAt = playedAt;
-    }
-
-    // Generate getters and setters
 }

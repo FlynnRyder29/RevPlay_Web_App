@@ -1,6 +1,0 @@
-CREATE TABLE play_events (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    song_id BIGINT NOT NULL,
-    user_id BIGINT NOT NULL,
-    played_at DATETIME NOT NULL
-);
