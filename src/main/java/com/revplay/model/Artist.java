@@ -1,25 +1,24 @@
 package com.revplay.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "artists")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@ToString(exclude = "userId")
+@EqualsAndHashCode(exclude = "userId")
 public class Artist {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // FK to User entity (owned by Member 1)
     @Column(name = "user_id", nullable = false)
     private Long userId;
 

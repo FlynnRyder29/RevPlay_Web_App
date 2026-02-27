@@ -1,9 +1,7 @@
 package com.revplay.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
@@ -11,9 +9,11 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "albums")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@ToString(exclude = "artist")
+@EqualsAndHashCode(exclude = "artist")
 public class Album {
 
     @Id
