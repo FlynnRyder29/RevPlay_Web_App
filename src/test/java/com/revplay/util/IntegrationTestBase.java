@@ -1,14 +1,11 @@
 package com.revplay.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,62 +17,47 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
  * Base class for RevPlay full-stack integration tests.
  *
  * Loads the FULL Spring application context with H2 in-memory DB.
- * Every test rolls back automatically via @Transactional — DB is
- * always clean at the start of each test.
+ * Every test rolls back automatically via @Transactional.
  *
- * Use this base class when you need to test the full request/response
- * cycle including real DB calls, real service logic, and real security.
- * For controller-only tests (mocked services), use ControllerTestBase.
- * For service-only tests (no HTTP), use ServiceTestBase.
+ * Uses JUnit 5 style (no @RunWith) — compatible with Spring Boot 3.x
+ * which ships JUnit 5 by default via spring-boot-starter-test.
  *
  * ── SECURITY TESTING ─────────────────────────────────────────────
  *
- * Option A — Annotate each test with @WithMockUser (simplest):
+ * Option A — annotate each test with @WithMockUser:
  *
  *   @Test
- *   @WithMockUser(username = "alice", roles = {"LISTENER"})
- *   public void getFavorites_asListener_returnsOk() throws Exception {
+ *   @WithMockUser(username = "alice", roles = {"USER"})
+ *   void getFavorites_asUser_returnsOk() throws Exception {
  *       getRequest(API_FAVORITES).andExpect(status().isOk());
  *   }
  *
  *   @Test
  *   @WithMockUser(username = "aria", roles = {"ARTIST"})
- *   public void uploadSong_asArtist_returnsCreated() throws Exception {
+ *   void uploadSong_asArtist_returnsCreated() throws Exception {
  *       postRequest(API_SONGS, songDto).andExpect(status().isCreated());
  *   }
  *
  *   @Test
- *   @WithMockUser(username = "alice", roles = {"LISTENER"})
- *   public void uploadSong_asListener_returnsForbidden() throws Exception {
- *       postRequest(API_SONGS, songDto).andExpect(status().isForbidden());
- *   }
- *
- *   @Test
- *   public void getPublicSongs_unauthenticated_returnsOk() throws Exception {
+ *   void getPublicSongs_unauthenticated_returnsOk() throws Exception {
  *       getRequest(API_SONGS).andExpect(status().isOk());
  *   }
  *
- *   @Test
- *   public void getPlaylists_unauthenticated_returnsUnauthorized() throws Exception {
- *       getRequest(API_PLAYLISTS).andExpect(status().isUnauthorized());
- *   }
+ * Option B — use programmatic helpers (no annotation needed):
  *
- * Option B — Use the helper methods with inline role (programmatic):
- *
- *   getRequestAs(API_FAVORITES, "alice", "LISTENER")
+ *   getRequestAs(API_FAVORITES, "alice", "USER")
  *       .andExpect(status().isOk());
  *
- *   getRequestAs(API_SONGS, "aria_artist", "ARTIST")
+ *   getRequestAs(API_SONGS, "aria", "ARTIST")
  *       .andExpect(status().isOk());
  *
- * ── ROLE REFERENCE ────────────────────────────────────────────────
- *   LISTENER — standard user: browse, play, favorites, playlists
- *   ARTIST   — all listener features + upload songs/albums, analytics
- *   ADMIN    — full access
+ * ── ROLES ─────────────────────────────────────────────────────────
+ *   USER   — browse, play, favorites, playlists
+ *   ARTIST — all USER features + upload songs/albums, analytics
+ *   ADMIN  — full access
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureMockMvc
+@org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 @ActiveProfiles("test")
 @TestPropertySource(locations = "classpath:application-test.properties")
 @Transactional
@@ -87,7 +69,7 @@ public abstract class IntegrationTestBase {
     @Autowired
     protected ObjectMapper objectMapper;
 
-    // ── Convenience API path constants ────────────────────────────
+    // ── API path constants ────────────────────────────────────────
 
     protected static final String API_SONGS     = TestConstants.API_SONGS;
     protected static final String API_ALBUMS    = TestConstants.API_ALBUMS;
@@ -99,7 +81,7 @@ public abstract class IntegrationTestBase {
     protected static final String API_HISTORY   = TestConstants.API_HISTORY;
     protected static final String API_ANALYTICS = TestConstants.API_ANALYTICS;
 
-    // ── Standard HTTP helpers (unauthenticated) ───────────────────
+    // ── Unauthenticated HTTP helpers ──────────────────────────────
 
     protected ResultActions getRequest(String url) throws Exception {
         return mockMvc.perform(get(url)
@@ -125,16 +107,8 @@ public abstract class IntegrationTestBase {
                 .accept(MediaType.APPLICATION_JSON));
     }
 
-    // ── Security-aware HTTP helpers (Option B — programmatic) ─────
+    // ── Authenticated HTTP helpers (programmatic) ─────────────────
 
-    /**
-     * GET as a specific user with a given role.
-     * Use when you need programmatic control over the authenticated user.
-     *
-     * Example:
-     *   getRequestAs("/api/favorites", "alice", "LISTENER")
-     *       .andExpect(status().isOk());
-     */
     protected ResultActions getRequestAs(String url, String username, String role) throws Exception {
         return mockMvc.perform(get(url)
                 .with(user(username).roles(role))
@@ -165,19 +139,16 @@ public abstract class IntegrationTestBase {
 
     // ── Role shortcut helpers ─────────────────────────────────────
 
-    /** GET as a LISTENER role user */
-    protected ResultActions getRequestAsListener(String url) throws Exception {
-        return getRequestAs(url, TestConstants.TEST_USER_USERNAME, "LISTENER");
+    protected ResultActions getRequestAsUser(String url) throws Exception {
+        return getRequestAs(url, TestConstants.TEST_USER_USERNAME, TestConstants.TEST_USER_ROLE_USER);
     }
 
-    /** GET as an ARTIST role user */
     protected ResultActions getRequestAsArtist(String url) throws Exception {
-        return getRequestAs(url, TestConstants.TEST_USER_USERNAME, "ARTIST");
+        return getRequestAs(url, TestConstants.TEST_USER_USERNAME, TestConstants.TEST_USER_ROLE_ARTIST);
     }
 
-    /** GET as an ADMIN role user */
     protected ResultActions getRequestAsAdmin(String url) throws Exception {
-        return getRequestAs(url, TestConstants.TEST_USER_USERNAME, "ADMIN");
+        return getRequestAs(url, TestConstants.TEST_USER_USERNAME, TestConstants.TEST_USER_ROLE_ADMIN);
     }
 
     // ── Utility ───────────────────────────────────────────────────
