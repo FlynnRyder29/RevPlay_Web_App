@@ -17,12 +17,16 @@ import java.time.LocalDateTime;
  * repositories, services, and MockMvc tests without any casting.
  *
  * Usage:
- *   User     user    = TestDataBuilder.aUser().build();
- *   Artist   artist  = TestDataBuilder.anArtist().build();
- *   Album    album   = TestDataBuilder.anAlbum().withArtist(artist).build();
- *   Song     song    = TestDataBuilder.aSong().withArtist(artist).build();
- *   Playlist pl      = TestDataBuilder.aPlaylist().asPrivate().build();
- *   Favorite fav     = TestDataBuilder.aFavorite().withUser(user).withSong(song).build();
+ *   User     user   = TestDataBuilder.aUser().build();
+ *   Artist   artist = TestDataBuilder.anArtist().withUser(user).build();
+ *   Album    album  = TestDataBuilder.anAlbum().withArtist(artist).build();
+ *   Song     song   = TestDataBuilder.aSong().withArtist(artist).build();
+ *   Playlist pl     = TestDataBuilder.aPlaylist().asPrivate().build();
+ *   Favorite fav    = TestDataBuilder.aFavorite().withUser(user).withSong(song).build();
+ *
+ * NOTE — verify these setter names match your entity before Day 4:
+ *   User  : setRole(String)         — confirm field is String, not enum
+ *   User  : setPasswordHash(String) — confirm setter name
  */
 public class TestDataBuilder {
 
@@ -37,6 +41,7 @@ public class TestDataBuilder {
         private String        passwordHash = "$2a$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36Q5V2xJHpXHhkEtWb2VVXK";
         private String        displayName  = TestConstants.TEST_USER_DISPLAY_NAME;
         private String        bio          = "Test user bio.";
+        // String role — update to User.Role enum if entity uses enum
         private String        role         = TestConstants.TEST_USER_ROLE_USER;
         private LocalDateTime createdAt    = LocalDateTime.now();
         private LocalDateTime updatedAt    = LocalDateTime.now();
@@ -55,10 +60,10 @@ public class TestDataBuilder {
             user.setId(id);
             user.setEmail(email);
             user.setUsername(username);
-            user.setPasswordHash(passwordHash);
+            user.setPasswordHash(passwordHash);  // verify setter name matches User.java
             user.setDisplayName(displayName);
             user.setBio(bio);
-            user.setRole(role);
+            user.setRole(role);                  // verify field is String, not enum
             user.setCreatedAt(createdAt);
             user.setUpdatedAt(updatedAt);
             return user;
@@ -84,17 +89,17 @@ public class TestDataBuilder {
         private String        website           = null;
         private LocalDateTime createdAt         = LocalDateTime.now();
 
-        public ArtistBuilder withId(Long id)                 { this.id = id;                return this; }
-        public ArtistBuilder withUser(User user)             { this.user = user;             return this; }
-        public ArtistBuilder withArtistName(String name)     { this.artistName = name;       return this; }
-        public ArtistBuilder withBio(String bio)             { this.bio = bio;               return this; }
-        public ArtistBuilder withGenre(String genre)         { this.genre = genre;           return this; }
-        public ArtistBuilder withInstagram(String url)       { this.instagram = url;         return this; }
-        public ArtistBuilder withTwitter(String url)         { this.twitter = url;           return this; }
-        public ArtistBuilder withYoutube(String url)         { this.youtube = url;           return this; }
-        public ArtistBuilder withSpotify(String url)         { this.spotify = url;           return this; }
-        public ArtistBuilder withWebsite(String url)         { this.website = url;           return this; }
-        public ArtistBuilder withProfilePicture(String url)  { this.profilePictureUrl = url; return this; }
+        public ArtistBuilder withId(Long id)                { this.id = id;                return this; }
+        public ArtistBuilder withUser(User user)            { this.user = user;             return this; }
+        public ArtistBuilder withArtistName(String name)    { this.artistName = name;       return this; }
+        public ArtistBuilder withBio(String bio)            { this.bio = bio;               return this; }
+        public ArtistBuilder withGenre(String genre)        { this.genre = genre;           return this; }
+        public ArtistBuilder withInstagram(String url)      { this.instagram = url;         return this; }
+        public ArtistBuilder withTwitter(String url)        { this.twitter = url;           return this; }
+        public ArtistBuilder withYoutube(String url)        { this.youtube = url;           return this; }
+        public ArtistBuilder withSpotify(String url)        { this.spotify = url;           return this; }
+        public ArtistBuilder withWebsite(String url)        { this.website = url;           return this; }
+        public ArtistBuilder withProfilePicture(String url) { this.profilePictureUrl = url; return this; }
 
         public Artist build() {
             Artist artist = new Artist();
@@ -128,12 +133,12 @@ public class TestDataBuilder {
         private Artist        artist        = anArtist().build();
         private LocalDateTime createdAt     = LocalDateTime.now();
 
-        public AlbumBuilder withId(Long id)                  { this.id = id;             return this; }
-        public AlbumBuilder withName(String name)            { this.name = name;         return this; }
-        public AlbumBuilder withDescription(String desc)     { this.description = desc;  return this; }
-        public AlbumBuilder withArtist(Artist artist)        { this.artist = artist;     return this; }
-        public AlbumBuilder withReleaseDate(LocalDate date)  { this.releaseDate = date;  return this; }
-        public AlbumBuilder withCoverImage(String url)       { this.coverImageUrl = url; return this; }
+        public AlbumBuilder withId(Long id)                 { this.id = id;             return this; }
+        public AlbumBuilder withName(String name)           { this.name = name;         return this; }
+        public AlbumBuilder withDescription(String desc)    { this.description = desc;  return this; }
+        public AlbumBuilder withArtist(Artist artist)       { this.artist = artist;     return this; }
+        public AlbumBuilder withReleaseDate(LocalDate date) { this.releaseDate = date;  return this; }
+        public AlbumBuilder withCoverImage(String url)      { this.coverImageUrl = url; return this; }
 
         public Album build() {
             Album album = new Album();
@@ -153,29 +158,34 @@ public class TestDataBuilder {
     public static SongBuilder aSong() { return new SongBuilder(); }
 
     public static class SongBuilder {
-        private Long          id            = TestConstants.TEST_SONG_ID;
-        private String        title         = TestConstants.TEST_SONG_TITLE;
-        private String        genre         = TestConstants.TEST_SONG_GENRE;
-        private int           duration      = TestConstants.TEST_SONG_DURATION;
-        private String        audioUrl      = TestConstants.TEST_SONG_AUDIO_URL;
-        private String        coverImageUrl = "/uploads/songs/test_cover.jpg";
-        private LocalDate     releaseDate   = LocalDate.of(2024, 1, 1);
-        private long          playCount     = 0L;
-        private String        visibility    = TestConstants.TEST_SONG_VISIBILITY_PUBLIC;
-        private Artist        artist        = anArtist().build();
-        private Album         album         = null;
-        private LocalDateTime createdAt     = LocalDateTime.now();
+        private Long            id            = TestConstants.TEST_SONG_ID;
+        private String          title         = TestConstants.TEST_SONG_TITLE;
+        private String          genre         = TestConstants.TEST_SONG_GENRE;
+        private int             duration      = TestConstants.TEST_SONG_DURATION;
+        private String          audioUrl      = TestConstants.TEST_SONG_AUDIO_URL;
+        private String          coverImageUrl = "/uploads/songs/test_cover.jpg";
+        private LocalDate       releaseDate   = LocalDate.of(2024, 1, 1);
+        private long            playCount     = 0L;
+        // Uses Song.Visibility enum — matches @Enumerated(EnumType.STRING) on entity
+        private Song.Visibility visibility    = Song.Visibility.PUBLIC;
+        private Artist          artist        = anArtist().build();
+        private Album           album         = null;
+        private LocalDateTime   createdAt     = LocalDateTime.now();
 
-        public SongBuilder withId(Long id)                  { this.id = id;              return this; }
-        public SongBuilder withTitle(String title)          { this.title = title;        return this; }
-        public SongBuilder withGenre(String genre)          { this.genre = genre;        return this; }
-        public SongBuilder withDuration(int duration)       { this.duration = duration;  return this; }
-        public SongBuilder withArtist(Artist artist)        { this.artist = artist;      return this; }
-        public SongBuilder withAlbum(Album album)           { this.album = album;        return this; }
-        public SongBuilder withPlayCount(long count)        { this.playCount = count;    return this; }
-        public SongBuilder withVisibility(String v)         { this.visibility = v;       return this; }
-        public SongBuilder withReleaseDate(LocalDate date)  { this.releaseDate = date;   return this; }
-        public SongBuilder asUnlisted()                     { this.visibility = TestConstants.TEST_SONG_VISIBILITY_UNLISTED; return this; }
+        public SongBuilder withId(Long id)                  { this.id = id;                                 return this; }
+        public SongBuilder withTitle(String title)          { this.title = title;                           return this; }
+        public SongBuilder withGenre(String genre)          { this.genre = genre;                           return this; }
+        public SongBuilder withDuration(int duration)       { this.duration = duration;                     return this; }
+        public SongBuilder withArtist(Artist artist)        { this.artist = artist;                         return this; }
+        public SongBuilder withAlbum(Album album)           { this.album = album;                           return this; }
+        public SongBuilder withPlayCount(long count)        { this.playCount = count;                       return this; }
+        public SongBuilder withReleaseDate(LocalDate date)  { this.releaseDate = date;                      return this; }
+        // Accept enum directly
+        public SongBuilder withVisibility(Song.Visibility v){ this.visibility = v;                          return this; }
+        // Accept String and convert — keeps call sites simple: .withVisibility("PUBLIC")
+        public SongBuilder withVisibility(String v)         { this.visibility = Song.Visibility.valueOf(v); return this; }
+        public SongBuilder asUnlisted()                     { this.visibility = Song.Visibility.UNLISTED;   return this; }
+        public SongBuilder asPrivate()                      { this.visibility = Song.Visibility.PRIVATE;    return this; }
 
         public Song build() {
             Song song = new Song();
