@@ -1,5 +1,7 @@
 package com.revplay.util;
 
+import com.revplay.model.Role;
+
 /**
  * Shared test constants for all RevPlay test classes.
  *
@@ -22,12 +24,6 @@ public final class TestConstants {
     public static final String TEST_USER_USERNAME      = "testuser";
     public static final String TEST_USER_PASSWORD      = "Password@123";
     public static final String TEST_USER_DISPLAY_NAME  = "Test User";
-
-    // Role names — must match Spring Security roles (without ROLE_ prefix)
-    // Spring Security stores as ROLE_USER, ROLE_ARTIST, ROLE_ADMIN internally
-    public static final String TEST_USER_ROLE_USER   = "USER";
-    public static final String TEST_USER_ROLE_ARTIST = "ARTIST";
-    public static final String TEST_USER_ROLE_ADMIN  = "ADMIN";
 
     // ── Artist Constants ──────────────────────────────────────────
 
@@ -92,4 +88,19 @@ public final class TestConstants {
     public static final String IMAGE_CONTENT_TYPE   = "image/jpeg";
     public static final long   MAX_AUDIO_SIZE_BYTES = 50L * 1024 * 1024;
     public static final long   MAX_IMAGE_SIZE_BYTES = 5L  * 1024 * 1024;
+
+    // ── Role Constants — String (for Spring Security MockMvc .roles() calls) ──
+    // Used with: mockMvc.perform(get(url).with(user("name").roles(ROLE)))
+    // Spring Security prepends ROLE_ internally: LISTENER → ROLE_LISTENER
+
+    public static final String TEST_SECURITY_ROLE_LISTENER = "LISTENER";
+    public static final String TEST_SECURITY_ROLE_ARTIST   = "ARTIST";
+    public static final String TEST_SECURITY_ROLE_ADMIN    = "ADMIN";
+
+    // ── Role Constants — Enum (for TestDataBuilder / entity-level usage) ──
+    // Used when building User objects to set user.setRole(...)
+
+    public static final Role TEST_ROLE_LISTENER = Role.LISTENER;
+    public static final Role TEST_ROLE_ARTIST   = Role.ARTIST;
+    public static final Role TEST_ROLE_ADMIN    = Role.ADMIN;
 }

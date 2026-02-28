@@ -3,6 +3,7 @@ package com.revplay.util;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
@@ -57,7 +58,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
  *   ADMIN  — full access
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
+@AutoConfigureMockMvc
 @ActiveProfiles("test")
 @TestPropertySource(locations = "classpath:application-test.properties")
 @Transactional
@@ -65,7 +66,7 @@ public abstract class IntegrationTestBase {
 
     @Autowired
     protected MockMvc mockMvc;
-
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     @Autowired
     protected ObjectMapper objectMapper;
 
@@ -138,17 +139,43 @@ public abstract class IntegrationTestBase {
     }
 
     // ── Role shortcut helpers ─────────────────────────────────────
+    // Uses TEST_SECURITY_ROLE_* String constants — matches Role enum values
+    // Spring Security will map "LISTENER" → GrantedAuthority("ROLE_LISTENER")
 
-    protected ResultActions getRequestAsUser(String url) throws Exception {
-        return getRequestAs(url, TestConstants.TEST_USER_USERNAME, TestConstants.TEST_USER_ROLE_USER);
+    protected ResultActions getRequestAsListener(String url) throws Exception {
+        return getRequestAs(url, TestConstants.TEST_USER_USERNAME, TestConstants.TEST_SECURITY_ROLE_LISTENER);
     }
 
     protected ResultActions getRequestAsArtist(String url) throws Exception {
-        return getRequestAs(url, TestConstants.TEST_USER_USERNAME, TestConstants.TEST_USER_ROLE_ARTIST);
+        return getRequestAs(url, TestConstants.TEST_USER_USERNAME, TestConstants.TEST_SECURITY_ROLE_ARTIST);
     }
 
     protected ResultActions getRequestAsAdmin(String url) throws Exception {
-        return getRequestAs(url, TestConstants.TEST_USER_USERNAME, TestConstants.TEST_USER_ROLE_ADMIN);
+        return getRequestAs(url, TestConstants.TEST_USER_USERNAME, TestConstants.TEST_SECURITY_ROLE_ADMIN);
+    }
+
+    protected ResultActions postRequestAsListener(String url, Object body) throws Exception {
+        return postRequestAs(url, body, TestConstants.TEST_USER_USERNAME, TestConstants.TEST_SECURITY_ROLE_LISTENER);
+    }
+
+    protected ResultActions postRequestAsArtist(String url, Object body) throws Exception {
+        return postRequestAs(url, body, TestConstants.TEST_USER_USERNAME, TestConstants.TEST_SECURITY_ROLE_ARTIST);
+    }
+
+    protected ResultActions putRequestAsListener(String url, Object body) throws Exception {
+        return putRequestAs(url, body, TestConstants.TEST_USER_USERNAME, TestConstants.TEST_SECURITY_ROLE_LISTENER);
+    }
+
+    protected ResultActions putRequestAsArtist(String url, Object body) throws Exception {
+        return putRequestAs(url, body, TestConstants.TEST_USER_USERNAME, TestConstants.TEST_SECURITY_ROLE_ARTIST);
+    }
+
+    protected ResultActions deleteRequestAsListener(String url) throws Exception {
+        return deleteRequestAs(url, TestConstants.TEST_USER_USERNAME, TestConstants.TEST_SECURITY_ROLE_LISTENER);
+    }
+
+    protected ResultActions deleteRequestAsArtist(String url) throws Exception {
+        return deleteRequestAs(url, TestConstants.TEST_USER_USERNAME, TestConstants.TEST_SECURITY_ROLE_ARTIST);
     }
 
     // ── Utility ───────────────────────────────────────────────────
