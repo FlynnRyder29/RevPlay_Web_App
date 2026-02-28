@@ -93,6 +93,7 @@ public class FavoriteService {
     // GET MY FAVORITES
     // -------------------------
 
+    @Transactional(readOnly = true)
     public List<FavoriteDTO> getMyFavorites() {
 
         User currentUser = securityUtils.getCurrentUser();
@@ -118,6 +119,7 @@ public class FavoriteService {
         dto.setSongTitle(favorite.getSong().getTitle());
         dto.setArtistName(favorite.getSong().getArtist().getArtistName());
         dto.setCoverImageUrl(favorite.getSong().getCoverImageUrl());
+        dto.setCreatedAt(favorite.getCreatedAt());
         return dto;
     }
 }

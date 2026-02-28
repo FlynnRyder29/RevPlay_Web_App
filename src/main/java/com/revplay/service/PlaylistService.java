@@ -53,6 +53,7 @@ public class PlaylistService {
     // GET MY PLAYLISTS
     // -------------------------
 
+    @Transactional(readOnly = true)
     public List<PlaylistDTO> getMyPlaylists() {
 
         User currentUser = securityUtils.getCurrentUser();
@@ -69,6 +70,7 @@ public class PlaylistService {
     // GET BY ID
     // -------------------------
 
+    @Transactional(readOnly = true)
     public PlaylistDTO getPlaylistById(Long id) {
 
         Playlist playlist = playlistRepository.findById(id)

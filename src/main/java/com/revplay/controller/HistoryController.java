@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -26,7 +27,7 @@ public class HistoryController {
     // ADD TO HISTORY
     // -------------------------
     @PostMapping
-    public ResponseEntity<Void> addToHistory(@RequestBody HistoryRequest request) {
+    public ResponseEntity<Void> addToHistory(@Valid @RequestBody HistoryRequest request) {
 
         log.info("POST /api/history songId={}", request.getSongId());
 

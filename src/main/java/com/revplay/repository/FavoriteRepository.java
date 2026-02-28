@@ -3,7 +3,6 @@ package com.revplay.repository;
 import com.revplay.model.Favorite;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,4 +18,7 @@ public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
 
     // Check if already favorited
     boolean existsByUser_IdAndSong_Id(Long userId, Long songId);
+
+    // Remove favorite
+    void deleteByUser_IdAndSong_Id(Long userId, Long songId);
 }

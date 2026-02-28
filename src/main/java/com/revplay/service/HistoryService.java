@@ -62,14 +62,14 @@ public class HistoryService {
     // GET MY HISTORY (PAGINATED)
     // -------------------------
 
+    @Transactional(readOnly = true)
     public Page<HistoryDTO> getMyHistory(int limit) {
 
         User currentUser = securityUtils.getCurrentUser();
 
-        // Safety guard: prevent negative or zero limits
-        if (limit <= 0) {
-            limit = 50;
-        }
+        // Safety guard: clamp limit to valid range
+        if (limit <= 0) limit = 50;
+        if (limit > 200) limit = 200;
 
         Pageable pageable = PageRequest.of(0, limit);
 
