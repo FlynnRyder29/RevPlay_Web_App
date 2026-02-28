@@ -23,7 +23,7 @@ public class SongDTO {
     private String coverImageUrl;
     private LocalDate releaseDate;
     private Long playCount;
-    private Song.Visibility visibility;
+    private String visibility;
 
     // Flattened artist info — no nested entity exposed
     private Long artistId;

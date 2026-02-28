@@ -10,54 +10,69 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/songs")
 @RequiredArgsConstructor
+@Validated  // ✅ Required to activate @Min/@Max on @RequestParam
 public class SongController {
 
     private static final Logger log = LoggerFactory.getLogger(SongController.class);
+
+    // ✅ Whitelist of allowed sort fields — prevents arbitrary column injection
+    private static final Set<String> ALLOWED_SORT_FIELDS =
+            Set.of("title", "releaseDate", "playCount", "createdAt", "duration");
 
     private final SongService songService;
 
     // GET /api/songs?page=0&size=20&sort=title,asc
     @GetMapping
     public ResponseEntity<Page<SongDTO>> getAllSongs(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,  // ✅ max 100 per page
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir) {
 
-        log.info("GET /api/songs - page={}, size={}", page, size);
+        // ✅ Sanitize sortBy — fall back to "createdAt" if not in whitelist
+        String safeSortBy = ALLOWED_SORT_FIELDS.contains(sortBy) ? sortBy : "createdAt";
+
+        log.info("GET /api/songs - page={}, size={}, sortBy={}", page, size, safeSortBy);
 
         Sort sort = sortDir.equalsIgnoreCase("asc")
-                ? Sort.by(sortBy).ascending()
-                : Sort.by(sortBy).descending();
+                ? Sort.by(safeSortBy).ascending()
+                : Sort.by(safeSortBy).descending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<SongDTO> songs = songService.getAllSongs(pageable);
-        return ResponseEntity.ok(songs);
+        return ResponseEntity.ok(songService.getAllSongs(pageable));
     }
 
     // GET /api/songs/{id}
     @GetMapping("/{id}")
     public ResponseEntity<SongDTO> getSongById(@PathVariable Long id) {
         log.info("GET /api/songs/{}", id);
-        SongDTO song = songService.getSongById(id);
-        return ResponseEntity.ok(song);
+        return ResponseEntity.ok(songService.getSongById(id));
     }
 
     // GET /api/songs/search?q=keyword&page=0&size=20
     @GetMapping("/search")
     public ResponseEntity<Page<SongDTO>> searchSongs(
             @RequestParam("q") String keyword,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
 
-        log.info("GET /api/songs/search - keyword={}", keyword);
+        // ✅ Guard blank keyword — prevents LIKE '%% ' blowing up the DB
+        if (keyword == null || keyword.isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        log.info("GET /api/songs/search - keyword='{}'", keyword);
         Pageable pageable = PageRequest.of(page, size);
-        Page<SongDTO> results = songService.searchSongs(keyword, pageable);
-        return ResponseEntity.ok(results);
+        return ResponseEntity.ok(songService.searchSongs(keyword.trim(), pageable));
     }
 }

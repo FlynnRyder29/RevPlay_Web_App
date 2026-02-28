@@ -20,12 +20,13 @@ public class SongService {
 
     private final SongRepository songRepository;
 
+    @Transactional(readOnly = true)  // ✅ Transaction here — keeps Hibernate session open for lazy fields
     public Page<SongDTO> getAllSongs(Pageable pageable) {
         log.debug("Fetching all songs, page={}", pageable.getPageNumber());
-        Page<Song> page = songRepository.findAll(pageable);
-        return page.map(this::mapToDTO);
+        return songRepository.findAll(pageable).map(this::mapToDTO);
     }
 
+    @Transactional(readOnly = true)
     public SongDTO getSongById(Long id) {
         log.debug("Fetching song by id={}", id);
         Song song = songRepository.findById(id)
@@ -33,14 +34,14 @@ public class SongService {
         return mapToDTO(song);
     }
 
+    @Transactional(readOnly = true)
     public Page<SongDTO> searchSongs(String keyword, Pageable pageable) {
         log.debug("Searching songs by keyword='{}'", keyword);
-        Page<Song> page = songRepository.searchByKeyword(keyword, pageable);
-        return page.map(this::mapToDTO);
+        return songRepository.searchByKeyword(keyword, pageable).map(this::mapToDTO);
     }
 
-    @Transactional(readOnly = true)
-    protected SongDTO mapToDTO(Song song) {
+    // ✅ Private — pure transformation, zero DB work, no @Transactional needed
+    private SongDTO mapToDTO(Song song) {
         return SongDTO.builder()
                 .id(song.getId())
                 .title(song.getTitle())
@@ -50,7 +51,7 @@ public class SongService {
                 .coverImageUrl(song.getCoverImageUrl())
                 .releaseDate(song.getReleaseDate())
                 .playCount(song.getPlayCount())
-                .visibility(song.getVisibility())
+                .visibility(song.getVisibility() != null ? song.getVisibility().name() : null) // ✅ enum → String
                 .artistId(song.getArtist() != null ? song.getArtist().getId() : null)
                 .artistName(song.getArtist() != null ? song.getArtist().getArtistName() : null)
                 .albumId(song.getAlbum() != null ? song.getAlbum().getId() : null)
