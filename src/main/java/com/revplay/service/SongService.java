@@ -40,7 +40,7 @@ public class SongService {
         return songRepository.searchByKeyword(keyword, pageable).map(this::mapToDTO);
     }
 
-    // ✅ Private — pure transformation, zero DB work, no @Transactional needed
+    // ✅ Fixed mapToDTO — artist null check removed, album null check kept
     private SongDTO mapToDTO(Song song) {
         return SongDTO.builder()
                 .id(song.getId())
@@ -51,12 +51,13 @@ public class SongService {
                 .coverImageUrl(song.getCoverImageUrl())
                 .releaseDate(song.getReleaseDate())
                 .playCount(song.getPlayCount())
-                .visibility(song.getVisibility() != null ? song.getVisibility().name() : null) // ✅ enum → String
-                .artistId(song.getArtist() != null ? song.getArtist().getId() : null)
-                .artistName(song.getArtist() != null ? song.getArtist().getArtistName() : null)
+                .visibility(song.getVisibility() != null ? song.getVisibility().name() : null)
+                .artistId(song.getArtist().getId())           // ✅ no null check — always present
+                .artistName(song.getArtist().getArtistName()) // ✅ no null check — always present
                 .albumId(song.getAlbum() != null ? song.getAlbum().getId() : null)
                 .albumName(song.getAlbum() != null ? song.getAlbum().getName() : null)
                 .createdAt(song.getCreatedAt())
                 .build();
     }
+
 }

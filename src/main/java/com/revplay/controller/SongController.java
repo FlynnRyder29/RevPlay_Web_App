@@ -1,6 +1,7 @@
 package com.revplay.controller;
 
 import com.revplay.dto.SongDTO;
+import com.revplay.exception.BadRequestException;
 import com.revplay.service.SongService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -66,13 +67,14 @@ public class SongController {
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
 
-        // ✅ Guard blank keyword — prevents LIKE '%% ' blowing up the DB
+        // ✅ Throws structured exception instead of bare 400
         if (keyword == null || keyword.isBlank()) {
-            return ResponseEntity.badRequest().build();
+            throw new BadRequestException("Search keyword cannot be blank");
         }
 
         log.info("GET /api/songs/search - keyword='{}'", keyword);
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(songService.searchSongs(keyword.trim(), pageable));
     }
+
 }
