@@ -12,6 +12,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.format.DateTimeFormatter;
+
 @Controller
 @RequestMapping("/user")
 @RequiredArgsConstructor
@@ -25,6 +27,13 @@ public class UserController {
     public String viewProfile(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         UserDTO user = userService.getUserProfile(userDetails.getUsername());
         model.addAttribute("user", user);
+
+        // Format the joined date for display
+        if (user.getCreatedAt() != null) {
+            String joinedDate = user.getCreatedAt().format(DateTimeFormatter.ofPattern("MMM yyyy"));
+            model.addAttribute("joinedDate", joinedDate);
+        }
+
         return "profile";
     }
 
