@@ -3,7 +3,6 @@ package com.revplay.repository;
 import com.revplay.model.PlaylistFollow;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,7 +27,6 @@ public interface PlaylistFollowRepository
     );
 
     // Unfollow playlist
-    @Transactional
     void deleteByUser_IdAndPlaylist_Id(
             Long userId,
             Long playlistId
