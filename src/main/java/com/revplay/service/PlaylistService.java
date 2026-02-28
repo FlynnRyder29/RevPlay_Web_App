@@ -7,6 +7,7 @@ import com.revplay.model.Playlist;
 import com.revplay.model.User;
 import com.revplay.repository.PlaylistRepository;
 import com.revplay.repository.UserRepository;
+import com.revplay.util.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,28 +26,20 @@ public class PlaylistService {
     private final UserRepository userRepository;
 
     public PlaylistService(PlaylistRepository playlistRepository,
-                           UserRepository userRepository) {
+                           UserRepository userRepository, SecurityUtils securityUtils) {
         this.playlistRepository = playlistRepository;
         this.userRepository = userRepository;
+        this.securityUtils = securityUtils;
     }
 
     // -------------------------
     // Helper: Current User
     // -------------------------
 
-    private User getCurrentUser() {
+    private final SecurityUtils securityUtils;
 
-        String username = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getName();
-
-        return userRepository.findByUsername(username)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "User", "username", username
-                        )
-                );
-    }
+    // usage:
+    User currentUser = securityUtils.getCurrentUser();
 
     // -------------------------
     // CREATE

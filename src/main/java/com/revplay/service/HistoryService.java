@@ -7,6 +7,7 @@ import com.revplay.model.User;
 import com.revplay.repository.HistoryRepository;
 import com.revplay.repository.SongRepository;
 import com.revplay.repository.UserRepository;
+import com.revplay.util.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -28,27 +29,21 @@ public class HistoryService {
 
     public HistoryService(HistoryRepository historyRepository,
                           UserRepository userRepository,
-                          SongRepository songRepository) {
+                          SongRepository songRepository, SecurityUtils securityUtils) {
         this.historyRepository = historyRepository;
         this.userRepository = userRepository;
         this.songRepository = songRepository;
+        this.securityUtils = securityUtils;
     }
 
     // -------------------------
     // Helper: Current User
     // -------------------------
 
-    private User getCurrentUser() {
+    private final SecurityUtils securityUtils;
 
-        String username = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getName();
-
-        return userRepository.findByUsername(username)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "User", "username", username));
-    }
+    // usage:
+    User currentUser = securityUtils.getCurrentUser();
 
     // -------------------------
     // ADD TO HISTORY

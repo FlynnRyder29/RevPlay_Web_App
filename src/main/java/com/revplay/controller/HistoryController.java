@@ -24,13 +24,9 @@ public class HistoryController {
     // -------------------------
     // ADD TO HISTORY
     // -------------------------
-    @PostMapping("/{songId}")
-    public ResponseEntity<Void> addToHistory(@PathVariable Long songId) {
-
-        log.info("POST /api/history/{}", songId);
-
-        historyService.addToHistory(songId);
-
+    @PostMapping
+    public ResponseEntity<Void> addToHistory(@RequestBody HistoryRequest request) {
+        historyService.addToHistory(request.getSongId());
         return ResponseEntity.ok().build();
     }
 
@@ -38,17 +34,11 @@ public class HistoryController {
     // GET MY HISTORY
     // -------------------------
     @GetMapping
-    public ResponseEntity<Page<ListeningHistory>> getMyHistory(
-            @RequestParam(defaultValue = "50") int limit) {
+    public Page<ListeningHistory> getMyHistory(int limit) {
+        if (limit <= 0) limit = 50;
+        if (limit > 200) limit = 200;
 
-        log.info("GET /api/history?limit={}", limit);
-
-        return ResponseEntity.ok(
-                historyService.getMyHistory(limit)
-        );
-    }
-
-    // -------------------------
+        // -------------------------
     // CLEAR HISTORY
     // -------------------------
     @DeleteMapping

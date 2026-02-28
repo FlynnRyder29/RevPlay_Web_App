@@ -19,8 +19,4 @@ public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
 
     // Check if already favorited
     boolean existsByUser_IdAndSong_Id(Long userId, Long songId);
-
-    // Remove favorite
-    @Transactional
-    void deleteByUser_IdAndSong_Id(Long userId, Long songId);
 }

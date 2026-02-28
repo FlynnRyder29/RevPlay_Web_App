@@ -7,6 +7,7 @@ import com.revplay.model.User;
 import com.revplay.repository.FavoriteRepository;
 import com.revplay.repository.SongRepository;
 import com.revplay.repository.UserRepository;
+import com.revplay.util.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,27 +28,21 @@ public class FavoriteService {
 
     public FavoriteService(FavoriteRepository favoriteRepository,
                            UserRepository userRepository,
-                           SongRepository songRepository) {
+                           SongRepository songRepository, SecurityUtils securityUtils) {
         this.favoriteRepository = favoriteRepository;
         this.userRepository = userRepository;
         this.songRepository = songRepository;
+        this.securityUtils = securityUtils;
     }
 
     // -------------------------
     // Helper: Current User
     // -------------------------
 
-    private User getCurrentUser() {
+    private final SecurityUtils securityUtils;
 
-        String username = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getName();
-
-        return userRepository.findByUsername(username)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "User", "username", username));
-    }
+    // usage:
+    User currentUser = securityUtils.getCurrentUser();
 
     // -------------------------
     // ADD FAVORITE
@@ -108,14 +103,22 @@ public class FavoriteService {
     // GET MY FAVORITES
     // -------------------------
 
-    public List<Favorite> getMyFavorites() {
-
+    public List<FavoriteDTO> getMyFavorites() {
         User currentUser = getCurrentUser();
+        return favoriteRepository.findByUser_Id(currentUser.getId())
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
 
-        log.debug("Fetching favorites for user {}",
-                currentUser.getId());
-
-        return favoriteRepository
-                .findByUser_Id(currentUser.getId());
+    private FavoriteDTO toDTO(Favorite f) {
+        FavoriteDTO dto = new FavoriteDTO();
+        dto.setId(f.getId());
+        dto.setSongId(f.getSong().getId());
+        dto.setSongTitle(f.getSong().getTitle());
+        dto.setArtistName(f.getSong().getArtist().getArtistName());
+        dto.setCoverImageUrl(f.getSong().getCoverImageUrl());
+        dto.setCreatedAt(f.getCreatedAt());
+        return dto;
     }
 }
