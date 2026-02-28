@@ -1,0 +1,41 @@
+package com.revplay.controller;
+
+import com.revplay.dto.ArtistProfileResponse;
+import com.revplay.dto.ArtistRegisterRequest;
+import com.revplay.dto.ArtistUpdateRequest;
+import com.revplay.service.ArtistService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/artists")
+@RequiredArgsConstructor
+public class ArtistManagementController {
+
+    private final ArtistService artistService;
+
+    // 1️⃣ Register artist profile
+    @PostMapping("/register")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ArtistProfileResponse registerArtist(
+            @Valid @RequestBody ArtistRegisterRequest request) {
+
+        return artistService.registerArtist(request);
+    }
+
+    // 2️⃣ Get current logged-in artist profile
+    @GetMapping("/me")
+    public ArtistProfileResponse getMyProfile() {
+        return artistService.getMyProfile();
+    }
+
+    // 3️⃣ Update artist profile
+    @PutMapping("/update")
+    public ArtistProfileResponse updateProfile(
+            @RequestBody ArtistUpdateRequest request) {
+
+        return artistService.updateProfile(request);
+    }
+}

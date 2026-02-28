@@ -1,0 +1,29 @@
+<!-- templates/fragments/navbar.html -->
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<nav th:fragment="mainNav" class="navbar">
+    <a th:href="@{/}" class="nav-brand">RevPlay</a>
+
+    <div class="nav-links">
+        <a th:href="@{/}">Home</a>
+        <a th:href="@{/library}">Library</a>
+
+        <!-- Shown only when logged out -->
+        <div sec:authorize="!isAuthenticated()">
+            <a th:href="@{/auth/register}">Sign Up</a>
+            <a th:href="@{/auth/login}" class="btn-login" style="padding: 8px 16px; background: white; color: black; border-radius: 20px;">Log In</a>
+        </div>
+
+        <!-- Shown only when logged in -->
+        <div sec:authorize="isAuthenticated()" style="display: flex; align-items: center; gap: 15px;">
+            <a th:href="@{/user/profile}">
+                <span sec:authentication="principal.username">Username</span>
+            </a>
+            <form th:action="@{/auth/logout}" method="post" style="margin: 0;">
+                <button type="submit" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px;">Logout</button>
+            </form>
+        </div>
+    </div>
+</nav>
+</body>
+</html>

@@ -1,17 +1,89 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head><title>Profile - RevPlay</title></head>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Profile - RevPlay</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <style>
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            padding: 40px;
+            background: linear-gradient(180deg, #333 0%, var(--bg-dark) 100%);
+        }
+        .profile-pic {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background-color: #535353;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            color: #b3b3b3;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        .profile-info h1 {
+            font-size: 48px;
+            margin: 0 0 10px 0;
+        }
+        .profile-container {
+            padding: 0 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
 <body>
-<h1>My Profile</h1>
-<div th:if="${success}" style="color:green" th:text="${success}"></div>
-<div th:if="${error}" style="color:red" th:text="${error}"></div>
-<form th:action="@{/user/profile}" method="post">
-    <p>Email: <span th:text="${user.email}"></span></p>
-    <p>Username: <span th:text="${user.username}"></span></p>
-    <p>Display Name: <input type="text" name="displayName" th:value="${user.displayName}"/></p>
-    <p>Bio: <textarea name="bio" th:text="${user.bio}"></textarea></p>
-    <button type="submit">Update Profile</button>
-</form>
-<a th:href="@{/auth/logout}">Logout</a>
+<div th:replace="~{fragments/navbar :: mainNav}"></div>
+
+<div class="profile-header">
+    <div class="profile-pic">
+        <!-- Show initial of display name -->
+        <span th:text="${#strings.substring(user.displayName, 0, 1).toUpperCase()}">U</span>
+    </div>
+    <div class="profile-info">
+        <span style="text-transform: uppercase; font-size: 12px; font-weight: bold;" th:text="${user.role}">LISTENER</span>
+        <h1 th:text="${user.displayName}">Display Name</h1>
+        <p style="color: var(--text-muted);">
+            <span th:text="${user.username}">@username</span> •
+            Joined <span th:text="${joinedDate}">Jan 2026</span>
+        </p>
+    </div>
+</div>
+
+<div class="profile-container">
+    <h2>Edit Profile</h2>
+
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+    <form th:action="@{/user/profile}" method="post" style="max-width: 500px; background: var(--bg-surface); padding: 30px; border-radius: 8px;">
+
+        <div class="form-group">
+            <label>Email (Cannot be changed)</label>
+            <input type="text" class="form-control" th:value="${user.email}" disabled style="opacity: 0.6;"/>
+        </div>
+
+        <div class="form-group">
+            <label for="displayName">Display Name</label>
+            <input type="text" id="displayName" name="displayName" class="form-control" th:value="${user.displayName}" required/>
+        </div>
+
+        <div class="form-group">
+            <label for="bio">Bio</label>
+            <textarea id="bio" name="bio" class="form-control" rows="4" th:text="${user.bio}" placeholder="Tell us about yourself..."></textarea>
+        </div>
+
+        <button type="submit" class="btn-primary" style="margin-top: 10px; width: auto; padding: 10px 30px;">Save Profile</button>
+    </form>
+
+    <!-- Artist Upgrade Button (If listener) -->
+    <div th:if="${user.role.name() == 'LISTENER'}" style="margin-top: 40px; padding: 20px; border: 1px dashed var(--border-color); border-radius: 8px;">
+        <h3>Are you a musician?</h3>
+        <p>Upload your own music, track analytics, and build your fanbase on RevPlay.</p>
+        <a href="#" class="btn-primary" style="display: inline-block; width: auto; background: white; color: black; padding: 10px 20px;">Upgrade to Artist</a>
+    </div>
+</div>
 </body>
 </html>

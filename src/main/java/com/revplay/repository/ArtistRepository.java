@@ -9,5 +9,9 @@ import java.util.Optional;
 @Repository
 public interface ArtistRepository extends JpaRepository<Artist, Long> {
 
+    // Efficient lookup using foreign key
     Optional<Artist> findByUserId(Long userId);
+
+    // Optional: existence check
+    boolean existsByUserId(Long userId);
 }

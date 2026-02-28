@@ -1,33 +1,40 @@
 package com.revplay.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "playlist_follows")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(exclude = {"user", "playlist"})
 public class PlaylistFollow {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    // ✅ Proper relationship instead of raw Long userId
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
-    @Column(name = "playlist_id", nullable = false)
-    private Long playlistId;
+    // ✅ Proper relationship instead of raw Long playlistId
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "playlist_id", nullable = false)
+    private Playlist playlist;
 
-    @Column(name = "followed_at")
+    @Column(name = "followed_at", nullable = false, updatable = false)
     private LocalDateTime followedAt;
 
     @PrePersist
     protected void onCreate() {
-        followedAt = LocalDateTime.now();
+        this.followedAt = LocalDateTime.now();
     }
 }
