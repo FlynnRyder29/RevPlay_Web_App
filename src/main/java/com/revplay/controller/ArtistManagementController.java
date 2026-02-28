@@ -19,7 +19,9 @@ public class ArtistManagementController {
     // 1️⃣ Register artist profile
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public ArtistProfileResponse registerArtist(@RequestBody ArtistRegisterRequest request) {
+    public ArtistProfileResponse registerArtist(
+            @Valid @RequestBody ArtistRegisterRequest request) {
+
         return artistService.registerArtist(request);
     }
 
