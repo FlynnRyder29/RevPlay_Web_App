@@ -21,13 +21,14 @@ public class ArtistServiceImpl implements ArtistService {
     public ArtistProfileResponse registerArtist(ArtistRegisterRequest request) {
 
         User user = getCurrentUser();
+        Long userId = user.getId();
 
-        if (artistRepository.existsByUser(user)) {
+        if (artistRepository.existsByUserId(userId)) {
             throw new RuntimeException("Artist profile already exists");
         }
 
         Artist artist = new Artist();
-        artist.setUser(user);
+        artist.setUserId(userId);
         artist.setArtistName(request.getArtistName());
         artist.setBio(request.getBio());
         artist.setGenre(request.getGenre());
@@ -39,26 +40,28 @@ public class ArtistServiceImpl implements ArtistService {
 
         artistRepository.save(artist);
 
-        return mapToResponse(artist);
+        return mapToResponse(artist, user);
     }
 
     @Override
     public ArtistProfileResponse getMyProfile() {
 
         User user = getCurrentUser();
+        Long userId = user.getId();
 
-        Artist artist = artistRepository.findByUser(user)
+        Artist artist = artistRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Artist profile not found"));
 
-        return mapToResponse(artist);
+        return mapToResponse(artist, user);
     }
 
     @Override
     public ArtistProfileResponse updateProfile(ArtistRegisterRequest request) {
 
         User user = getCurrentUser();
+        Long userId = user.getId();
 
-        Artist artist = artistRepository.findByUser(user)
+        Artist artist = artistRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Artist profile not found"));
 
         artist.setArtistName(request.getArtistName());
@@ -72,7 +75,7 @@ public class ArtistServiceImpl implements ArtistService {
 
         artistRepository.save(artist);
 
-        return mapToResponse(artist);
+        return mapToResponse(artist, user);
     }
 
     private User getCurrentUser() {
@@ -85,12 +88,12 @@ public class ArtistServiceImpl implements ArtistService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
-    private ArtistProfileResponse mapToResponse(Artist artist) {
+    private ArtistProfileResponse mapToResponse(Artist artist, User user) {
 
         return ArtistProfileResponse.builder()
                 .id(artist.getId())
-                .username(artist.getUser().getUsername())
-                .email(artist.getUser().getEmail())
+                .username(user.getUsername())
+                .email(user.getEmail())
                 .artistName(artist.getArtistName())
                 .bio(artist.getBio())
                 .genre(artist.getGenre())

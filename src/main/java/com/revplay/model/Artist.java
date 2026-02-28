@@ -11,18 +11,16 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-@ToString(exclude = "user")
-@EqualsAndHashCode(exclude = "user")
+@ToString(exclude = "userId")
+@EqualsAndHashCode(exclude = "userId")
 public class Artist {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Proper relationship
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
-    private User user;
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
 
     @Column(name = "artist_name", nullable = false)
     private String artistName;

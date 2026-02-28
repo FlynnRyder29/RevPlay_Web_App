@@ -1,17 +1,17 @@
 package com.revplay.repository;
 
 import com.revplay.model.PlayEvent;
-import com.revplay.model.Song;
-import com.revplay.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+@Repository
 public interface PlayEventRepository extends JpaRepository<PlayEvent, Long> {
 
-    List<PlayEvent> findBySong(Song song);
+    List<PlayEvent> findBySongId(Long songId);
 
-    List<PlayEvent> findByUser(User user);
+    List<PlayEvent> findByUserId(Long userId);
 
-    long countBySong(Song song);
+    long countBySongId(Long songId);
 }
