@@ -1,6 +1,6 @@
 package com.revplay.controller;
 
-import com.revplay.model.Favorite;
+import com.revplay.dto.FavoriteDTO;
 import com.revplay.service.FavoriteService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +52,7 @@ public class FavoriteController {
     // GET MY FAVORITES
     // -------------------------
     @GetMapping
-    public ResponseEntity<List<Favorite>> getMyFavorites() {
+    public ResponseEntity<List<FavoriteDTO>> getMyFavorites() {
 
         log.info("GET /api/favorites");
 

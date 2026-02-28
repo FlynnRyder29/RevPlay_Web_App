@@ -1,6 +1,7 @@
 package com.revplay.controller;
 
-import com.revplay.model.ListeningHistory;
+import com.revplay.dto.HistoryDTO;
+import com.revplay.dto.HistoryRequest;
 import com.revplay.service.HistoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +27,11 @@ public class HistoryController {
     // -------------------------
     @PostMapping
     public ResponseEntity<Void> addToHistory(@RequestBody HistoryRequest request) {
+
+        log.info("POST /api/history songId={}", request.getSongId());
+
         historyService.addToHistory(request.getSongId());
+
         return ResponseEntity.ok().build();
     }
 
@@ -34,11 +39,17 @@ public class HistoryController {
     // GET MY HISTORY
     // -------------------------
     @GetMapping
-    public Page<ListeningHistory> getMyHistory(int limit) {
-        if (limit <= 0) limit = 50;
-        if (limit > 200) limit = 200;
+    public ResponseEntity<Page<HistoryDTO>> getMyHistory(
+            @RequestParam(defaultValue = "50") int limit) {
 
-        // -------------------------
+        log.info("GET /api/history?limit={}", limit);
+
+        return ResponseEntity.ok(
+                historyService.getMyHistory(limit)
+        );
+    }
+
+    // -------------------------
     // CLEAR HISTORY
     // -------------------------
     @DeleteMapping
