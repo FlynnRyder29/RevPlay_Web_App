@@ -16,13 +16,15 @@ public class PlayEvent {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Using foreign key IDs directly (until Song/User entities exist)
-    @Column(name = "song_id", nullable = false)
-    private Long songId;
+    // Proper relationship to Song
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "song_id", nullable = false)
+    private Song song;
 
-    // Nullable because DB allows NULL (ON DELETE SET NULL)
-    @Column(name = "user_id")
-    private Long userId;
+    // Proper relationship to User (nullable allowed)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @Column(name = "played_at", nullable = false)
     private LocalDateTime playedAt;
