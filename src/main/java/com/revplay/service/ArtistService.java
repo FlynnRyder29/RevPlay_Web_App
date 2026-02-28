@@ -2,6 +2,7 @@ package com.revplay.service;
 
 import com.revplay.dto.ArtistProfileResponse;
 import com.revplay.dto.ArtistRegisterRequest;
+import com.revplay.dto.ArtistUpdateRequest;
 
 public interface ArtistService {
 
@@ -9,5 +10,5 @@ public interface ArtistService {
 
     ArtistProfileResponse getMyProfile();
 
-    ArtistProfileResponse updateProfile(ArtistRegisterRequest request);
+    ArtistProfileResponse updateProfile(ArtistUpdateRequest request);
 }

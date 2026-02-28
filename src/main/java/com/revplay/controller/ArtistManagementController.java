@@ -2,9 +2,11 @@ package com.revplay.controller;
 
 import com.revplay.dto.ArtistProfileResponse;
 import com.revplay.dto.ArtistRegisterRequest;
+import com.revplay.dto.ArtistUpdateRequest;
 import com.revplay.service.ArtistService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -16,9 +18,8 @@ public class ArtistManagementController {
 
     // 1️⃣ Register artist profile
     @PostMapping("/register")
-    public ArtistProfileResponse registerArtist(
-            @Valid @RequestBody ArtistRegisterRequest request) {
-
+    @ResponseStatus(HttpStatus.CREATED)
+    public ArtistProfileResponse registerArtist(@RequestBody ArtistRegisterRequest request) {
         return artistService.registerArtist(request);
     }
 
@@ -31,7 +32,7 @@ public class ArtistManagementController {
     // 3️⃣ Update artist profile
     @PutMapping("/update")
     public ArtistProfileResponse updateProfile(
-            @Valid @RequestBody ArtistRegisterRequest request) {
+            @RequestBody ArtistUpdateRequest request) {
 
         return artistService.updateProfile(request);
     }

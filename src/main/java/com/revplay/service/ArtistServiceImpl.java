@@ -2,6 +2,9 @@ package com.revplay.service;
 
 import com.revplay.dto.ArtistProfileResponse;
 import com.revplay.dto.ArtistRegisterRequest;
+import com.revplay.dto.ArtistUpdateRequest;
+import com.revplay.exception.DuplicateResourceException;
+import com.revplay.exception.ResourceNotFoundException;
 import com.revplay.model.Artist;
 import com.revplay.model.User;
 import com.revplay.repository.ArtistRepository;
@@ -21,14 +24,15 @@ public class ArtistServiceImpl implements ArtistService {
     public ArtistProfileResponse registerArtist(ArtistRegisterRequest request) {
 
         User user = getCurrentUser();
-        Long userId = user.getId();
 
-        if (artistRepository.existsByUserId(userId)) {
-            throw new RuntimeException("Artist profile already exists");
+        if (artistRepository.existsByUserId(user.getId())) {
+            throw new DuplicateResourceException(
+                    "Artist profile already exists for this user"
+            );
         }
 
         Artist artist = new Artist();
-        artist.setUserId(userId);
+        artist.setUserId(user.getId());
         artist.setArtistName(request.getArtistName());
         artist.setBio(request.getBio());
         artist.setGenre(request.getGenre());
@@ -40,42 +44,66 @@ public class ArtistServiceImpl implements ArtistService {
 
         artistRepository.save(artist);
 
-        return mapToResponse(artist, user);
+        return mapToResponse(artist);
     }
 
     @Override
     public ArtistProfileResponse getMyProfile() {
 
         User user = getCurrentUser();
-        Long userId = user.getId();
 
-        Artist artist = artistRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Artist profile not found"));
+        Artist artist = artistRepository
+                .findByUserId(user.getId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Artist",
+                        "userId",
+                        user.getId()
+                ));
 
-        return mapToResponse(artist, user);
+        return mapToResponse(artist);
     }
 
     @Override
-    public ArtistProfileResponse updateProfile(ArtistRegisterRequest request) {
+    public ArtistProfileResponse updateProfile(ArtistUpdateRequest request) {
 
         User user = getCurrentUser();
-        Long userId = user.getId();
 
-        Artist artist = artistRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Artist profile not found"));
+        Artist artist = artistRepository
+                .findByUserId(user.getId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Artist",
+                        "userId",
+                        user.getId()
+                ));
 
-        artist.setArtistName(request.getArtistName());
-        artist.setBio(request.getBio());
-        artist.setGenre(request.getGenre());
-        artist.setInstagram(request.getInstagram());
-        artist.setTwitter(request.getTwitter());
-        artist.setYoutube(request.getYoutube());
-        artist.setSpotify(request.getSpotify());
-        artist.setWebsite(request.getWebsite());
+        // Prevent null overwrite (BLOCKING FIX)
+        if (request.getArtistName() != null)
+            artist.setArtistName(request.getArtistName());
+
+        if (request.getBio() != null)
+            artist.setBio(request.getBio());
+
+        if (request.getGenre() != null)
+            artist.setGenre(request.getGenre());
+
+        if (request.getInstagram() != null)
+            artist.setInstagram(request.getInstagram());
+
+        if (request.getTwitter() != null)
+            artist.setTwitter(request.getTwitter());
+
+        if (request.getYoutube() != null)
+            artist.setYoutube(request.getYoutube());
+
+        if (request.getSpotify() != null)
+            artist.setSpotify(request.getSpotify());
+
+        if (request.getWebsite() != null)
+            artist.setWebsite(request.getWebsite());
 
         artistRepository.save(artist);
 
-        return mapToResponse(artist, user);
+        return mapToResponse(artist);
     }
 
     private User getCurrentUser() {
@@ -85,15 +113,16 @@ public class ArtistServiceImpl implements ArtistService {
                 .getName();
 
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "User",
+                        "username",
+                        username
+                ));
     }
 
-    private ArtistProfileResponse mapToResponse(Artist artist, User user) {
-
+    private ArtistProfileResponse mapToResponse(Artist artist) {
         return ArtistProfileResponse.builder()
                 .id(artist.getId())
-                .username(user.getUsername())
-                .email(user.getEmail())
                 .artistName(artist.getArtistName())
                 .bio(artist.getBio())
                 .genre(artist.getGenre())
