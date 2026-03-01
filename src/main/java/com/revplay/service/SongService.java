@@ -21,6 +21,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.revplay.specification.SongSpecification;
+import org.springframework.data.jpa.domain.Specification;
 
 @Service
 @RequiredArgsConstructor
@@ -195,6 +197,19 @@ public class SongService {
                     "You are not allowed to modify this song"
             );
         }
+    }
+
+    @Transactional(readOnly = true)
+    public Page<SongDTO> filterSongs(String genre, String artist, String album, Integer year, Pageable pageable) {
+        log.info("Filtering songs - genre={}, artist={}, album={}, year={}", genre, artist, album, year);
+
+        Specification<Song> spec = Specification
+                .where(SongSpecification.hasGenre(genre))
+                .and(SongSpecification.hasArtistName(artist))
+                .and(SongSpecification.hasAlbumName(album))
+                .and(SongSpecification.hasYear(year));
+
+        return songRepository.findAll(spec, pageable).map(this::mapToDTO);
     }
 
     // ✅ FIX: All fields mapped — title, genre, duration, audioUrl, coverImageUrl restored

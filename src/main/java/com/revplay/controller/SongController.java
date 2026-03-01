@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -103,5 +104,15 @@ public class SongController {
         log.info("PATCH /api/songs/{}/visibility -> {}", id, visibility);
 
         return ResponseEntity.ok(songService.updateVisibility(id, visibility.toUpperCase()));
+    }
+    @GetMapping("/filter")
+    public ResponseEntity<Page<SongDTO>> filterSongs(
+            @RequestParam(required = false) String genre,
+            @RequestParam(required = false) String artist,
+            @RequestParam(required = false) String album,
+            @RequestParam(required = false) Integer year,
+            @PageableDefault(size = 20) Pageable pageable) {
+        log.info("GET /api/songs/filter");
+        return ResponseEntity.ok(songService.filterSongs(genre, artist, album, year, pageable));
     }
 }
