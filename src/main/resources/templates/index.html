@@ -1,20 +1,39 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head><title>RevPlay - Music Streaming</title></head>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<!-- We pass the title parameter to the head fragment -->
+<head th:replace="~{layout :: head('Home')}"></head>
 <body>
-<h1>Welcome to RevPlay!</h1>
-<div sec:authorize="isAuthenticated()">
-    <p>You are logged in.
-        <a th:href="@{/user/profile}">View Profile</a> |
-        <a th:href="@{/auth/logout}">Logout</a>
-    </p>
-</div>
-<div sec:authorize="!isAuthenticated()">
-    <p>
-        <a th:href="@{/auth/login}">Login</a> |
-        <a th:href="@{/auth/register}">Register</a>
-    </p>
+<!-- We call the layout page fragment, and pass the ~{::#home-content} block into it -->
+<div th:replace="~{layout :: page(~{::#home-content})}">
+
+    <!-- This is the content that gets injected into the layout's <main> area -->
+    <div id="home-content">
+
+        <!-- Welcome Guest Section -->
+        <div sec:authorize="!isAuthenticated()" style="text-align: center; padding: 60px 20px;">
+            <h1 style="font-size: 3rem; margin-bottom: 20px; color: var(--primary-color);">Music for everyone.</h1>
+            <p style="font-size: 1.2rem; margin-bottom: 40px; color: var(--text-muted);">Millions of songs. No credit card needed.</p>
+            <a th:href="@{/auth/register}" class="btn-primary" style="display: inline-block; padding: 15px 40px; width: auto; font-size: 1.1rem;">GET REVPLAY FREE</a>
+        </div>
+
+        <!-- Welcome Logged In User -->
+        <div sec:authorize="isAuthenticated()">
+            <h1 style="margin-bottom: 30px;">Good Afternoon!</h1>
+
+            <h2>Recently Added</h2>
+            <!-- We will populate this with actual songs from the DB in Day 5. For now, testing the grid. -->
+            <div class="song-grid">
+                <!-- Example empty cards to see how the grid looks -->
+                <div th:replace="~{fragments/song-card :: card(song=null)}"></div>
+                <div th:replace="~{fragments/song-card :: card(song=null)}"></div>
+                <div th:replace="~{fragments/song-card :: card(song=null)}"></div>
+                <div th:replace="~{fragments/song-card :: card(song=null)}"></div>
+                <div th:replace="~{fragments/song-card :: card(song=null)}"></div>
+                <div th:replace="~{fragments/song-card :: card(song=null)}"></div>
+            </div>
+        </div>
+
+    </div>
 </div>
 </body>
 </html>

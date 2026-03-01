@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+    Usage: <div th:replace="~{fragments/song-card :: card(song=${someSongObj})}"></div>
+    Note: We use safe navigation (?.) in case the Song fields are empty or it's a mock object for now
+-->
+<div th:fragment="card(song)" class="song-card"
+     th:data-id="${song?.id}"
+     th:data-url="${song?.fileUrl}"
+     th:data-title="${song?.title}"
+     th:data-artist="${song?.artist?.name}">
+
+    <img th:src="${song?.coverUrl != null ? song.coverUrl : 'https://www.shutterstock.com/shutterstock/photos/2626947211/display_1500/stock-vector-jazz-music-poster-design-template-2626947211.jpg'}" alt="Cover">
+    <div class="play-button-overlay">▶</div>
+    <div class="song-title" th:text="${song?.title != null ? song.title : 'Unknown Title'}">Song Title</div>
+    <div class="song-artist" th:text="${song?.artist?.name != null ? song.artist.name : 'Unknown Artist'}">Artist Name</div>
+</div>
+</body>
+</html>

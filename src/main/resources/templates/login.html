@@ -1,16 +1,35 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head><title>Login - RevPlay</title></head>
+<head>
+    <title>Log in - RevPlay</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
 <body>
-<h1>Login</h1>
-<div th:if="${param.error}" style="color:red">Invalid email/username or password.</div>
-<div th:if="${param.logout}" style="color:green">You have been logged out.</div>
-<div th:if="${success}" style="color:green" th:text="${success}"></div>
-<form th:action="@{/auth/login}" method="post">
-    <p>Email or Username: <input type="text" name="emailOrUsername" required/></p>
-    <p>Password: <input type="password" name="password" required/></p>
-    <button type="submit">Login</button>
-</form>
-<p>Don't have an account? <a th:href="@{/auth/register}">Register here</a></p>
+<div class="auth-container">
+    <h1>Log in to RevPlay</h1>
+
+    <div th:if="${param.error}" class="alert alert-error">Invalid email/username or password.</div>
+    <div th:if="${param.logout}" class="alert alert-success">You have been logged out successfully.</div>
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+    <!-- Note: action must be /auth/login exactly so Spring Security intercepts it -->
+    <form th:action="@{/auth/login}" method="post">
+        <div class="form-group">
+            <label for="emailOrUsername">Email or Username</label>
+            <input type="text" id="emailOrUsername" name="emailOrUsername" class="form-control" placeholder="Email or username" required autofocus/>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" class="form-control" placeholder="Password" required/>
+        </div>
+
+        <button type="submit" class="btn-primary" style="margin-top: 20px;">Log In</button>
+    </form>
+
+    <div class="auth-links">
+        <p>Don't have an account? <a th:href="@{/auth/register}" style="color: white; text-decoration: underline;">Sign up for RevPlay</a>.</p>
+    </div>
+</div>
 </body>
 </html>
