@@ -1,9 +1,12 @@
 package com.revplay.config;
 
+import com.revplay.exception.RevPlayAccessDeniedHandler;
+import com.revplay.exception.RevPlayAuthenticationEntryPoint;
 import com.revplay.service.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -19,11 +22,19 @@ public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
 
+    private final RevPlayAuthenticationEntryPoint authEntryPoint;
+    private final RevPlayAccessDeniedHandler accessDeniedHandler;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
         http
+
+                // ✅ Disable CSRF only for API endpoints
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
                 .authorizeHttpRequests(auth -> auth
-                        // Public pages
+
+                        // ✅ Public pages
                         .requestMatchers(
                                 "/", "/auth/register", "/auth/login",
                                 "/css/**", "/js/**", "/images/**",
@@ -31,16 +42,40 @@ public class SecurityConfig {
                                 "/swagger-ui/**", "/v3/api-docs/**"
                         ).permitAll()
 
-                        // Artist-only pages
-                        .requestMatchers("/artist/dashboard/**", "/api/artists/me/**", "/api/artists/analytics/**")
+                                // GET — listeners can browse
+                                .requestMatchers(HttpMethod.GET, "/api/songs/**")
+                                .authenticated()
+
+                                // Modify — only ARTIST
+                                .requestMatchers(HttpMethod.POST, "/api/songs/**")
+                                .hasRole("ARTIST")
+
+                                .requestMatchers(HttpMethod.PUT, "/api/songs/**")
+                                .hasRole("ARTIST")
+
+                                .requestMatchers(HttpMethod.DELETE, "/api/songs/**")
+                                .hasRole("ARTIST")
+
+                                .requestMatchers(HttpMethod.PATCH, "/api/songs/**")
+                                .hasRole("ARTIST")
+                        // ✅ Artist dashboard & analytics
+                        .requestMatchers("/artist/dashboard/**",
+                                "/api/artists/me/**",
+                                "/api/artists/analytics/**")
                         .hasRole("ARTIST")
 
-                        // Admin-only pages
+                        // ✅ Admin
                         .requestMatchers("/admin/**").hasRole("ADMIN")
 
-                        // Everything else requires login
+                        // ✅ Everything else
                         .anyRequest().authenticated()
                 )
+
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(authEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler)
+                )
+
                 .formLogin(form -> form
                         .loginPage("/auth/login")
                         .loginProcessingUrl("/auth/login")
@@ -50,12 +85,14 @@ public class SecurityConfig {
                         .failureUrl("/auth/login?error=true")
                         .permitAll()
                 )
+
                 .logout(logout -> logout
                         .logoutUrl("/auth/logout")
                         .logoutSuccessUrl("/auth/login?logout=true")
                         .deleteCookies("JSESSIONID")
                         .permitAll()
                 )
+
                 .userDetailsService(userDetailsService);
 
         return http.build();
@@ -67,7 +104,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
+            throws Exception {
         return config.getAuthenticationManager();
     }
 }
