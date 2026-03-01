@@ -1,5 +1,6 @@
 package com.revplay.dto;
 
+import com.revplay.model.Song;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -29,4 +30,7 @@ public class SongCreateRequest {
     private LocalDate releaseDate;
 
     private Long albumId; // optional
+
+    // ✅ ADD THIS
+    private Song.Visibility visibility;  // optional (defaults to PUBLIC if null)
 }
