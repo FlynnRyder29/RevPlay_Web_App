@@ -1,11 +1,13 @@
 spring:
+  profiles:
+    active: dev
   application:
     name: RevPlay_P2
 
   datasource:
     url: jdbc:mysql://localhost:3306/revplay_db?createDatabaseIfNotExist=true
     username: root
-    password: your password
+    password: Skywarrior@2002#
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
