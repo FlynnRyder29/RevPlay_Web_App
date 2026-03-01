@@ -55,6 +55,20 @@ public class PlaylistController {
     }
 
     // -------------------------
+    // GET PUBLIC PLAYLISTS
+    // -------------------------
+
+    @GetMapping("/public")
+    public ResponseEntity<List<PlaylistDTO>> getPublicPlaylists() {
+
+        log.info("GET /api/playlists/public");
+
+        return ResponseEntity.ok(
+                playlistService.getPublicPlaylists()
+        );
+    }
+
+    // -------------------------
     // GET BY ID
     // -------------------------
 
@@ -94,6 +108,84 @@ public class PlaylistController {
         log.info("DELETE /api/playlists/{}", id);
 
         playlistService.deletePlaylist(id);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    // -------------------------
+    // ADD SONG TO PLAYLIST
+    // -------------------------
+
+    @PostMapping("/{id}/songs/{songId}")
+    public ResponseEntity<Void> addSong(
+            @PathVariable Long id,
+            @PathVariable Long songId) {
+
+        log.info("POST /api/playlists/{}/songs/{}", id, songId);
+
+        playlistService.addSongToPlaylist(id, songId);
+
+        return ResponseEntity.ok().build();
+    }
+
+    // -------------------------
+    // REMOVE SONG FROM PLAYLIST
+    // -------------------------
+
+    @DeleteMapping("/{id}/songs/{songId}")
+    public ResponseEntity<Void> removeSong(
+            @PathVariable Long id,
+            @PathVariable Long songId) {
+
+        log.info("DELETE /api/playlists/{}/songs/{}", id, songId);
+
+        playlistService.removeSongFromPlaylist(id, songId);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    // -------------------------
+    // REORDER SONGS
+    // -------------------------
+
+    // Request body: ordered list of songIds
+    // e.g. [3, 1, 5, 2] — songId at index 0 gets position 0
+    @PutMapping("/{id}/reorder")
+    public ResponseEntity<Void> reorderSongs(
+            @PathVariable Long id,
+            @RequestBody List<Long> orderedSongIds) {
+
+        log.info("PUT /api/playlists/{}/reorder - {} songs", id, orderedSongIds.size());
+
+        playlistService.reorderSongs(id, orderedSongIds);
+
+        return ResponseEntity.ok().build();
+    }
+
+    // -------------------------
+    // FOLLOW PLAYLIST
+    // -------------------------
+
+    @PostMapping("/{id}/follow")
+    public ResponseEntity<Void> followPlaylist(@PathVariable Long id) {
+
+        log.info("POST /api/playlists/{}/follow", id);
+
+        playlistService.followPlaylist(id);
+
+        return ResponseEntity.ok().build();
+    }
+
+    // -------------------------
+    // UNFOLLOW PLAYLIST
+    // -------------------------
+
+    @DeleteMapping("/{id}/follow")
+    public ResponseEntity<Void> unfollowPlaylist(@PathVariable Long id) {
+
+        log.info("DELETE /api/playlists/{}/follow", id);
+
+        playlistService.unfollowPlaylist(id);
 
         return ResponseEntity.noContent().build();
     }
