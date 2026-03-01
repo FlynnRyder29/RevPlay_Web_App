@@ -1,12 +1,14 @@
 package com.revplay.config;
 
+import com.revplay.exception.RevPlayAccessDeniedHandler;
+import com.revplay.exception.RevPlayAuthenticationEntryPoint;
 import com.revplay.service.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -15,16 +17,21 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
 
+    private final RevPlayAuthenticationEntryPoint authEntryPoint;
+    private final RevPlayAccessDeniedHandler accessDeniedHandler;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
+
+                // ✅ Disable CSRF only for API endpoints
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
                 .authorizeHttpRequests(auth -> auth
 
                         // ✅ Public pages
@@ -35,9 +42,22 @@ public class SecurityConfig {
                                 "/swagger-ui/**", "/v3/api-docs/**"
                         ).permitAll()
 
-                        // ✅ Song management (Artist only)
-                        .requestMatchers("/api/songs/**").hasRole("ARTIST")
+                                // GET — listeners can browse
+                                .requestMatchers(HttpMethod.GET, "/api/songs/**")
+                                .authenticated()
 
+                                // Modify — only ARTIST
+                                .requestMatchers(HttpMethod.POST, "/api/songs/**")
+                                .hasRole("ARTIST")
+
+                                .requestMatchers(HttpMethod.PUT, "/api/songs/**")
+                                .hasRole("ARTIST")
+
+                                .requestMatchers(HttpMethod.DELETE, "/api/songs/**")
+                                .hasRole("ARTIST")
+
+                                .requestMatchers(HttpMethod.PATCH, "/api/songs/**")
+                                .hasRole("ARTIST")
                         // ✅ Artist dashboard & analytics
                         .requestMatchers("/artist/dashboard/**",
                                 "/api/artists/me/**",
@@ -49,6 +69,11 @@ public class SecurityConfig {
 
                         // ✅ Everything else
                         .anyRequest().authenticated()
+                )
+
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(authEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler)
                 )
 
                 .formLogin(form -> form

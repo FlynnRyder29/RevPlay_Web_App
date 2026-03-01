@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
  * Triggered by: missing/expired JWT, bad credentials.
  */
 @Component
-class RevPlayAuthenticationEntryPoint implements AuthenticationEntryPoint {
+public class RevPlayAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     private static final Logger log = LoggerFactory.getLogger(RevPlayAuthenticationEntryPoint.class);
 
@@ -75,7 +75,7 @@ class RevPlayAuthenticationEntryPoint implements AuthenticationEntryPoint {
  * Triggered by: @PreAuthorize failures, role mismatches.
  */
 @Component
-class RevPlayAccessDeniedHandler implements AccessDeniedHandler {
+public class RevPlayAccessDeniedHandler implements AccessDeniedHandler {
 
     private static final Logger log = LoggerFactory.getLogger(RevPlayAccessDeniedHandler.class);
 

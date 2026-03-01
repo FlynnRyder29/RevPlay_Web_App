@@ -1,9 +1,8 @@
 package com.revplay.controller;
 
 import com.revplay.dto.SongDTO;
-import com.revplay.dto.SongCreateRequest;
-import com.revplay.dto.SongUpdateRequest;
 import com.revplay.exception.BadRequestException;
+import com.revplay.model.Song;
 import com.revplay.service.SongService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -12,12 +11,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.util.Set;
@@ -35,10 +32,7 @@ public class SongController {
 
     private final SongService songService;
 
-    /* =========================================================
-       EXISTING ENDPOINTS (UNCHANGED)
-       ========================================================= */
-
+    // GET /api/songs
     @GetMapping
     public ResponseEntity<Page<SongDTO>> getAllSongs(
             @RequestParam(defaultValue = "0") @Min(0) int page,
@@ -54,16 +48,20 @@ public class SongController {
                 ? Sort.by(safeSortBy).ascending()
                 : Sort.by(safeSortBy).descending();
 
+        // ✅ FIX: Construct pageable (TL compile issue)
         Pageable pageable = PageRequest.of(page, size, sort);
+
         return ResponseEntity.ok(songService.getAllSongs(pageable));
     }
 
+    // GET /api/songs/{id}
     @GetMapping("/{id}")
     public ResponseEntity<SongDTO> getSongById(@PathVariable Long id) {
         log.info("GET /api/songs/{}", id);
         return ResponseEntity.ok(songService.getSongById(id));
     }
 
+    // GET /api/songs/search
     @GetMapping("/search")
     public ResponseEntity<Page<SongDTO>> searchSongs(
             @RequestParam("q") String keyword,
@@ -75,47 +73,14 @@ public class SongController {
         }
 
         log.info("GET /api/songs/search - keyword='{}'", keyword);
+
+        // ✅ FIX: Construct pageable (TL compile issue)
         Pageable pageable = PageRequest.of(page, size);
+
         return ResponseEntity.ok(songService.searchSongs(keyword.trim(), pageable));
     }
 
-    /* =========================================================
-       DAY 4 ENDPOINTS (ARTIST ONLY)
-       ========================================================= */
-
-    // CREATE SONG
-    @PostMapping
-    public ResponseEntity<SongDTO> createSong(
-            @Valid @RequestBody SongCreateRequest request) {
-
-        log.info("POST /api/songs - Creating new song");
-
-        SongDTO createdSong = songService.createSong(request);
-        return new ResponseEntity<>(createdSong, HttpStatus.CREATED);
-    }
-
-    // UPDATE SONG
-    @PutMapping("/{id}")
-    public ResponseEntity<SongDTO> updateSong(
-            @PathVariable Long id,
-            @Valid @RequestBody SongUpdateRequest request) {
-
-        log.info("PUT /api/songs/{} - Updating song", id);
-
-        return ResponseEntity.ok(songService.updateSong(id, request));
-    }
-
-    // DELETE SONG
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteSong(@PathVariable Long id) {
-
-        log.info("DELETE /api/songs/{} - Deleting song", id);
-
-        songService.deleteSong(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    // UPDATE VISIBILITY
+    // PATCH /api/songs/{id}/visibility
     @PatchMapping("/{id}/visibility")
     public ResponseEntity<SongDTO> updateVisibility(
             @PathVariable Long id,
@@ -125,8 +90,18 @@ public class SongController {
             throw new BadRequestException("Visibility cannot be blank");
         }
 
-        log.info("PATCH /api/songs/{}/visibility - New visibility={}", id, visibility);
+        // ✅ FIX: Validate enum BEFORE calling service
+        try {
+            Song.Visibility.valueOf(visibility.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException(
+                    "Invalid visibility value: " + visibility +
+                            ". Allowed values: PUBLIC, UNLISTED, PRIVATE"
+            );
+        }
 
-        return ResponseEntity.ok(songService.updateVisibility(id, visibility));
+        log.info("PATCH /api/songs/{}/visibility -> {}", id, visibility);
+
+        return ResponseEntity.ok(songService.updateVisibility(id, visibility.toUpperCase()));
     }
 }
