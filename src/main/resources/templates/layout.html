@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<!-- layout.html -->
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title + ' - RevPlay'}">RevPlay</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <!-- We will add player.js here on Day 5 -->
+</head>
+<body>
+<!-- This base layout is defined as a fragment itself -->
+<div th:fragment="page(content)">
+    <div class="app-container">
+        <!-- Navbar -->
+        <div th:replace="~{fragments/navbar :: mainNav}"></div>
+
+        <!-- Main scrollable content injected here -->
+        <div class="main-content">
+            <main class="content-area">
+                <!-- The dynamic content from other pages goes here -->
+                <th:block th:replace="${content}"></th:block>
+
+                <!-- Footer at the bottom of the scroll area -->
+                <div th:replace="~{fragments/footer :: mainFooter}" style="margin-top: 50px;"></div>
+            </main>
+        </div>
+
+        <!-- If logged in, show the global player bar at the bottom -->
+        <div sec:authorize="isAuthenticated()">
+            <div th:replace="~{fragments/player-bar :: player}"></div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="player" class="player-bar" id="global-player">
+    <!-- Left: Now Playing Info -->
+    <div class="player-left">
+        <img src="https://placehold.net/5.png" alt="Album Art" id="player-art" style="display: none;">
+        <div>
+            <div class="song-title" id="player-title" style="margin-bottom: 2px; font-size: 14px;">Select a song to play</div>
+            <div class="song-artist" id="player-artist" style="font-size: 12px;"></div>
+        </div>
+        <button class="control-btn" id="player-favorite" style="display: none;">🤍</button>
+    </div>
+
+    <!-- Center: Controls & Progress -->
+    <div class="player-center">
+        <div class="player-controls">
+            <button class="control-btn" id="btn-shuffle">🔀</button>
+            <button class="control-btn" id="btn-prev">⏮</button>
+            <button class="control-btn control-play" id="btn-play">▶</button>
+            <button class="control-btn" id="btn-next">⏭</button>
+            <button class="control-btn" id="btn-repeat">🔁</button>
+        </div>
+        <div class="progress-container">
+            <span class="progress-time" id="time-current">0:00</span>
+            <div class="progress-bar-bg" id="progress-container">
+                <div class="progress-bar-fill" id="progress-fill"></div>
+            </div>
+            <span class="progress-time" id="time-total">0:00</span>
+        </div>
+        <!-- Hidden HTML5 Audio Element that JS will use -->
+        <audio id="audio-element"></audio>
+    </div>
+
+    <!-- Right: Volume & Extra -->
+    <div class="player-right">
+        <button class="control-btn">🎧</button>
+        <button class="control-btn">🔊</button>
+        <div class="progress-bar-bg" style="width: 80px;">
+            <div class="progress-bar-fill" style="width: 100%;"></div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
