@@ -33,7 +33,7 @@ public class SongService {
     private final AlbumRepository albumRepository;
     private final UserRepository userRepository;
 
-    // ========================= READ METHODS =========================
+    // ========================= READ =========================
 
     @Transactional(readOnly = true)
     public Page<SongDTO> getAllSongs(Pageable pageable) {
@@ -86,9 +86,12 @@ public class SongService {
                 .album(album)
                 .build();
 
-        songRepository.save(song);
+        // ✅ FIX: Map the saved entity so id and createdAt are populated
+        Song saved = songRepository.save(song);
 
-        return mapToDTO(song);
+        log.info("Artist {} created song '{}'", currentUser.getUsername(), saved.getTitle());
+
+        return mapToDTO(saved);
     }
 
     // ========================= UPDATE =========================
@@ -131,7 +134,10 @@ public class SongService {
             song.setAlbum(album);
         }
 
-        return mapToDTO(song);
+        log.info("Artist {} updated song id={}", currentUser.getUsername(), id);
+
+        // ✅ FIX: Explicit save — don't rely on dirty checking alone
+        return mapToDTO(songRepository.save(song));
     }
 
     // ========================= DELETE =========================
@@ -147,6 +153,8 @@ public class SongService {
         validateOwnership(song.getArtist().getUserId(), currentUser.getId());
 
         songRepository.delete(song);
+
+        log.info("Artist {} deleted song id={}", currentUser.getUsername(), id);
     }
 
     // ========================= VISIBILITY =========================
@@ -163,7 +171,9 @@ public class SongService {
 
         song.setVisibility(Song.Visibility.valueOf(visibility));
 
-        return mapToDTO(song);
+        log.info("Artist {} changed visibility of song id={} to {}", currentUser.getUsername(), id, visibility);
+
+        return mapToDTO(songRepository.save(song));
     }
 
     // ========================= HELPERS =========================
@@ -187,6 +197,7 @@ public class SongService {
         }
     }
 
+    // ✅ FIX: All fields mapped — title, genre, duration, audioUrl, coverImageUrl restored
     private SongDTO mapToDTO(Song song) {
         return SongDTO.builder()
                 .id(song.getId())
