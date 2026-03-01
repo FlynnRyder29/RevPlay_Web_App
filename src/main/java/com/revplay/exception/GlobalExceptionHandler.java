@@ -5,11 +5,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.web.AuthenticationEntryPoint;
-import org.springframework.security.web.access.AccessDeniedHandler;
-import org.springframework.stereotype.Component;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -19,83 +14,10 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-// ============================================================
-// SPRING SECURITY — JSON ERROR HANDLERS
-//
-// Spring Security exceptions (AccessDeniedException,
-// AuthenticationException) bypass @RestControllerAdvice entirely.
-// These two @Component beans intercept them at the filter chain
-// level and return the same consistent JSON as ErrorResponse.
-//
-// Wire them in SecurityConfig:
-//
-//   @Autowired RevPlayAuthenticationEntryPoint authEntryPoint;
-//   @Autowired RevPlayAccessDeniedHandler      accessDeniedHandler;
-//
-//   http.exceptionHandling(ex -> ex
-//       .authenticationEntryPoint(authEntryPoint)
-//       .accessDeniedHandler(accessDeniedHandler));
-// ============================================================
 
-/**
- * Returns HTTP 401 Unauthorized when a request is unauthenticated.
- * Triggered by: missing/expired JWT, bad credentials.
- */
-@Component
-class RevPlayAuthenticationEntryPoint implements AuthenticationEntryPoint {
-
-    private static final Logger log = LoggerFactory.getLogger(RevPlayAuthenticationEntryPoint.class);
-
-    @Override
-    public void commence(HttpServletRequest request, HttpServletResponse response,
-                         AuthenticationException ex) throws IOException {
-
-        log.warn("Unauthenticated access | path={} | reason={}", request.getRequestURI(), ex.getMessage());
-
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(String.format(
-                "{\"timestamp\":\"%s\",\"status\":401,\"error\":\"Unauthorized\"," +
-                        "\"message\":\"Authentication is required to access this resource.\"," +
-                        "\"path\":\"%s\"}",
-                LocalDateTime.now(), request.getRequestURI()
-        ));
-    }
-}
-
-/**
- * Returns HTTP 403 Forbidden when an authenticated user lacks permission.
- * Triggered by: @PreAuthorize failures, role mismatches.
- */
-@Component
-class RevPlayAccessDeniedHandler implements AccessDeniedHandler {
-
-    private static final Logger log = LoggerFactory.getLogger(RevPlayAccessDeniedHandler.class);
-
-    @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response,
-                       AccessDeniedException ex) throws IOException {
-
-        log.warn("Access denied | path={} | reason={}", request.getRequestURI(), ex.getMessage());
-
-        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(String.format(
-                "{\"timestamp\":\"%s\",\"status\":403,\"error\":\"Forbidden\"," +
-                        "\"message\":\"You do not have permission to access this resource.\"," +
-                        "\"path\":\"%s\"}",
-                LocalDateTime.now(), request.getRequestURI()
-        ));
-    }
-}
 
 // ============================================================
 // GLOBAL EXCEPTION HANDLER
