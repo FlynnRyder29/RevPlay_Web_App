@@ -21,9 +21,11 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
         http
                 .authorizeHttpRequests(auth -> auth
-                        // Public pages
+
+                        // ✅ Public pages
                         .requestMatchers(
                                 "/", "/auth/register", "/auth/login",
                                 "/css/**", "/js/**", "/images/**",
@@ -31,16 +33,22 @@ public class SecurityConfig {
                                 "/swagger-ui/**", "/v3/api-docs/**"
                         ).permitAll()
 
-                        // Artist-only pages
-                        .requestMatchers("/artist/dashboard/**", "/api/artists/me/**", "/api/artists/analytics/**")
+                        // ✅ Song management (Artist only)
+                        .requestMatchers("/api/songs/**").hasRole("ARTIST")
+
+                        // ✅ Artist dashboard & analytics
+                        .requestMatchers("/artist/dashboard/**",
+                                "/api/artists/me/**",
+                                "/api/artists/analytics/**")
                         .hasRole("ARTIST")
 
-                        // Admin-only pages
+                        // ✅ Admin
                         .requestMatchers("/admin/**").hasRole("ADMIN")
 
-                        // Everything else requires login
+                        // ✅ Everything else
                         .anyRequest().authenticated()
                 )
+
                 .formLogin(form -> form
                         .loginPage("/auth/login")
                         .loginProcessingUrl("/auth/login")
@@ -50,12 +58,14 @@ public class SecurityConfig {
                         .failureUrl("/auth/login?error=true")
                         .permitAll()
                 )
+
                 .logout(logout -> logout
                         .logoutUrl("/auth/logout")
                         .logoutSuccessUrl("/auth/login?logout=true")
                         .deleteCookies("JSESSIONID")
                         .permitAll()
                 )
+
                 .userDetailsService(userDetailsService);
 
         return http.build();
@@ -67,7 +77,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
+            throws Exception {
         return config.getAuthenticationManager();
     }
 }
