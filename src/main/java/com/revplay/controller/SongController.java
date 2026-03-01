@@ -13,10 +13,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.util.Set;
+import org.springframework.data.web.PageableDefault;
+
 
 @RestController
 @RequestMapping("/api/songs")
@@ -75,6 +76,17 @@ public class SongController {
         log.info("GET /api/songs/search - keyword='{}'", keyword);
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(songService.searchSongs(keyword.trim(), pageable));
+    }
+
+    @GetMapping("/filter")
+    public ResponseEntity<Page<SongDTO>> filterSongs(
+            @RequestParam(required = false) String genre,
+            @RequestParam(required = false) String artist,
+            @RequestParam(required = false) String album,
+            @RequestParam(required = false) Integer year,
+            @PageableDefault(size = 20) Pageable pageable) {
+        log.info("GET /api/songs/filter");
+        return ResponseEntity.ok(songService.filterSongs(genre, artist, album, year, pageable));
     }
 
 }
