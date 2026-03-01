@@ -12,8 +12,8 @@ import java.util.List;
 @Repository
 public interface AlbumRepository extends JpaRepository<Album, Long> {
 
-    @Query("SELECT a FROM Album a WHERE a.artist.id = :artistId")
-    List<Album> findByArtistId(@Param("artistId") Long artistId);
+    @Query("SELECT a FROM Album a LEFT JOIN FETCH a.artist WHERE a.artist.id = :artistId")
+    List<Album> findAllByArtistId(@Param("artistId") Long artistId);
 
     @Query("SELECT a FROM Album a WHERE a.artist.id = :artistId")
     Page<Album> findByArtistId(@Param("artistId") Long artistId, Pageable pageable);

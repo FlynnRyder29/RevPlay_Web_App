@@ -25,26 +25,31 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ArtistCatalogService {
 
+    private static final Logger log = LoggerFactory.getLogger(ArtistCatalogService.class);
     private final ArtistRepository artistRepository;
     private final SongRepository songRepository;
     private final AlbumRepository albumRepository;
 
+
+
     @Transactional(readOnly = true)
     public Page<ArtistDTO> getAllArtists(Pageable pageable) {
+        log.info("Fetching all artists, page={}", pageable.getPageNumber());
         return artistRepository.findAll(pageable).map(this::mapToDTO);
     }
 
     @Transactional(readOnly = true)
     public ArtistDTO getArtistById(Long id) {
+        log.info("Fetching artist detail for id={}", id);
         Artist artist = artistRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Artist", "id", id));
 
         ArtistDTO dto = mapToDTO(artist);
 
         // Populate songs and albums for detail view
-        dto.setSongs(songRepository.findByArtistId(id)
+        dto.setSongs(songRepository.findAllByArtistId(id)
                 .stream().map(this::mapSongToDTO).toList());
-        dto.setAlbums(albumRepository.findByArtistId(id)
+        dto.setAlbums(albumRepository.findAllByArtistId(id)
                 .stream().map(this::mapAlbumToDTO).toList());
 
         return dto;

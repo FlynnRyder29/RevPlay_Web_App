@@ -20,8 +20,8 @@ public interface SongRepository extends JpaRepository<Song, Long>, JpaSpecificat
     @Query("SELECT s FROM Song s WHERE s.artist.id = :artistId")
     Page<Song> findByArtistId(@Param("artistId") Long artistId, Pageable pageable);
 
-    @Query("SELECT s FROM Song s WHERE s.artist.id = :artistId")
-    List<Song> findByArtistId(@Param("artistId") Long artistId);
+    @Query("SELECT s FROM Song s LEFT JOIN FETCH s.album WHERE s.artist.id = :artistId")
+    List<Song> findAllByArtistId(@Param("artistId") Long artistId);
 
     @Query("SELECT s FROM Song s WHERE s.album.id = :albumId")
     Page<Song> findByAlbumId(@Param("albumId") Long albumId, Pageable pageable);
