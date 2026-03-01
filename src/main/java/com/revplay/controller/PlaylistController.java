@@ -125,7 +125,7 @@ public class PlaylistController {
 
         playlistService.addSongToPlaylist(id, songId);
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build(); // Fixed: was 200, now 204 for consistency
     }
 
     // -------------------------
@@ -159,7 +159,7 @@ public class PlaylistController {
 
         playlistService.reorderSongs(id, orderedSongIds);
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     // -------------------------
@@ -173,7 +173,7 @@ public class PlaylistController {
 
         playlistService.followPlaylist(id);
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     // -------------------------

@@ -13,9 +13,10 @@ import com.revplay.repository.PlaylistFollowRepository;
 import com.revplay.repository.PlaylistRepository;
 import com.revplay.repository.PlaylistSongRepository;
 import com.revplay.repository.SongRepository;
-import com.revplay.util.SecurityUtils;
+import com.revplay.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,18 +32,18 @@ public class PlaylistService {
     private final PlaylistSongRepository   playlistSongRepository;
     private final PlaylistFollowRepository playlistFollowRepository;
     private final SongRepository           songRepository;
-    private final SecurityUtils            securityUtils;
+    private final UserRepository           userRepository;
 
     public PlaylistService(PlaylistRepository playlistRepository,
                            PlaylistSongRepository playlistSongRepository,
                            PlaylistFollowRepository playlistFollowRepository,
                            SongRepository songRepository,
-                           SecurityUtils securityUtils) {
+                           UserRepository userRepository) {
         this.playlistRepository       = playlistRepository;
         this.playlistSongRepository   = playlistSongRepository;
         this.playlistFollowRepository = playlistFollowRepository;
         this.songRepository           = songRepository;
-        this.securityUtils            = securityUtils;
+        this.userRepository           = userRepository;
     }
 
     // -------------------------
@@ -52,7 +53,7 @@ public class PlaylistService {
     @Transactional
     public PlaylistDTO createPlaylist(PlaylistDTO dto) {
 
-        User currentUser = securityUtils.getCurrentUser();
+        User currentUser = getCurrentUser();
 
         log.debug("Creating playlist for userId: {}", currentUser.getId());
 
@@ -72,7 +73,7 @@ public class PlaylistService {
     @Transactional(readOnly = true)
     public List<PlaylistDTO> getMyPlaylists() {
 
-        User currentUser = securityUtils.getCurrentUser();
+        User currentUser = getCurrentUser();
 
         log.debug("Fetching playlists for userId: {}", currentUser.getId());
 
@@ -108,7 +109,7 @@ public class PlaylistService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Playlist", "id", id));
 
-        User currentUser = securityUtils.getCurrentUser();
+        User currentUser = getCurrentUser();
 
         if (!playlist.isPublic()
                 && !playlist.getUser().getId().equals(currentUser.getId())) {
@@ -130,7 +131,7 @@ public class PlaylistService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Playlist", "id", id));
 
-        User currentUser = securityUtils.getCurrentUser();
+        User currentUser = getCurrentUser();
 
         if (!playlist.getUser().getId().equals(currentUser.getId())) {
             throw new UnauthorizedAccessException("You don't own this playlist");
@@ -156,7 +157,7 @@ public class PlaylistService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Playlist", "id", id));
 
-        User currentUser = securityUtils.getCurrentUser();
+        User currentUser = getCurrentUser();
 
         if (!playlist.getUser().getId().equals(currentUser.getId())) {
             throw new UnauthorizedAccessException("You don't own this playlist");
@@ -178,7 +179,7 @@ public class PlaylistService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Playlist", "id", playlistId));
 
-        User currentUser = securityUtils.getCurrentUser();
+        User currentUser = getCurrentUser();
 
         if (!playlist.getUser().getId().equals(currentUser.getId())) {
             throw new UnauthorizedAccessException("You don't own this playlist");
@@ -219,7 +220,7 @@ public class PlaylistService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Playlist", "id", playlistId));
 
-        User currentUser = securityUtils.getCurrentUser();
+        User currentUser = getCurrentUser();
 
         if (!playlist.getUser().getId().equals(currentUser.getId())) {
             throw new UnauthorizedAccessException("You don't own this playlist");
@@ -247,7 +248,7 @@ public class PlaylistService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Playlist", "id", playlistId));
 
-        User currentUser = securityUtils.getCurrentUser();
+        User currentUser = getCurrentUser();
 
         if (!playlist.getUser().getId().equals(currentUser.getId())) {
             throw new UnauthorizedAccessException("You don't own this playlist");
@@ -300,7 +301,7 @@ public class PlaylistService {
             throw new BadRequestException("Cannot follow a private playlist");
         }
 
-        User currentUser = securityUtils.getCurrentUser();
+        User currentUser = getCurrentUser();
 
         // Cannot follow your own playlist
         if (playlist.getUser().getId().equals(currentUser.getId())) {
@@ -329,7 +330,7 @@ public class PlaylistService {
     @Transactional
     public void unfollowPlaylist(Long playlistId) {
 
-        User currentUser = securityUtils.getCurrentUser();
+        User currentUser = getCurrentUser();
 
         if (!playlistFollowRepository.existsByUser_IdAndPlaylist_Id(
                 currentUser.getId(), playlistId)) {
@@ -340,6 +341,21 @@ public class PlaylistService {
                 currentUser.getId(), playlistId);
 
         log.debug("User {} unfollowed playlist {}", currentUser.getId(), playlistId);
+    }
+
+    // -------------------------
+    // HELPERS
+    // -------------------------
+
+    private User getCurrentUser() {
+        String username = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "User", "username", username));
     }
 
     // -------------------------
