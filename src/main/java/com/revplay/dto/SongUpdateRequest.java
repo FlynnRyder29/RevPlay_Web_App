@@ -1,15 +1,12 @@
 package com.revplay.dto;
 
-import com.revplay.model.Song;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class SongUpdateRequest {
 
     private String title;
@@ -18,6 +15,4 @@ public class SongUpdateRequest {
     private String audioUrl;
     private String coverImageUrl;
     private LocalDate releaseDate;
-    private Long albumId;
-    private Song.Visibility visibility;
 }

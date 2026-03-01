@@ -1,34 +1,32 @@
 package com.revplay.dto;
 
-import com.revplay.model.Song;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class SongCreateRequest {
 
-    @NotBlank
+    @NotBlank(message = "Title is required")
     private String title;
 
     private String genre;
 
-    @NotNull
-    @Positive
+    @NotNull(message = "Duration is required")
+    @Min(value = 1, message = "Duration must be greater than 0")
     private Integer duration;
 
+    @NotBlank(message = "Audio URL is required")
     private String audioUrl;
+
     private String coverImageUrl;
+
     private LocalDate releaseDate;
 
-    private Long albumId;
-
-    private Song.Visibility visibility; // service sets default if null
+    private Long albumId; // optional
 }
