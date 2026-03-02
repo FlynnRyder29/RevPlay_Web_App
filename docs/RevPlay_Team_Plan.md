@@ -197,7 +197,7 @@
 - Complete ERD design (draw.io / dbdiagram.io)
 - SQL schema creation scripts
 - **Flyway** migration files (`V1__initial_schema.sql`, etc.)
-- Sample/seed data for demo (`V99__seed_data.sql`)
+- Sample/seed data for demo (`V100__seed_data.sql`)
 - Database indexing strategy (indexes on search columns, foreign keys)
 
 *Testing Infrastructure*
