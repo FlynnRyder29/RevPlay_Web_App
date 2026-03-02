@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -53,7 +54,7 @@ public class HistoryService {
         ListeningHistory history = new ListeningHistory();
         history.setUser(currentUser);
         history.setSong(song);
-
+        history.setPlayedAt(LocalDateTime.now());
         historyRepository.save(history);
 
         log.debug("Added history: user={}, song={}",

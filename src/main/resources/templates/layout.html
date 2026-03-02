@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<!-- layout.html -->
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <head th:fragment="head(title)">
     <meta charset="UTF-8">
@@ -11,29 +11,33 @@
 </head>
 
 <body>
-    <!-- This base layout is defined as a fragment itself -->
-    <div th:fragment="page(content)">
-        <div class="app-container">
-            <!-- Navbar -->
-            <div th:replace="~{fragments/navbar :: mainNav}"></div>
+<div th:fragment="page(content)">
+    <div class="app-container">
 
-            <!-- Main scrollable content injected here -->
-            <div class="main-content">
-                <main class="content-area">
-                    <!-- The dynamic content from other pages goes here -->
-                    <th:block th:replace="${content}"></th:block>
+        <!-- Top Navbar (simplified — brand + search) -->
+        <div th:replace="~{fragments/navbar :: mainNav}"></div>
 
-                    <!-- Footer at the bottom of the scroll area -->
-                    <div th:replace="~{fragments/footer :: mainFooter}" style="margin-top: 50px;"></div>
-                </main>
-            </div>
+        <!-- Main Area: Sidebar + Content -->
+        <div class="main-content">
 
-            <!-- If logged in, show the global player bar at the bottom -->
-            <div sec:authorize="isAuthenticated()">
-                <div th:replace="~{fragments/player-bar :: player}"></div>
-            </div>
+            <!-- Side Drawer Navigation -->
+            <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+            <!-- Scrollable Content Area -->
+            <main class="content-area">
+                <th:block th:replace="${content}"></th:block>
+
+                <!-- Footer -->
+                <div th:replace="~{fragments/footer :: mainFooter}"
+                     style="margin-top: 50px;"></div>
+            </main>
+        </div>
+
+        <!-- Player Bar (authenticated only) -->
+        <div sec:authorize="isAuthenticated()">
+            <div th:replace="~{fragments/player-bar :: player}"></div>
         </div>
     </div>
+</div>
 </body>
-
 </html>

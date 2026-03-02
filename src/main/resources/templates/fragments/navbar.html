@@ -1,29 +1,60 @@
-<!-- templates/fragments/navbar.html -->
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
+
 <nav th:fragment="mainNav" class="navbar">
-    <a th:href="@{/}" class="nav-brand">RevPlay</a>
 
-    <div class="nav-links">
-        <a th:href="@{/}">Home</a>
-        <a th:href="@{/library}">Library</a>
+    <!-- Brand -->
+    <a th:href="@{/}" class="nav-brand">
+        <span class="brand-icon">
+            <img th:src="@{/images/icons/headphone.png}"
+                 alt="🎧"
+                 class="brand-icon-img"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+            <span class="icon-fallback" style="display:none;">🎧</span>
+        </span>
+        <span>RevPlay</span>
+    </a>
 
-        <!-- Shown only when logged out -->
-        <div sec:authorize="!isAuthenticated()">
-            <a th:href="@{/auth/register}">Sign Up</a>
-            <a th:href="@{/auth/login}" class="btn-login" style="padding: 8px 16px; background: white; color: black; border-radius: 20px;">Log In</a>
+    <!-- Center: Search Bar -->
+    <div class="nav-search" sec:authorize="isAuthenticated()">
+        <form th:action="@{/library}" method="get" class="nav-search-form">
+            <span class="nav-search-icon">
+                <img th:src="@{/images/icons/search.png}"
+                     alt="🔍"
+                     class="nav-search-icon-img"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                <span class="icon-fallback" style="display:none;">🔍</span>
+            </span>
+            <input type="text"
+                   name="q"
+                   class="nav-search-input"
+                   placeholder="What do you want to listen to?"
+                   autocomplete="off">
+        </form>
+    </div>
+
+    <!-- Right -->
+    <div class="nav-right">
+        <!-- Guest -->
+        <div sec:authorize="!isAuthenticated()" class="nav-links">
+            <a th:href="@{/auth/register}" class="nav-signup-btn">Sign Up</a>
+            <a th:href="@{/auth/login}" class="nav-login-btn">Log In</a>
         </div>
 
-        <!-- Shown only when logged in -->
-        <div sec:authorize="isAuthenticated()" style="display: flex; align-items: center; gap: 15px;">
-            <a th:href="@{/user/profile}">
-                <span sec:authentication="principal.username">Username</span>
+        <!-- Authenticated -->
+        <div sec:authorize="isAuthenticated()" class="nav-links">
+            <a th:href="@{/user/profile}" class="nav-profile-link" title="Profile">
+                <span class="nav-profile-avatar">
+                    <span sec:authentication="principal.username"
+                          class="nav-avatar-letter"
+                          th:text="${#strings.substring(#authentication.principal.username, 0, 1).toUpperCase()}">U</span>
+                </span>
             </a>
-            <form th:action="@{/auth/logout}" method="post" style="margin: 0;">
-                <button type="submit" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px;">Logout</button>
-            </form>
         </div>
     </div>
 </nav>
+
 </body>
 </html>

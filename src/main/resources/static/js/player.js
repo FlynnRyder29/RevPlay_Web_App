@@ -67,6 +67,74 @@
         });
     }
 
+    /**
+     * player.js — Updated icon toggle functions
+     * Supports image icons with emoji fallback
+     */
+
+// ========================= ICON HELPERS =========================
+
+    /**
+     * Toggle Play/Pause icon on a button.
+     * Handles both image icons and emoji fallbacks.
+     */
+    function setPlayIcon(button, playing) {
+        if (!button) return;
+
+        // Find the image — could be .player-play-img or .page-play-icon
+        var img = button.querySelector('.player-play-img')
+            || button.querySelector('.page-play-icon');
+        var fallback = button.querySelector('.play-fallback');
+
+        if (img && img.style.display !== 'none') {
+            // Image mode — swap src
+            img.src = playing
+                ? (img.dataset.pauseSrc || '/images/icons/pause.png')
+                : (img.dataset.playSrc  || '/images/icons/play.png');
+            img.alt = playing ? '⏸' : '▶';
+        } else if (fallback) {
+            // Fallback mode — swap emoji
+            fallback.textContent = playing ? '⏸' : '▶';
+        }
+
+        button.title = playing ? 'Pause' : 'Play';
+    }
+
+    /**
+     * Toggle Repeat icon on a button.
+     * Modes: 0 = off, 1 = repeat all, 2 = repeat one
+     */
+    function setRepeatIcon(button, mode) {
+        if (!button) return;
+
+        if (mode === 0) {
+            button.classList.remove('active');
+        } else {
+            button.classList.add('active');
+        }
+
+        var img = button.querySelector('.player-repeat-img');
+        var fallback = button.querySelector('.repeat-fallback');
+
+        if (img && img.style.display !== 'none') {
+            img.src = mode === 2
+                ? (img.dataset.repeatOneSrc || '/images/icons/repeat-one.png')
+                : (img.dataset.repeatSrc    || '/images/icons/repeat.png');
+            img.alt = mode === 2 ? '🔂' : '🔁';
+        } else if (fallback) {
+            fallback.textContent = mode === 2 ? '🔂' : '🔁';
+        }
+    }
+
+
+    /**
+     * Toggle Shuffle active state.
+     */
+    function setShuffleIcon(button, isActive) {
+        if (!button) return;
+        button.classList.toggle('active', isActive);
+    }
+
     // ========================= CORE PLAYBACK =========================
 
     /**
@@ -76,16 +144,15 @@
         if (index < 0 || index >= queue.length) return;
 
         currentIndex = index;
-        const song = queue[currentIndex];
+        var song = queue[currentIndex];
 
-        // Set audio source
         if (song.url) {
             audio.src = song.url;
             audio.load();
             audio.play()
                 .then(function () {
                     isPlaying = true;
-                    btnPlay.textContent = '⏸';
+                    setPlayIcon(btnPlay, true);             // ← CHANGED
                 })
                 .catch(function (err) {
                     console.warn('Playback failed:', err.message);
@@ -113,7 +180,6 @@
      */
     function togglePlayPause() {
         if (!audio.src || audio.src === window.location.href) {
-            // No song loaded yet — try to play the first song in queue
             if (queue.length > 0) {
                 playSongAtIndex(0);
             }
@@ -123,12 +189,12 @@
         if (isPlaying) {
             audio.pause();
             isPlaying = false;
-            btnPlay.textContent = '▶';
+            setPlayIcon(btnPlay, false);                    // ← CHANGED
         } else {
             audio.play()
                 .then(function () {
                     isPlaying = true;
-                    btnPlay.textContent = '⏸';
+                    setPlayIcon(btnPlay, true);             // ← CHANGED
                 })
                 .catch(function (err) {
                     console.warn('Playback failed:', err.message);
@@ -137,10 +203,9 @@
 
         // Sync dedicated player page button
         var pageBtnPlay = document.getElementById('page-btn-play');
-        if (pageBtnPlay) {
-            pageBtnPlay.textContent = isPlaying ? '⏸' : '▶';
-        }
+        setPlayIcon(pageBtnPlay, isPlaying);                // ← CHANGED
     }
+
 
     /**
      * Play next song in queue.
@@ -271,35 +336,21 @@
     if (btnShuffle) {
         btnShuffle.addEventListener('click', function () {
             isShuffle = !isShuffle;
-            btnShuffle.style.color = isShuffle ? 'var(--primary-color)' : '';
+            setShuffleIcon(btnShuffle, isShuffle);          // ← CHANGED
+
             var pageShuffle = document.getElementById('page-btn-shuffle');
-            if (pageShuffle) pageShuffle.style.color = isShuffle ? 'var(--primary-color)' : '';
+            setShuffleIcon(pageShuffle, isShuffle);          // ← CHANGED
         });
     }
+
 
     if (btnRepeat) {
         btnRepeat.addEventListener('click', function () {
             repeatMode = (repeatMode + 1) % 3;
-            switch (repeatMode) {
-                case 0:
-                    btnRepeat.textContent = '🔁';
-                    btnRepeat.style.color = '';
-                    break;
-                case 1:
-                    btnRepeat.textContent = '🔁';
-                    btnRepeat.style.color = 'var(--primary-color)';
-                    break;
-                case 2:
-                    btnRepeat.textContent = '🔂';
-                    btnRepeat.style.color = 'var(--primary-color)';
-                    break;
-            }
-            // Sync page repeat
+            setRepeatIcon(btnRepeat, repeatMode);            // ← CHANGED
+
             var pageRepeat = document.getElementById('page-btn-repeat');
-            if (pageRepeat) {
-                pageRepeat.textContent = btnRepeat.textContent;
-                pageRepeat.style.color = btnRepeat.style.color;
-            }
+            setRepeatIcon(pageRepeat, repeatMode);           // ← CHANGED
         });
     }
 
