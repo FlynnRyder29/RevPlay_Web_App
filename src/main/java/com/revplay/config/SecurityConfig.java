@@ -64,6 +64,11 @@ public class SecurityConfig {
                                 "/api/artists/analytics/**")
                         .hasRole("ARTIST")
 
+                        // ✅ Artist album management (Day 5 — Member 5)
+                        // Double-layer security: SecurityConfig + @PreAuthorize in controller
+                        .requestMatchers("/api/artist/**")
+                        .hasRole("ARTIST")
+
                         // ✅ Admin
                         .requestMatchers("/admin/**").hasRole("ADMIN")
 
