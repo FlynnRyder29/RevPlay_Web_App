@@ -22,6 +22,7 @@ import org.springframework.security.web.servlet.util.matcher.PathPatternRequestM
 public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
+
     private final RevPlayAuthenticationEntryPoint authEntryPoint;
     private final RevPlayAccessDeniedHandler accessDeniedHandler;
 
@@ -62,6 +63,12 @@ public class SecurityConfig {
                                 "/api/artists/me/**",
                                 "/api/artists/analytics/**")
                         .hasRole("ARTIST")
+
+                        // ✅ Artist album management (Day 5 — Member 5)
+                        // Double-layer security: SecurityConfig + @PreAuthorize in controller
+                        .requestMatchers("/api/artists/albums/**")
+                        .hasRole("ARTIST")
+
 
                         // ✅ Admin
                         .requestMatchers("/admin/**").hasRole("ADMIN")
