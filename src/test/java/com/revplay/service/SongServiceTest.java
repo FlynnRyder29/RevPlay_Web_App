@@ -34,8 +34,14 @@ class SongServiceTest {
 
     @Mock
     private SongRepository songRepository;
+
+    @Mock
     private ArtistRepository artistRepository;
+
+    @Mock
     private AlbumRepository albumRepository;
+
+    @Mock
     private UserRepository userRepository;
 
     @InjectMocks
