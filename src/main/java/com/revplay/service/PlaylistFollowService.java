@@ -6,14 +6,11 @@ import com.revplay.model.PlaylistFollow;
 import com.revplay.model.User;
 import com.revplay.repository.PlaylistFollowRepository;
 import com.revplay.repository.PlaylistRepository;
-import com.revplay.repository.UserRepository;
+import com.revplay.util.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 public class PlaylistFollowService {
@@ -21,35 +18,16 @@ public class PlaylistFollowService {
     private static final Logger log =
             LoggerFactory.getLogger(PlaylistFollowService.class);
 
-    private final PlaylistFollowRepository followRepository;
+    private final PlaylistFollowRepository playlistFollowRepository;
     private final PlaylistRepository playlistRepository;
-    private final UserRepository userRepository;
+    private final SecurityUtils securityUtils;
 
-    public PlaylistFollowService(PlaylistFollowRepository followRepository,
+    public PlaylistFollowService(PlaylistFollowRepository playlistFollowRepository,
                                  PlaylistRepository playlistRepository,
-                                 UserRepository userRepository) {
-        this.followRepository = followRepository;
+                                 SecurityUtils securityUtils) {
+        this.playlistFollowRepository = playlistFollowRepository;
         this.playlistRepository = playlistRepository;
-        this.userRepository = userRepository;
-    }
-
-    // -------------------------
-    // Helper: Current User
-    // -------------------------
-
-    private User getCurrentUser() {
-
-        String username = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getName();
-
-        return userRepository.findByUsername(username)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "User",
-                                "username",
-                                username
-                        ));
+        this.securityUtils = securityUtils;
     }
 
     // -------------------------
@@ -59,21 +37,17 @@ public class PlaylistFollowService {
     @Transactional
     public void followPlaylist(Long playlistId) {
 
-        User currentUser = getCurrentUser();
+        User currentUser = securityUtils.getCurrentUser();
 
         Playlist playlist = playlistRepository.findById(playlistId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "Playlist",
-                                "id",
-                                playlistId
-                        ));
+                                "Playlist", "id", playlistId));
 
-        if (followRepository.existsByUser_IdAndPlaylist_Id(
-                currentUser.getId(),
-                playlistId)) {
-
-            log.debug("User {} already follows playlist {}",
+        // Idempotent — silently skip if already following
+        if (playlistFollowRepository.existsByUser_IdAndPlaylist_Id(
+                currentUser.getId(), playlistId)) {
+            log.debug("User {} already follows playlist {} — no-op",
                     currentUser.getId(), playlistId);
             return;
         }
@@ -82,7 +56,7 @@ public class PlaylistFollowService {
         follow.setUser(currentUser);
         follow.setPlaylist(playlist);
 
-        followRepository.save(follow);
+        playlistFollowRepository.save(follow);
 
         log.debug("User {} followed playlist {}",
                 currentUser.getId(), playlistId);
@@ -95,39 +69,34 @@ public class PlaylistFollowService {
     @Transactional
     public void unfollowPlaylist(Long playlistId) {
 
-        User currentUser = getCurrentUser();
+        User currentUser = securityUtils.getCurrentUser();
 
-        if (!followRepository.existsByUser_IdAndPlaylist_Id(
-                currentUser.getId(),
-                playlistId)) {
+        // Verify the relationship exists before deleting
+        playlistFollowRepository
+                .findByUser_IdAndPlaylist_Id(currentUser.getId(), playlistId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "PlaylistFollow",
+                                "userId/playlistId",
+                                currentUser.getId() + "/" + playlistId));
 
-            throw new ResourceNotFoundException(
-                    "PlaylistFollow",
-                    "playlistId",
-                    playlistId
-            );
-        }
-
-        followRepository.deleteByUser_IdAndPlaylist_Id(
-                currentUser.getId(),
-                playlistId
-        );
+        playlistFollowRepository.deleteByUser_IdAndPlaylist_Id(
+                currentUser.getId(), playlistId);
 
         log.debug("User {} unfollowed playlist {}",
                 currentUser.getId(), playlistId);
     }
 
     // -------------------------
-    // GET MY FOLLOWED PLAYLISTS
+    // CHECK IF FOLLOWING
     // -------------------------
 
-    public List<PlaylistFollow> getMyFollowedPlaylists() {
+    @Transactional(readOnly = true)
+    public boolean isFollowing(Long playlistId) {
 
-        User currentUser = getCurrentUser();
+        User currentUser = securityUtils.getCurrentUser();
 
-        log.debug("Fetching followed playlists for user {}",
-                currentUser.getId());
-
-        return followRepository.findByUser_Id(currentUser.getId());
+        return playlistFollowRepository.existsByUser_IdAndPlaylist_Id(
+                currentUser.getId(), playlistId);
     }
 }

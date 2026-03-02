@@ -11,17 +11,17 @@ import java.util.List;
 @Repository
 public interface HistoryRepository extends JpaRepository<ListeningHistory, Long> {
 
-    // Recent history (paginated)
+    // Recent history — paginated (used by getMyHistory)
     Page<ListeningHistory> findByUser_IdOrderByPlayedAtDesc(
             Long userId,
             Pageable pageable
     );
 
-    // Full history (non-paginated)
-    List<ListeningHistory> findByUser_IdOrderByPlayedAtDesc(
+    // Full history — non-paginated (used by getAllHistory)
+    List<ListeningHistory> findAllByUser_IdOrderByPlayedAtDesc(
             Long userId
     );
 
-    // Clear user history
+    // Delete all history for a user (used by clearHistory)
     void deleteByUser_Id(Long userId);
 }

@@ -21,29 +21,46 @@ public class PlaylistFollowController {
 
     // -------------------------
     // FOLLOW PLAYLIST
+    // POST /api/playlists/{id}/follow
     // -------------------------
-    @PostMapping("/{playlistId}/follow")
-    public ResponseEntity<Void> followPlaylist(
-            @PathVariable Long playlistId) {
 
-        log.info("POST /api/playlists/{}/follow", playlistId);
+    @PostMapping("/{id}/follow")
+    public ResponseEntity<Void> followPlaylist(@PathVariable Long id) {
 
-        playlistFollowService.followPlaylist(playlistId);
+        log.info("POST /api/playlists/{}/follow", id);
+
+        playlistFollowService.followPlaylist(id);
 
         return ResponseEntity.ok().build();
     }
 
     // -------------------------
     // UNFOLLOW PLAYLIST
+    // DELETE /api/playlists/{id}/follow
     // -------------------------
-    @DeleteMapping("/{playlistId}/follow")
-    public ResponseEntity<Void> unfollowPlaylist(
-            @PathVariable Long playlistId) {
 
-        log.info("DELETE /api/playlists/{}/follow", playlistId);
+    @DeleteMapping("/{id}/follow")
+    public ResponseEntity<Void> unfollowPlaylist(@PathVariable Long id) {
 
-        playlistFollowService.unfollowPlaylist(playlistId);
+        log.info("DELETE /api/playlists/{}/follow", id);
+
+        playlistFollowService.unfollowPlaylist(id);
 
         return ResponseEntity.noContent().build();
+    }
+
+    // -------------------------
+    // CHECK IF FOLLOWING
+    // GET /api/playlists/{id}/follow
+    // -------------------------
+
+    @GetMapping("/{id}/follow")
+    public ResponseEntity<Boolean> isFollowing(@PathVariable Long id) {
+
+        log.info("GET /api/playlists/{}/follow", id);
+
+        return ResponseEntity.ok(
+                playlistFollowService.isFollowing(id)
+        );
     }
 }

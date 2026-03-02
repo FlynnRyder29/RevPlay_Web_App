@@ -26,10 +26,11 @@ public class HistoryController {
     }
 
     // -------------------------
-    // RECORD PLAY
+    // ADD TO HISTORY
     // -------------------------
+
     @PostMapping
-    public ResponseEntity<Void> recordPlay(
+    public ResponseEntity<Void> addToHistory(
             @Valid @RequestBody HistoryRequest request) {
 
         log.info("POST /api/history songId={}", request.getSongId());
@@ -40,22 +41,26 @@ public class HistoryController {
     }
 
     // -------------------------
-    // GET RECENT (LIMITED)
+    // GET MY HISTORY (RECENT / LIMITED)
+    // GET /api/history?limit=50  ← original path preserved (backward-compatible)
     // -------------------------
-    @GetMapping("/recent")
-    public ResponseEntity<Page<HistoryDTO>> getRecentHistory(
+
+    @GetMapping
+    public ResponseEntity<Page<HistoryDTO>> getMyHistory(
             @RequestParam(defaultValue = "50") int limit) {
 
-        log.info("GET /api/history/recent?limit={}", limit);
+        log.info("GET /api/history?limit={}", limit);
 
         return ResponseEntity.ok(
-                historyService.getRecentHistory(limit)
+                historyService.getMyHistory(limit)
         );
     }
 
     // -------------------------
-    // GET ALL HISTORY
+    // GET ALL HISTORY (complete, unpaginated)
+    // GET /api/history/all  ← new endpoint added per project plan
     // -------------------------
+
     @GetMapping("/all")
     public ResponseEntity<List<HistoryDTO>> getAllHistory() {
 
@@ -69,6 +74,7 @@ public class HistoryController {
     // -------------------------
     // CLEAR HISTORY
     // -------------------------
+
     @DeleteMapping
     public ResponseEntity<Void> clearHistory() {
 
