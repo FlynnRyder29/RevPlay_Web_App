@@ -210,6 +210,7 @@ class FavoriteServiceTest {
         assertEquals("Test Song",    dto.getSongTitle());
         assertEquals("Test Artist",  dto.getArtistName());
         assertEquals("/covers/test.jpg", dto.getCoverImageUrl());
+        assertEquals(210,            dto.getDuration());
         assertNotNull(dto.getCreatedAt());
         assertEquals(LocalDateTime.of(2024, 6, 1, 10, 0), dto.getCreatedAt());
     }

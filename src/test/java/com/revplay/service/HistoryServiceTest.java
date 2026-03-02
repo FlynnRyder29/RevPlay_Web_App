@@ -32,7 +32,7 @@ import static org.mockito.Mockito.*;
 /**
  * Unit tests for HistoryService.
  *
- * FavoriteService uses SecurityUtils (injected), so we mock it
+ * HistoryService uses SecurityUtils (injected), so we mock it
  * and stub getCurrentUser() to return a pre-built User.
  *
  * Key behaviour verified:
