@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout :: head('Now Playing')}"></head>
+
+<body>
+    <div th:replace="~{layout :: page(~{::#player-content})}">
+
+        <div id="player-content">
+
+            <!-- ============ Now Playing Hero ============ -->
+            <div class="player-page">
+
+                <div class="player-hero">
+                    <img id="player-page-art"
+                        src="https://www.shutterstock.com/shutterstock/photos/2626947211/display_1500/stock-vector-jazz-music-poster-design-template-2626947211.jpg"
+                        alt="Album Art" class="player-hero-art">
+
+                    <div class="player-hero-info">
+                        <span class="now-playing-label">NOW PLAYING</span>
+                        <h1 id="player-page-title" class="player-hero-title">Select a song</h1>
+                        <p id="player-page-artist" class="player-hero-artist">Choose from the library</p>
+                        <p id="player-page-album" class="player-hero-album"></p>
+                    </div>
+                </div>
+
+                <!-- Large Progress Bar -->
+                <div class="player-page-progress">
+                    <div class="progress-container">
+                        <span class="progress-time" id="page-time-current">0:00</span>
+                        <div class="progress-bar-bg" id="page-progress-container">
+                            <div class="progress-bar-fill" id="page-progress-fill"></div>
+                        </div>
+                        <span class="progress-time" id="page-time-total">0:00</span>
+                    </div>
+                </div>
+
+                <!-- Large Controls -->
+                <div class="player-page-controls">
+                    <button class="control-btn" id="page-btn-shuffle">🔀</button>
+                    <button class="control-btn page-ctrl-lg" id="page-btn-prev">⏮</button>
+                    <button class="control-btn control-play page-ctrl-play" id="page-btn-play">▶</button>
+                    <button class="control-btn page-ctrl-lg" id="page-btn-next">⏭</button>
+                    <button class="control-btn" id="page-btn-repeat">🔁</button>
+                </div>
+
+                <!-- Volume Control -->
+                <div class="player-page-volume">
+                    <button class="control-btn" id="page-vol-icon">🔊</button>
+                    <div class="progress-bar-bg" id="page-volume-bar" style="width: 150px;">
+                        <div class="progress-bar-fill" id="page-volume-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+
+                <!-- Quick link to library -->
+                <div style="text-align: center; margin-top: 40px;">
+                    <a th:href="@{/library}" class="btn-primary"
+                        style="display: inline-block; width: auto; padding: 12px 30px;">
+                        ← Browse Library
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+
+</html>
