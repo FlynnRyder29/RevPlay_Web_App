@@ -4,6 +4,9 @@ import com.revplay.dto.AlbumDTO;
 import com.revplay.dto.SongDTO;
 import com.revplay.exception.BadRequestException;
 import com.revplay.service.AlbumService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,12 +20,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import java.util.Set;
 
 @RestController
-@RequestMapping("/api/artist/albums")
+@RequestMapping("/api/artists/albums")
 @RequiredArgsConstructor
 @Validated
 @PreAuthorize("hasRole('ARTIST')")
@@ -40,15 +41,12 @@ public class ArtistAlbumController {
 
     // ── CREATE ───────────────────────────────────────────────────────────────
 
-    // POST /api/artist/albums
+    // POST /api/artists/albums
     @PostMapping
-    public ResponseEntity<AlbumDTO> createAlbum(@RequestBody AlbumDTO request) {
+    public ResponseEntity<AlbumDTO> createAlbum(
+            @Valid @RequestBody AlbumDTO request) {
 
-        if (request.getName() == null || request.getName().isBlank()) {
-            throw new BadRequestException("Album name cannot be blank");
-        }
-
-        log.info("POST /api/artist/albums - name='{}'", request.getName());
+        log.info("POST /api/artists/albums - name='{}'", request.getName());
 
         AlbumDTO created = albumService.createAlbum(request);
 
@@ -57,13 +55,13 @@ public class ArtistAlbumController {
 
     // ── UPDATE ───────────────────────────────────────────────────────────────
 
-    // PUT /api/artist/albums/{albumId}
+    // PUT /api/artists/albums/{albumId}
     @PutMapping("/{albumId}")
     public ResponseEntity<AlbumDTO> updateAlbum(
             @PathVariable Long albumId,
             @RequestBody AlbumDTO request) {
 
-        log.info("PUT /api/artist/albums/{}", albumId);
+        log.info("PUT /api/artists/albums/{}", albumId);
 
         AlbumDTO updated = albumService.updateAlbum(albumId, request);
 
@@ -72,11 +70,11 @@ public class ArtistAlbumController {
 
     // ── DELETE ───────────────────────────────────────────────────────────────
 
-    // DELETE /api/artist/albums/{albumId}
+    // DELETE /api/artists/albums/{albumId}
     @DeleteMapping("/{albumId}")
     public ResponseEntity<Void> deleteAlbum(@PathVariable Long albumId) {
 
-        log.info("DELETE /api/artist/albums/{}", albumId);
+        log.info("DELETE /api/artists/albums/{}", albumId);
 
         albumService.deleteAlbum(albumId);
 
@@ -85,13 +83,13 @@ public class ArtistAlbumController {
 
     // ── ADD SONG TO ALBUM ────────────────────────────────────────────────────
 
-    // POST /api/artist/albums/{albumId}/songs/{songId}
+    // POST /api/artists/albums/{albumId}/songs/{songId}
     @PostMapping("/{albumId}/songs/{songId}")
     public ResponseEntity<Void> addSongToAlbum(
             @PathVariable Long albumId,
             @PathVariable Long songId) {
 
-        log.info("POST /api/artist/albums/{}/songs/{}", albumId, songId);
+        log.info("POST /api/artists/albums/{}/songs/{}", albumId, songId);
 
         albumService.addSongToAlbum(albumId, songId);
 
@@ -100,13 +98,13 @@ public class ArtistAlbumController {
 
     // ── REMOVE SONG FROM ALBUM ───────────────────────────────────────────────
 
-    // DELETE /api/artist/albums/{albumId}/songs/{songId}
+    // DELETE /api/artists/albums/{albumId}/songs/{songId}
     @DeleteMapping("/{albumId}/songs/{songId}")
     public ResponseEntity<Void> removeSongFromAlbum(
             @PathVariable Long albumId,
             @PathVariable Long songId) {
 
-        log.info("DELETE /api/artist/albums/{}/songs/{}", albumId, songId);
+        log.info("DELETE /api/artists/albums/{}/songs/{}", albumId, songId);
 
         albumService.removeSongFromAlbum(albumId, songId);
 
@@ -115,7 +113,7 @@ public class ArtistAlbumController {
 
     // ── LIST MY ALBUMS ───────────────────────────────────────────────────────
 
-    // GET /api/artist/albums
+    // GET /api/artists/albums
     @GetMapping
     public ResponseEntity<Page<AlbumDTO>> getMyAlbums(
             @RequestParam(defaultValue = "0") @Min(0) int page,
@@ -125,7 +123,7 @@ public class ArtistAlbumController {
 
         String safeSortBy = ALLOWED_ALBUM_SORT_FIELDS.contains(sortBy) ? sortBy : "createdAt";
 
-        log.info("GET /api/artist/albums - page={}, size={}, sortBy={}", page, size, safeSortBy);
+        log.info("GET /api/artists/albums - page={}, size={}, sortBy={}", page, size, safeSortBy);
 
         Sort sort = sortDir.equalsIgnoreCase("asc")
                 ? Sort.by(safeSortBy).ascending()
@@ -138,7 +136,7 @@ public class ArtistAlbumController {
 
     // ── LIST MY SONGS ────────────────────────────────────────────────────────
 
-    // GET /api/artist/albums/songs
+    // GET /api/artists/albums/songs
     @GetMapping("/songs")
     public ResponseEntity<Page<SongDTO>> getMySongs(
             @RequestParam(defaultValue = "0") @Min(0) int page,
@@ -148,7 +146,7 @@ public class ArtistAlbumController {
 
         String safeSortBy = ALLOWED_SONG_SORT_FIELDS.contains(sortBy) ? sortBy : "createdAt";
 
-        log.info("GET /api/artist/albums/songs - page={}, size={}, sortBy={}", page, size, safeSortBy);
+        log.info("GET /api/artists/albums/songs - page={}, size={}, sortBy={}", page, size, safeSortBy);
 
         Sort sort = sortDir.equalsIgnoreCase("asc")
                 ? Sort.by(safeSortBy).ascending()
@@ -161,11 +159,11 @@ public class ArtistAlbumController {
 
     // ── GET MY ALBUM BY ID ───────────────────────────────────────────────────
 
-    // GET /api/artist/albums/{albumId}
+    // GET /api/artists/albums/{albumId}
     @GetMapping("/{albumId}")
     public ResponseEntity<AlbumDTO> getMyAlbumById(@PathVariable Long albumId) {
 
-        log.info("GET /api/artist/albums/{}", albumId);
+        log.info("GET /api/artists/albums/{}", albumId);
 
         return ResponseEntity.ok(albumService.getMyAlbumById(albumId));
     }

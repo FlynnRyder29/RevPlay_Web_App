@@ -4,6 +4,7 @@ import com.revplay.dto.AlbumDTO;
 import com.revplay.dto.SongDTO;
 import com.revplay.exception.BadRequestException;
 import com.revplay.exception.ResourceNotFoundException;
+import com.revplay.mapper.SongMapper;
 import com.revplay.model.Album;
 import com.revplay.model.Artist;
 import com.revplay.model.Song;
@@ -31,6 +32,7 @@ public class AlbumServiceImpl implements AlbumService {
     private final SongRepository songRepository;
     private final ArtistRepository artistRepository;
     private final UserRepository userRepository;
+    private final SongMapper songMapper;
 
     // ── CREATE ───────────────────────────────────────────────────────────────
 
@@ -100,6 +102,17 @@ public class AlbumServiceImpl implements AlbumService {
 
         Album album = getOwnedAlbum(albumId, artist.getId());
 
+        // 🔴 HIGH — Guard: only delete if album has no songs
+        // Per project plan: "Delete album only if empty"
+        // DB schema has ON DELETE SET NULL — but we block it explicitly
+        // to prevent silent orphaning of songs
+        int songCount = albumRepository.countSongsByAlbumId(albumId);
+        if (songCount > 0) {
+            throw new BadRequestException(
+                    "Cannot delete album with " + songCount +
+                            " song(s). Remove all songs from the album first.");
+        }
+
         albumRepository.delete(album);
 
         log.info("Album deleted id={}", albumId);
@@ -118,7 +131,7 @@ public class AlbumServiceImpl implements AlbumService {
         // Verify album belongs to this artist
         Album album = getOwnedAlbum(albumId, artist.getId());
 
-        // Verify song belongs to this artist
+        // Verify song exists and belongs to this artist
         Song song = songRepository.findById(songId)
                 .orElseThrow(() -> new ResourceNotFoundException("Song", "id", songId));
 
@@ -126,9 +139,17 @@ public class AlbumServiceImpl implements AlbumService {
             throw new BadRequestException("Song does not belong to the logged-in artist");
         }
 
-        // Prevent adding song that is already in this album
-        if (song.getAlbum() != null && song.getAlbum().getId().equals(albumId)) {
-            throw new BadRequestException("Song is already part of this album");
+        // 🟡 MEDIUM — Option A: Block if song belongs to ANY album (same or different)
+        // Artist must explicitly remove song from current album before adding to another
+        if (song.getAlbum() != null) {
+            if (song.getAlbum().getId().equals(albumId)) {
+                throw new BadRequestException(
+                        "Song is already part of this album");
+            } else {
+                throw new BadRequestException(
+                        "Song is already in album '" + song.getAlbum().getName() +
+                                "'. Remove it first before adding to another album.");
+            }
         }
 
         song.setAlbum(album);
@@ -150,7 +171,7 @@ public class AlbumServiceImpl implements AlbumService {
         // Verify album belongs to this artist
         getOwnedAlbum(albumId, artist.getId());
 
-        // Verify song belongs to this artist
+        // Verify song exists and belongs to this artist
         Song song = songRepository.findById(songId)
                 .orElseThrow(() -> new ResourceNotFoundException("Song", "id", songId));
 
@@ -194,8 +215,9 @@ public class AlbumServiceImpl implements AlbumService {
 
         log.info("Fetching songs for artistId={}, page={}", artist.getId(), pageable.getPageNumber());
 
+        // ✅ Using shared SongMapper — eliminates duplicate mapping logic
         return songRepository.findByArtistId(artist.getId(), pageable)
-                .map(this::mapSongToDTO);
+                .map(songMapper::toDTO);
     }
 
     // ── GET MY ALBUM BY ID ───────────────────────────────────────────────────
@@ -251,6 +273,7 @@ public class AlbumServiceImpl implements AlbumService {
     }
 
     // Map Album entity → AlbumDTO
+    // Note: album.getArtist() is LAZY — safe here as all callers are @Transactional
     private AlbumDTO mapToDTO(Album album) {
         int songCount = albumRepository.countSongsByAlbumId(album.getId());
 
@@ -264,26 +287,6 @@ public class AlbumServiceImpl implements AlbumService {
                 .artistName(album.getArtist() != null ? album.getArtist().getArtistName() : "Unknown")
                 .songCount(songCount)
                 .createdAt(album.getCreatedAt())
-                .build();
-    }
-
-    // Map Song entity → SongDTO
-    private SongDTO mapSongToDTO(Song song) {
-        return SongDTO.builder()
-                .id(song.getId())
-                .title(song.getTitle())
-                .genre(song.getGenre())
-                .duration(song.getDuration())
-                .audioUrl(song.getAudioUrl())
-                .coverImageUrl(song.getCoverImageUrl())
-                .releaseDate(song.getReleaseDate())
-                .playCount(song.getPlayCount())
-                .visibility(song.getVisibility() != null ? song.getVisibility().name() : null)
-                .artistId(song.getArtist() != null ? song.getArtist().getId() : null)
-                .artistName(song.getArtist() != null ? song.getArtist().getArtistName() : "Unknown")
-                .albumId(song.getAlbum() != null ? song.getAlbum().getId() : null)
-                .albumName(song.getAlbum() != null ? song.getAlbum().getName() : null)
-                .createdAt(song.getCreatedAt())
                 .build();
     }
 }
