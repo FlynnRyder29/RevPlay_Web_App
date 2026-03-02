@@ -14,6 +14,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -21,7 +22,6 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
-
     private final RevPlayAuthenticationEntryPoint authEntryPoint;
     private final RevPlayAccessDeniedHandler accessDeniedHandler;
 
@@ -29,11 +29,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-
-                // ✅ Disable CSRF only for API endpoints
                 .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
-                .authorizeHttpRequests(auth -> auth
 
+                .authorizeHttpRequests(auth -> auth
                         // ✅ Public pages
                         .requestMatchers(
                                 "/", "/auth/register", "/auth/login",
@@ -42,22 +40,23 @@ public class SecurityConfig {
                                 "/swagger-ui/**", "/v3/api-docs/**"
                         ).permitAll()
 
-                                // GET — listeners can browse
-                                .requestMatchers(HttpMethod.GET, "/api/songs/**")
-                                .authenticated()
+                        // GET — listeners can browse
+                        .requestMatchers(HttpMethod.GET, "/api/songs/**")
+                        .authenticated()
 
-                                // Modify — only ARTIST
-                                .requestMatchers(HttpMethod.POST, "/api/songs/**")
-                                .hasRole("ARTIST")
+                        // Modify — only ARTIST
+                        .requestMatchers(HttpMethod.POST, "/api/songs/**")
+                        .hasRole("ARTIST")
 
-                                .requestMatchers(HttpMethod.PUT, "/api/songs/**")
-                                .hasRole("ARTIST")
+                        .requestMatchers(HttpMethod.PUT, "/api/songs/**")
+                        .hasRole("ARTIST")
 
-                                .requestMatchers(HttpMethod.DELETE, "/api/songs/**")
-                                .hasRole("ARTIST")
+                        .requestMatchers(HttpMethod.DELETE, "/api/songs/**")
+                        .hasRole("ARTIST")
 
-                                .requestMatchers(HttpMethod.PATCH, "/api/songs/**")
-                                .hasRole("ARTIST")
+                        .requestMatchers(HttpMethod.PATCH, "/api/songs/**")
+                        .hasRole("ARTIST")
+
                         // ✅ Artist dashboard & analytics
                         .requestMatchers("/artist/dashboard/**",
                                 "/api/artists/me/**",
@@ -72,7 +71,11 @@ public class SecurityConfig {
                 )
 
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint(authEntryPoint)
+                        .defaultAuthenticationEntryPointFor(
+                                authEntryPoint,
+                                PathPatternRequestMatcher.withDefaults()
+                                        .matcher("/api/**")  // ✅ New API
+                        )
                         .accessDeniedHandler(accessDeniedHandler)
                 )
 
