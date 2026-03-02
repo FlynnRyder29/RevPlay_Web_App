@@ -19,4 +19,8 @@ public interface AlbumRepository extends JpaRepository<Album, Long> {
     Page<Album> findByArtistId(@Param("artistId") Long artistId, Pageable pageable);
 
     Page<Album> findAll(Pageable pageable);
+
+    // ✅ Count songs belonging to a specific album
+    @Query("SELECT COUNT(s) FROM Song s WHERE s.album.id = :albumId")
+    int countSongsByAlbumId(@Param("albumId") Long albumId);
 }
