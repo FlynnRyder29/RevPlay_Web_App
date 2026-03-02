@@ -105,14 +105,16 @@ class PlaylistServiceTest {
                 .visibility(Song.Visibility.PUBLIC)
                 .build();
 
-        // Wire SecurityContextHolder so getCurrentUser() resolves "alice" → owner
+        // ✅ FIX: Use lenient() for shared stubs that not every test needs
         Authentication auth = mock(Authentication.class);
-        when(auth.getName()).thenReturn("alice");
+        lenient().when(auth.getName()).thenReturn("alice");
+
         SecurityContext ctx = mock(SecurityContext.class);
-        when(ctx.getAuthentication()).thenReturn(auth);
+        lenient().when(ctx.getAuthentication()).thenReturn(auth);
         SecurityContextHolder.setContext(ctx);
 
-        when(userRepository.findByUsername("alice")).thenReturn(Optional.of(owner));
+        lenient().when(userRepository.findByUsername("alice"))
+                .thenReturn(Optional.of(owner));
     }
 
     @AfterEach

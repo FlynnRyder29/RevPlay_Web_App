@@ -119,6 +119,7 @@ public class FavoriteService {
         dto.setSongTitle(favorite.getSong().getTitle());
         dto.setArtistName(favorite.getSong().getArtist().getArtistName());
         dto.setCoverImageUrl(favorite.getSong().getCoverImageUrl());
+        dto.setDuration(favorite.getSong().getDuration());
         dto.setCreatedAt(favorite.getCreatedAt());
         return dto;
     }
