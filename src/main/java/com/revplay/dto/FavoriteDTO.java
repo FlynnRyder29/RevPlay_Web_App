@@ -14,5 +14,6 @@ public class FavoriteDTO {
     private String songTitle;
     private String artistName;
     private String coverImageUrl;
+    private Integer duration;
     private LocalDateTime createdAt;
 }
