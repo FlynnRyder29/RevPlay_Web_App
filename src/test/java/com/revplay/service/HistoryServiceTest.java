@@ -7,6 +7,7 @@ import com.revplay.model.ListeningHistory;
 import com.revplay.model.Role;
 import com.revplay.model.Song;
 import com.revplay.model.User;
+import java.util.List;
 import com.revplay.repository.HistoryRepository;
 import com.revplay.repository.SongRepository;
 import com.revplay.util.SecurityUtils;
@@ -294,5 +295,68 @@ class HistoryServiceTest {
         assertDoesNotThrow(() -> historyService.clearHistory());
 
         verify(historyRepository).deleteByUser_Id(1L);
+    }
+
+
+    // ── getAllHistory ─────────────────────────────────────────────
+
+    @Test
+    @DisplayName("getAllHistory - returns full list with all DTO fields mapped")
+    void getAllHistory_returnsFullListWithMappedFields() {
+        when(historyRepository.findAllByUser_IdOrderByPlayedAtDesc(1L))
+                .thenReturn(List.of(testHistory));
+
+        List<HistoryDTO> result = historyService.getAllHistory();
+
+        assertEquals(1, result.size());
+        HistoryDTO dto = result.get(0);
+        assertEquals(1L,             dto.getId());
+        assertEquals(10L,            dto.getSongId());
+        assertEquals("Test Song",    dto.getSongTitle());
+        assertEquals("Test Artist",  dto.getArtistName());
+        assertEquals("/covers/test.jpg", dto.getCoverImageUrl());
+        assertEquals(LocalDateTime.of(2024, 6, 1, 10, 0), dto.getPlayedAt());
+    }
+
+    @Test
+    @DisplayName("getAllHistory - empty history - returns empty list")
+    void getAllHistory_emptyHistory_returnsEmptyList() {
+        when(historyRepository.findAllByUser_IdOrderByPlayedAtDesc(1L))
+                .thenReturn(List.of());
+
+        List<HistoryDTO> result = historyService.getAllHistory();
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("getAllHistory - queries by current user id only")
+    void getAllHistory_queriesWithCurrentUserId() {
+        when(historyRepository.findAllByUser_IdOrderByPlayedAtDesc(1L))
+                .thenReturn(List.of());
+
+        historyService.getAllHistory();
+
+        verify(historyRepository).findAllByUser_IdOrderByPlayedAtDesc(1L);
+        verify(historyRepository, never()).findAllByUser_IdOrderByPlayedAtDesc(2L);
+    }
+
+    @Test
+    @DisplayName("getAllHistory - multiple entries - all mapped in order")
+    void getAllHistory_multipleEntries_allMappedInOrder() {
+        ListeningHistory h2 = new ListeningHistory();
+        h2.setId(2L);
+        h2.setUser(currentUser);
+        h2.setSong(testSong);
+        h2.setPlayedAt(LocalDateTime.of(2024, 5, 1, 9, 0));
+
+        when(historyRepository.findAllByUser_IdOrderByPlayedAtDesc(1L))
+                .thenReturn(List.of(testHistory, h2)); // testHistory is newer
+
+        List<HistoryDTO> result = historyService.getAllHistory();
+
+        assertEquals(2, result.size());
+        assertEquals(1L, result.get(0).getId()); // newest first
+        assertEquals(2L, result.get(1).getId());
     }
 }

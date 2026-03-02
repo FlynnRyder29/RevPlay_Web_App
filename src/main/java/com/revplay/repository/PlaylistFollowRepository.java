@@ -20,13 +20,13 @@ public interface PlaylistFollowRepository
             Long playlistId
     );
 
-    // Check if already following
+    // Check if already following (more efficient than loading the full entity)
     boolean existsByUser_IdAndPlaylist_Id(
             Long userId,
             Long playlistId
     );
 
-    // Unfollow playlist
+    // Unfollow — remove the join record
     void deleteByUser_IdAndPlaylist_Id(
             Long userId,
             Long playlistId

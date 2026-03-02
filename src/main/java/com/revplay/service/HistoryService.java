@@ -16,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class HistoryService {
 
@@ -59,7 +61,7 @@ public class HistoryService {
     }
 
     // -------------------------
-    // GET MY HISTORY (PAGINATED)
+    // GET MY HISTORY (PAGINATED / LIMITED)
     // -------------------------
 
     @Transactional(readOnly = true)
@@ -85,6 +87,25 @@ public class HistoryService {
     }
 
     // -------------------------
+    // GET ALL HISTORY (complete, unpaginated)
+    // -------------------------
+
+    @Transactional(readOnly = true)
+    public List<HistoryDTO> getAllHistory() {
+
+        User currentUser = securityUtils.getCurrentUser();
+
+        log.debug("Fetching full history for user {}",
+                currentUser.getId());
+
+        return historyRepository
+                .findAllByUser_IdOrderByPlayedAtDesc(currentUser.getId())
+                .stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    // -------------------------
     // CLEAR HISTORY
     // -------------------------
 
@@ -100,17 +121,20 @@ public class HistoryService {
     }
 
     // -------------------------
-    // Mapping
+    // MAPPER
     // -------------------------
 
     private HistoryDTO toDTO(ListeningHistory h) {
+
         HistoryDTO dto = new HistoryDTO();
+
         dto.setId(h.getId());
         dto.setSongId(h.getSong().getId());
         dto.setSongTitle(h.getSong().getTitle());
         dto.setArtistName(h.getSong().getArtist().getArtistName());
         dto.setCoverImageUrl(h.getSong().getCoverImageUrl());
         dto.setPlayedAt(h.getPlayedAt());
+
         return dto;
     }
 }

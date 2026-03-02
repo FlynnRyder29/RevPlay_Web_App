@@ -7,8 +7,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
+
+import jakarta.validation.Valid;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/history")
@@ -26,8 +28,10 @@ public class HistoryController {
     // -------------------------
     // ADD TO HISTORY
     // -------------------------
+
     @PostMapping
-    public ResponseEntity<Void> addToHistory(@Valid @RequestBody HistoryRequest request) {
+    public ResponseEntity<Void> addToHistory(
+            @Valid @RequestBody HistoryRequest request) {
 
         log.info("POST /api/history songId={}", request.getSongId());
 
@@ -37,8 +41,10 @@ public class HistoryController {
     }
 
     // -------------------------
-    // GET MY HISTORY
+    // GET MY HISTORY (RECENT / LIMITED)
+    // GET /api/history?limit=50  ← original path preserved (backward-compatible)
     // -------------------------
+
     @GetMapping
     public ResponseEntity<Page<HistoryDTO>> getMyHistory(
             @RequestParam(defaultValue = "50") int limit) {
@@ -51,8 +57,24 @@ public class HistoryController {
     }
 
     // -------------------------
+    // GET ALL HISTORY (complete, unpaginated)
+    // GET /api/history/all  ← new endpoint added per project plan
+    // -------------------------
+
+    @GetMapping("/all")
+    public ResponseEntity<List<HistoryDTO>> getAllHistory() {
+
+        log.info("GET /api/history/all");
+
+        return ResponseEntity.ok(
+                historyService.getAllHistory()
+        );
+    }
+
+    // -------------------------
     // CLEAR HISTORY
     // -------------------------
+
     @DeleteMapping
     public ResponseEntity<Void> clearHistory() {
 
