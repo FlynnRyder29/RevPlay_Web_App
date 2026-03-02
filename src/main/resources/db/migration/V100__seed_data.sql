@@ -253,11 +253,11 @@ INSERT INTO favorites (user_id, song_id) VALUES
 -- PLAYLIST FOLLOWS
 -- ============================================================
 
-INSERT INTO playlist_follows (user_id, playlist_id) VALUES
-(3, 1),  -- Bob follows Alice's Morning Vibes
-(3, 2),  -- Bob follows Alice's Late Night Drive
-(2, 4),  -- Alice follows Bob's Jazz Corner
-(2, 5);  -- Alice follows Bob's Workout Mix
+INSERT INTO playlist_follows (user_id, playlist_id, followed_at) VALUES
+(3, 1, NOW() - INTERVAL 5 DAY),  -- Bob follows Alice's Morning Vibes
+(3, 2, NOW() - INTERVAL 3 DAY),  -- Bob follows Alice's Late Night Drive
+(2, 4, NOW() - INTERVAL 4 DAY),  -- Alice follows Bob's Jazz Corner
+(2, 5, NOW() - INTERVAL 2 DAY);  -- Alice follows Bob's Workout Mix
 
 -- ============================================================
 -- LISTENING HISTORY
