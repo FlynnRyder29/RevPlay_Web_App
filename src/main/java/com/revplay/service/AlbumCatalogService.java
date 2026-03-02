@@ -3,6 +3,7 @@ package com.revplay.service;
 import com.revplay.dto.AlbumDTO;
 import com.revplay.dto.SongDTO;
 import com.revplay.exception.ResourceNotFoundException;
+import com.revplay.mapper.SongMapper;
 import com.revplay.model.Album;
 import com.revplay.model.Song;
 import com.revplay.repository.AlbumRepository;
@@ -25,6 +26,11 @@ public class AlbumCatalogService {
 
     private final AlbumRepository albumRepository;
     private final SongRepository songRepository;
+
+    // SongMapper injected for shared mapping — available for future use
+    // Note: mapSongToDTO(Song, String albumName) kept intentionally below
+    // to avoid lazy-loading album.getName() per song in tracklist queries
+    private final SongMapper songMapper;
     // ArtistRepository removed — not needed, we navigate via album.getArtist()
 
     @Transactional(readOnly = true)
