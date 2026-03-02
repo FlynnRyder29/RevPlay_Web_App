@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  Reusable icon fragment with image + emoji fallback.
+  Usage: <th:block th:replace="~{fragments/icon :: img(src='/images/icons/home.png', fallback='🏠', cls='')}"/>
+
+  Parameters:
+    src      — path to the image (e.g. /images/icons/home.png)
+    fallback — emoji fallback if image fails to load
+    cls      — additional CSS class (optional, pass '' for none)
+-->
+<span th:fragment="img(src, fallback, cls)" class="icon-wrapper">
+    <img th:src="@{${src}}"
+         th:alt="${fallback}"
+         th:class="'icon-img ' + ${cls}"
+         onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+    <span class="icon-fallback" style="display:none;" th:text="${fallback}"></span>
+</span>
+
+</body>
+</html>

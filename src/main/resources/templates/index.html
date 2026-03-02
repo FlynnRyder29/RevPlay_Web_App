@@ -1,44 +1,80 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<!-- We pass the title parameter to the head fragment -->
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <head th:replace="~{layout :: head('Home')}"></head>
 
 <body>
-    <!-- We call the layout page fragment, and pass the ~{::#home-content} block into it -->
-    <div th:replace="~{layout :: page(~{::#home-content})}">
+<div th:replace="~{layout :: page(~{::#home-content})}">
+    <div id="home-content">
 
-        <!-- This is the content that gets injected into the layout's <main> area -->
-        <div id="home-content">
+        <!-- ═══ Welcome Guest ═══ -->
+        <div sec:authorize="!isAuthenticated()" class="hero-section">
+            <div class="hero-glow"></div>
+            <h1 class="hero-title">Music for everyone.</h1>
+            <p class="hero-subtitle">
+                Millions of songs. No credit card needed.
+            </p>
+            <a th:href="@{/auth/register}" class="hero-cta">
+                GET REVPLAY FREE
+            </a>
+            <div class="hero-features">
+                <div class="hero-feature">
+                    <span class="hero-feature-icon">🎵</span>
+                    <span>Unlimited Songs</span>
+                </div>
+                <div class="hero-feature">
+                    <span class="hero-feature-icon">📋</span>
+                    <span>Custom Playlists</span>
+                </div>
+                <div class="hero-feature">
+                    <span class="hero-feature-icon">🎤</span>
+                    <span>Artist Profiles</span>
+                </div>
+            </div>
+        </div>
 
-            <!-- Welcome Guest Section -->
-            <div sec:authorize="!isAuthenticated()" style="text-align: center; padding: 60px 20px;">
-                <h1 style="font-size: 3rem; margin-bottom: 20px; color: var(--primary-color);">Music for everyone.</h1>
-                <p style="font-size: 1.2rem; margin-bottom: 40px; color: var(--text-muted);">Millions of songs. No
-                    credit card needed.</p>
-                <a th:href="@{/auth/register}" class="btn-primary"
-                    style="display: inline-block; padding: 15px 40px; width: auto; font-size: 1.1rem;">GET REVPLAY
-                    FREE</a>
+        <!-- ═══ Welcome Logged-In User ═══ -->
+        <div sec:authorize="isAuthenticated()">
+
+            <!-- Greeting -->
+            <div class="greeting-section">
+                <h1 class="greeting-text" id="greeting-heading">Welcome back!</h1>
             </div>
 
-            <!-- Welcome Logged In User -->
-            <div sec:authorize="isAuthenticated()">
-                <h1 style="margin-bottom: 30px;">Good Afternoon!</h1>
+            <!-- Recently Added -->
+            <section class="home-section">
+                <div class="section-header">
+                    <h2 class="section-title">Recently Added</h2>
+                    <a th:href="@{/library}" class="section-see-all">See all</a>
+                </div>
 
-                <h2>Recently Added</h2>
-                <div class="song-grid" th:if="${recentSongs != null && !recentSongs.isEmpty()}">
+                <div class="song-grid"
+                     th:if="${recentSongs != null && !recentSongs.isEmpty()}">
                     <th:block th:each="song : ${recentSongs}">
                         <div th:replace="~{fragments/song-card :: card(song=${song})}"></div>
                     </th:block>
                 </div>
+
                 <div th:if="${recentSongs == null || recentSongs.isEmpty()}"
-                    style="text-align: center; padding: 40px; color: var(--text-muted);">
+                     class="empty-state" style="padding: 40px;">
+                    <div class="empty-icon">🎵</div>
                     <p>No songs yet. Check back soon!</p>
                 </div>
-            </div>
+            </section>
 
         </div>
     </div>
-</body>
+</div>
 
+<!-- Dynamic greeting based on time of day -->
+<script>
+    (function () {
+        var h = new Date().getHours();
+        var greeting = h < 12 ? 'Good Morning!' : h < 18 ? 'Good Afternoon!' : 'Good Evening!';
+        var el = document.getElementById('greeting-heading');
+        if (el) el.textContent = greeting;
+    })();
+</script>
+</body>
 </html>

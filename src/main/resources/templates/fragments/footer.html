@@ -1,27 +1,80 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
+
 <footer th:fragment="mainFooter" class="site-footer">
-    <div>
-        <strong>RevPlay &copy; 2026</strong>
-        <p style="margin-top: 10px;">Your favorite tunes, beautifully streamed.</p>
-    </div>
-    <div style="display: flex; gap: 40px;">
-        <div>
-            <h4 style="color: white; margin-bottom: 15px;">Company</h4>
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-                <a href="#">About</a>
-                <a href="#">Jobs</a>
+    <div class="footer-content">
+
+        <!-- Brand -->
+        <div class="footer-brand">
+            <div class="footer-logo">
+                <span class="footer-logo-icon">
+                    <img th:src="@{/images/icons/headphone.png}"
+                         alt="🎧"
+                         class="footer-logo-img"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                    <span class="icon-fallback" style="display:none;">🎧</span>
+                </span>
+                RevPlay
+            </div>
+            <p class="footer-tagline">Your favorite tunes, beautifully streamed.</p>
+            <div class="footer-socials">
+                <a href="#" class="social-link" title="Instagram">
+                    <img th:src="@{/images/icons/instagram.png}"
+                         alt="📷"
+                         class="social-icon-img"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                    <span class="icon-fallback" style="display:none;">📷</span>
+                </a>
+                <a href="#" class="social-link" title="Twitter">
+                    <img th:src="@{/images/icons/twitter.png}"
+                         alt="🐦"
+                         class="social-icon-img"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                    <span class="icon-fallback" style="display:none;">🐦</span>
+                </a>
+                <a href="#" class="social-link" title="YouTube">
+                    <img th:src="@{/images/icons/youtube.png}"
+                         alt="📺"
+                         class="social-icon-img"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                    <span class="icon-fallback" style="display:none;">📺</span>
+                </a>
             </div>
         </div>
-        <div>
-            <h4 style="color: white; margin-bottom: 15px;">Communities</h4>
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-                <a href="#">For Artists</a>
-                <a href="#">Developers</a>
+
+        <!-- Columns -->
+        <div class="footer-columns">
+            <div class="footer-col">
+                <h4 class="footer-col-title">Company</h4>
+                <a href="#" class="footer-link">About</a>
+                <a href="#" class="footer-link">Jobs</a>
+                <a href="#" class="footer-link">Press</a>
             </div>
+            <div class="footer-col">
+                <h4 class="footer-col-title">Communities</h4>
+                <a href="#" class="footer-link">For Artists</a>
+                <a href="#" class="footer-link">Developers</a>
+                <a href="#" class="footer-link">Investors</a>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-col-title">Useful Links</h4>
+                <a href="#" class="footer-link">Support</a>
+                <a href="#" class="footer-link">Mobile App</a>
+                <a href="#" class="footer-link">Free Music</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        <span>&copy; 2026 RevPlay. All rights reserved.</span>
+        <div class="footer-bottom-links">
+            <a href="#">Privacy</a>
+            <a href="#">Terms</a>
+            <a href="#">Cookies</a>
         </div>
     </div>
 </footer>
+
 </body>
 </html>
