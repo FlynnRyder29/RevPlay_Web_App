@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head('Library')}"></head>
+<body>
+<div th:replace="~{layout :: page(~{::#library-content})}">
+
+    <div id="library-content">
+
+        <!-- ============ Page Header ============ -->
+        <div class="library-header">
+            <h1>Browse Music</h1>
+            <p class="library-subtitle">Discover songs from talented artists</p>
+        </div>
+
+        <!-- ============ Search & Filter Bar ============ -->
+        <div class="library-controls">
+            <!-- Search Form -->
+            <form th:action="@{/library}" method="get" class="search-form">
+                <div class="search-input-wrapper">
+                    <span class="search-icon">🔍</span>
+                    <input type="text"
+                           name="q"
+                           class="search-input"
+                           placeholder="Search songs, artists..."
+                           th:value="${currentQuery}">
+                </div>
+                <button type="submit" class="btn-search">Search</button>
+            </form>
+
+            <!-- Genre Filter -->
+            <form th:action="@{/library}" method="get" class="genre-filter-form">
+                <select name="genre" class="genre-select" onchange="this.form.submit()">
+                    <option value="">All Genres</option>
+                    <option th:each="g : ${genres}"
+                            th:value="${g.name}"
+                            th:text="${g.name}"
+                            th:selected="${g.name == currentGenre}">Genre</option>
+                </select>
+            </form>
+        </div>
+
+        <!-- Active Filter Indicator -->
+        <div class="active-filters" th:if="${currentQuery != null || currentGenre != null}">
+            <span class="filter-label">Showing results for:</span>
+            <span class="filter-tag" th:if="${currentQuery != null}" th:text="'Search: ' + ${currentQuery}"></span>
+            <span class="filter-tag" th:if="${currentGenre != null}" th:text="'Genre: ' + ${currentGenre}"></span>
+            <a th:href="@{/library}" class="clear-filters">✕ Clear</a>
+        </div>
+
+        <!-- ============ Song Grid ============ -->
+        <div class="song-grid" th:if="${songs != null && songs.totalElements > 0}">
+            <th:block th:each="song : ${songs.content}">
+                <div th:replace="~{fragments/song-card :: card(song=${song})}"></div>
+            </th:block>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" th:if="${songs == null || songs.totalElements == 0}">
+            <div class="empty-icon">🎵</div>
+            <h2>No songs found</h2>
+            <p th:if="${currentQuery != null}">Try a different search term</p>
+            <p th:if="${currentQuery == null}">Songs will appear here once artists upload them</p>
+            <a th:href="@{/library}" class="btn-primary" style="display: inline-block; width: auto; padding: 12px 30px; margin-top: 15px;">Browse All</a>
+        </div>
+
+        <!-- ============ Pagination ============ -->
+        <div class="pagination" th:if="${songs != null && songs.totalPages > 1}">
+            <!-- Previous -->
+            <a th:if="${songs.hasPrevious()}"
+               th:href="@{/library(q=${currentQuery}, genre=${currentGenre}, page=${songs.number - 1}, size=${songs.size})}"
+               class="page-link">← Previous</a>
+            <span th:if="${!songs.hasPrevious()}" class="page-link disabled">← Previous</span>
+
+            <!-- Page Numbers -->
+            <div class="page-numbers">
+                <th:block th:each="i : ${#numbers.sequence(0, songs.totalPages - 1)}">
+                    <a th:if="${i != songs.number}"
+                       th:href="@{/library(q=${currentQuery}, genre=${currentGenre}, page=${i}, size=${songs.size})}"
+                       th:text="${i + 1}"
+                       class="page-num"></a>
+                    <span th:if="${i == songs.number}"
+                          th:text="${i + 1}"
+                          class="page-num active"></span>
+                </th:block>
+            </div>
+
+            <!-- Next -->
+            <a th:if="${songs.hasNext()}"
+               th:href="@{/library(q=${currentQuery}, genre=${currentGenre}, page=${songs.number + 1}, size=${songs.size})}"
+               class="page-link">Next →</a>
+            <span th:if="${!songs.hasNext()}" class="page-link disabled">Next →</span>
+        </div>
+
+        <!-- Song Count -->
+        <div class="song-count" th:if="${songs != null && songs.totalElements > 0}">
+            <span th:text="'Showing ' + ${songs.numberOfElements} + ' of ' + ${songs.totalElements} + ' songs'"></span>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>
