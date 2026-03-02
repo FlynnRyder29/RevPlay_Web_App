@@ -7,8 +7,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
+
+import jakarta.validation.Valid;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/history")
@@ -24,10 +26,11 @@ public class HistoryController {
     }
 
     // -------------------------
-    // ADD TO HISTORY
+    // RECORD PLAY
     // -------------------------
     @PostMapping
-    public ResponseEntity<Void> addToHistory(@Valid @RequestBody HistoryRequest request) {
+    public ResponseEntity<Void> recordPlay(
+            @Valid @RequestBody HistoryRequest request) {
 
         log.info("POST /api/history songId={}", request.getSongId());
 
@@ -37,16 +40,29 @@ public class HistoryController {
     }
 
     // -------------------------
-    // GET MY HISTORY
+    // GET RECENT (LIMITED)
     // -------------------------
-    @GetMapping
-    public ResponseEntity<Page<HistoryDTO>> getMyHistory(
+    @GetMapping("/recent")
+    public ResponseEntity<Page<HistoryDTO>> getRecentHistory(
             @RequestParam(defaultValue = "50") int limit) {
 
-        log.info("GET /api/history?limit={}", limit);
+        log.info("GET /api/history/recent?limit={}", limit);
 
         return ResponseEntity.ok(
-                historyService.getMyHistory(limit)
+                historyService.getRecentHistory(limit)
+        );
+    }
+
+    // -------------------------
+    // GET ALL HISTORY
+    // -------------------------
+    @GetMapping("/all")
+    public ResponseEntity<List<HistoryDTO>> getAllHistory() {
+
+        log.info("GET /api/history/all");
+
+        return ResponseEntity.ok(
+                historyService.getAllHistory()
         );
     }
 
