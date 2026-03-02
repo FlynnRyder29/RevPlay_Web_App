@@ -1,10 +1,11 @@
 package com.revplay.service;
 
+import com.revplay.mapper.SongMapper;
 import com.revplay.model.Artist;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
@@ -17,7 +18,6 @@ import com.revplay.repository.AlbumRepository;
 import com.revplay.repository.SongRepository;
 import com.revplay.dto.AlbumDTO;
 import com.revplay.exception.ResourceNotFoundException;
-import org.springframework.data.jpa.domain.Specification;
 
 
 import java.util.List;
@@ -37,8 +37,15 @@ class AlbumCatalogServiceTest {
     @Mock
     private SongRepository songRepository;
 
-    @InjectMocks
+    @Mock
+    private SongMapper songMapper;
+
     private AlbumCatalogService albumCatalogService;
+
+    @BeforeEach
+    void setUp() {
+        albumCatalogService = new AlbumCatalogService(albumRepository, songRepository, songMapper);
+    }
 
     @Test
     @DisplayName("getAllAlbums - pagination returns paged album list")
@@ -115,9 +122,17 @@ class AlbumCatalogServiceTest {
 
 
     private Song createMockSong(Long id) {
+        Artist mockArtist = new Artist();
+        mockArtist.setId(10L);
+        mockArtist.setArtistName("Mock Artist");
+
         Song song = new Song();
         song.setId(id);
         song.setTitle("Mock Track");
+        song.setGenre("Rock");
+        song.setDuration(200);
+        song.setArtist(mockArtist);
         return song;
     }
+
 }

@@ -77,6 +77,8 @@ class ArtistCatalogServiceTest {
         assertNotNull(result);
         assertEquals("Test Artist", result.getArtistName());
         assertEquals(1, result.getAlbums().size());
+        assertEquals(1, result.getSongs().size());                          // ← ADD
+        assertEquals("Mock Song", result.getSongs().get(0).getTitle());
         verify(artistRepository).findById(artistId);
         verify(songRepository).findAllByArtistId(artistId);
         verify(albumRepository).findAllByArtistId(artistId);

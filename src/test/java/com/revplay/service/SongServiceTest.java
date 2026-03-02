@@ -1,5 +1,8 @@
 package com.revplay.service;
 
+import com.revplay.repository.AlbumRepository;
+import com.revplay.repository.ArtistRepository;
+import com.revplay.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,6 +34,9 @@ class SongServiceTest {
 
     @Mock
     private SongRepository songRepository;
+    private ArtistRepository artistRepository;
+    private AlbumRepository albumRepository;
+    private UserRepository userRepository;
 
     @InjectMocks
     private SongService songService;
