@@ -21,4 +21,6 @@ public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
 
     // Remove favorite
     void deleteByUser_IdAndSong_Id(Long userId, Long songId);
+
+    List<Favorite> findByUser_IdOrderByCreatedAtDesc(Long userId);
 }
