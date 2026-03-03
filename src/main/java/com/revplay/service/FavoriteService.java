@@ -2,6 +2,7 @@ package com.revplay.service;
 
 import com.revplay.dto.FavoriteDTO;
 import com.revplay.exception.ResourceNotFoundException;
+import com.revplay.exception.BadRequestException;
 import com.revplay.model.Favorite;
 import com.revplay.model.Song;
 import com.revplay.model.User;
@@ -13,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,6 +40,8 @@ public class FavoriteService {
     // ADD FAVORITE
     // -------------------------
 
+    // Inside FavoriteService.java — verify these guards exist
+
     @Transactional
     public void addFavorite(Long songId) {
 
@@ -45,47 +49,40 @@ public class FavoriteService {
 
         Song song = songRepository.findById(songId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Song", "id", songId));
+                        new ResourceNotFoundException("Song", "id", songId));
 
+        // ── DUPLICATE GUARD — must exist ──
         if (favoriteRepository.existsByUser_IdAndSong_Id(
                 currentUser.getId(), songId)) {
-
-            log.debug("Song {} already favorited by user {}",
-                    songId, currentUser.getId());
-            return; // Prevent duplicate favorites
+            throw new BadRequestException(
+                    "Song " + songId + " is already in your favorites");
         }
 
         Favorite favorite = new Favorite();
         favorite.setUser(currentUser);
         favorite.setSong(song);
+        favorite.setCreatedAt(LocalDateTime.now());
 
         favoriteRepository.save(favorite);
 
-        log.debug("Added favorite: user={}, song={}",
+        log.debug("User {} favorited song {}",
                 currentUser.getId(), songId);
     }
-
-    // -------------------------
-    // REMOVE FAVORITE
-    // -------------------------
 
     @Transactional
     public void removeFavorite(Long songId) {
 
         User currentUser = securityUtils.getCurrentUser();
 
-        if (!favoriteRepository.existsByUser_IdAndSong_Id(
-                currentUser.getId(), songId)) {
+        Favorite favorite = favoriteRepository
+                .findByUser_IdAndSong_Id(currentUser.getId(), songId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Favorite", "songId", songId));
 
-            throw new ResourceNotFoundException(
-                    "Favorite", "songId", songId);
-        }
+        favoriteRepository.delete(favorite);
 
-        favoriteRepository.deleteByUser_IdAndSong_Id(
-                currentUser.getId(), songId);
-
-        log.debug("Removed favorite: user={}, song={}",
+        log.debug("User {} unfavorited song {}",
                 currentUser.getId(), songId);
     }
 
