@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head('Playlists')}"></head>
+<body>
+<div th:replace="~{layout :: page(~{::#playlist-content})}">
+
+    <div id="playlist-content">
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!--  LIST MODE — Show all user's playlists     -->
+        <!-- ═══════════════════════════════════════════ -->
+        <div th:if="${viewMode == 'list'}">
+
+            <!-- Page Header -->
+            <div class="playlist-page-header">
+                <div class="playlist-header-left">
+                    <h1>Your Playlists</h1>
+                    <p class="playlist-subtitle" th:text="${playlists != null ? playlists.size() + ' playlists' : '0 playlists'}"></p>
+                </div>
+                <button class="btn-create-playlist" onclick="document.getElementById('create-modal').style.display='flex'">
+                    + New Playlist
+                </button>
+            </div>
+
+            <!-- Playlists Grid -->
+            <div class="playlist-grid" th:if="${playlists != null && !playlists.isEmpty()}">
+                <a th:each="pl : ${playlists}"
+                   th:href="@{/playlists/{id}(id=${pl.id})}"
+                   class="playlist-card">
+                    <div class="playlist-card-icon">📋</div>
+                    <div class="playlist-card-info">
+                        <div class="playlist-card-name" th:text="${pl.name}">My Playlist</div>
+                        <div class="playlist-card-meta">
+                            <span th:text="${pl.description != null ? pl.description : 'No description'}">Description</span>
+                        </div>
+                        <div class="playlist-card-badge">
+                            <span th:if="${pl.public}" class="badge-public">Public</span>
+                            <span th:if="${!pl.public}" class="badge-private">Private</span>
+                        </div>
+                    </div>
+                    <div class="playlist-card-arrow">→</div>
+                </a>
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state" th:if="${playlists == null || playlists.isEmpty()}">
+                <div class="empty-icon">📋</div>
+                <h2>No playlists yet</h2>
+                <p>Create your first playlist to start organizing your music</p>
+                <button class="btn-primary" style="display: inline-block; width: auto; padding: 12px 30px; margin-top: 15px;"
+                        onclick="document.getElementById('create-modal').style.display='flex'">
+                    Create Playlist
+                </button>
+            </div>
+
+            <!-- Create Playlist Modal -->
+            <div id="create-modal" class="modal-overlay" style="display:none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Create New Playlist</h2>
+                        <button class="modal-close" onclick="document.getElementById('create-modal').style.display='none'">✕</button>
+                    </div>
+                    <form id="create-playlist-form">
+                        <div class="form-group">
+                            <label for="playlist-name">Name</label>
+                            <input type="text" id="playlist-name" class="form-control" placeholder="My awesome playlist" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="playlist-desc">Description</label>
+                            <textarea id="playlist-desc" class="form-control" rows="3" placeholder="What's this playlist about?"></textarea>
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" id="playlist-public">
+                            <label for="playlist-public" style="margin-bottom: 0; cursor: pointer;">Make it public</label>
+                        </div>
+                        <button type="submit" class="btn-primary">Create</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!--  DETAIL MODE — Show songs in a playlist    -->
+        <!-- ═══════════════════════════════════════════ -->
+        <div th:if="${viewMode == 'detail'}">
+
+            <!-- Playlist Header -->
+            <div class="playlist-detail-header">
+                <div class="playlist-detail-icon">📋</div>
+                <div class="playlist-detail-info">
+                    <span class="playlist-type-label">PLAYLIST</span>
+                    <h1 class="playlist-detail-name" th:text="${playlist.name}">Playlist Name</h1>
+                    <p class="playlist-detail-desc" th:if="${playlist.description}" th:text="${playlist.description}">Description</p>
+                    <div class="playlist-detail-meta">
+                        <span th:if="${playlist.public}" class="badge-public">Public</span>
+                        <span th:if="${!playlist.public}" class="badge-private">Private</span>
+                        <span class="meta-separator">•</span>
+                        <span th:text="${songs != null ? songs.size() + ' songs' : '0 songs'}">0 songs</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Song List -->
+            <div class="playlist-song-list" th:if="${songs != null && !songs.isEmpty()}">
+                <div class="playlist-song-header">
+                    <span class="col-num">#</span>
+                    <span class="col-title">TITLE</span>
+                    <span class="col-artist">ARTIST</span>
+                    <span class="col-duration">⏱</span>
+                </div>
+                <div th:each="song, iter : ${songs}"
+                     class="playlist-song-row"
+                     th:data-id="${song.id}"
+                     th:data-url="${song.audioUrl}"
+                     th:data-title="${song.title}"
+                     th:data-artist="${song.artistName}">
+                    <span class="col-num" th:text="${iter.index + 1}">1</span>
+                    <div class="col-title">
+                        <img th:src="${song.coverImageUrl != null ? song.coverImageUrl : 'https://www.shutterstock.com/shutterstock/photos/2626947211/display_1500/stock-vector-jazz-music-poster-design-template-2626947211.jpg'}"
+                             alt="Cover" class="song-row-cover">
+                        <span class="song-row-title" th:text="${song.title}">Song Title</span>
+                    </div>
+                    <span class="col-artist">
+                        <a th:href="@{/artist/{id}(id=${song.artistId})}" th:text="${song.artistName}">Artist</a>
+                    </span>
+                    <span class="col-duration" th:text="${song.duration != null ? (song.duration / 60) + ':' + String.format('%02d', song.duration % 60) : '--:--'}">3:45</span>
+                </div>
+            </div>
+
+            <!-- Empty Song List -->
+            <div class="empty-state" th:if="${songs == null || songs.isEmpty()}" style="padding: 60px 20px;">
+                <div class="empty-icon">🎵</div>
+                <h2>This playlist is empty</h2>
+                <p>Add songs from the library to build your playlist</p>
+                <a th:href="@{/library}" class="btn-primary" style="display: inline-block; width: auto; padding: 12px 30px; margin-top: 15px;">
+                    Browse Library
+                </a>
+            </div>
+
+            <!-- Back link -->
+            <div style="margin-top: 30px;">
+                <a th:href="@{/playlists}" class="back-link">← Back to Playlists</a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Create playlist via API -->
+<script>
+    document.getElementById('create-playlist-form')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var name = document.getElementById('playlist-name').value;
+        var desc = document.getElementById('playlist-desc').value;
+        var isPublic = document.getElementById('playlist-public').checked;
+
+        fetch('/api/playlists', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]')?.content || ''
+            },
+            body: JSON.stringify({ name: name, description: desc, isPublic: isPublic })
+        })
+            .then(function(res) {
+                if (res.ok) { window.location.reload(); }
+                else { alert('Failed to create playlist'); }
+            })
+            .catch(function() { alert('Error creating playlist'); });
+    });
+</script>
+</body>
+</html>

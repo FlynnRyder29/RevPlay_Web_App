@@ -244,7 +244,7 @@ public class AlbumServiceImpl implements AlbumService {
                 .getAuthentication()
                 .getName();
 
-        return userRepository.findByUsername(username)
+        return userRepository.findByEmailOrUsername(username, username)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "User", "username", username));
     }
