@@ -495,6 +495,17 @@ class PlaylistServiceTest {
     }
 
     @Test
+      @DisplayName("reorderSongs - playlist not found - throws ResourceNotFoundException")
+     void reorderSongs_notFound_throwsResourceNotFoundException() {
+         when(playlistRepository.findById(99L)).thenReturn(Optional.empty());
+
+         assertThrows(ResourceNotFoundException.class,
+                                 () -> playlistService.reorderSongs(99L, List.of(1L, 2L)));
+
+         verify(playlistSongRepository, never()).saveAll(any());
+     }
+
+    @Test
     @DisplayName("reorderSongs - saveAll called with the mutated list")
     void reorderSongs_saveAllCalledWithMutatedList() {
         Song song1 = Song.builder().id(1L).title("S1").duration(100).build();

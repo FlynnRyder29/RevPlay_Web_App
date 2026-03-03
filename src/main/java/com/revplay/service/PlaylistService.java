@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -185,16 +186,17 @@ public class PlaylistService {
             throw new UnauthorizedAccessException("You don't own this playlist");
         }
 
+        // Idempotent — prevent duplicates silently
         if (playlistSongRepository.existsByPlaylist_IdAndSong_Id(playlistId, songId)) {
             log.debug("Song {} already in playlist {}", songId, playlistId);
-            return; // Prevent duplicates silently — same pattern as FavoriteService
+            return;
         }
 
         Song song = songRepository.findById(songId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Song", "id", songId));
 
-        // Position = current count so new song goes to end
+        // Position = current count so new song goes to the end
         List<PlaylistSong> existing = playlistSongRepository
                 .findByPlaylist_IdOrderByPosition(playlistId);
 
@@ -237,10 +239,12 @@ public class PlaylistService {
 
     // -------------------------
     // REORDER SONGS
+    // orderedSongIds: complete list of songIds in the desired new order.
+    // e.g. [3, 1, 5, 2] → song 3 gets position 0, song 1 gets position 1, etc.
+    // The list must contain exactly the same songs already in the playlist —
+    // no additions, no omissions.
     // -------------------------
 
-    // orderedSongIds: full list of songIds in the desired order
-    // e.g. [3, 1, 5, 2] → song 3 gets position 0, song 1 gets position 1, etc.
     @Transactional
     public void reorderSongs(Long playlistId, List<Long> orderedSongIds) {
 
@@ -257,14 +261,15 @@ public class PlaylistService {
         List<PlaylistSong> playlistSongs = playlistSongRepository
                 .findByPlaylist_IdOrderByPosition(playlistId);
 
+        // Caller must provide exactly as many IDs as there are songs
         if (orderedSongIds.size() != playlistSongs.size()) {
             throw new BadRequestException(
                     "Reorder list must contain all " + playlistSongs.size()
                             + " songs in the playlist");
         }
 
-        // Build a map of songId → PlaylistSong for quick lookup
-        java.util.Map<Long, PlaylistSong> songMap = playlistSongs.stream()
+        // Build songId → PlaylistSong map for O(1) lookups
+        Map<Long, PlaylistSong> songMap = playlistSongs.stream()
                 .collect(Collectors.toMap(
                         ps -> ps.getSong().getId(),
                         ps -> ps
@@ -296,14 +301,12 @@ public class PlaylistService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Playlist", "id", playlistId));
 
-        // Can only follow public playlists
         if (!playlist.isPublic()) {
             throw new BadRequestException("Cannot follow a private playlist");
         }
 
         User currentUser = getCurrentUser();
 
-        // Cannot follow your own playlist
         if (playlist.getUser().getId().equals(currentUser.getId())) {
             throw new BadRequestException("You cannot follow your own playlist");
         }
@@ -311,7 +314,7 @@ public class PlaylistService {
         if (playlistFollowRepository.existsByUser_IdAndPlaylist_Id(
                 currentUser.getId(), playlistId)) {
             log.debug("User {} already follows playlist {}", currentUser.getId(), playlistId);
-            return; // Prevent duplicate follows silently
+            return;
         }
 
         PlaylistFollow follow = new PlaylistFollow();
@@ -359,7 +362,7 @@ public class PlaylistService {
     }
 
     // -------------------------
-    // Mapping
+    // MAPPER
     // -------------------------
 
     private PlaylistDTO toDTO(Playlist playlist) {
