@@ -43,4 +43,11 @@ public interface SongRepository extends JpaRepository<Song, Long>, JpaSpecificat
     Page<Song> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
     Page<Song> findByGenreIgnoreCase(String genre, Pageable pageable);
+
+    // ── ADDED FOR DAY 6 ANALYTICS ─────────────────────────────────────────────
+
+    // Efficient count — avoids loading all songs into memory
+    // Used in AnalyticsService.getOverview() instead of findAllByArtistId().size()
+    @Query("SELECT COUNT(s) FROM Song s WHERE s.artist.id = :artistId")
+    long countByArtistId(@Param("artistId") Long artistId);
 }

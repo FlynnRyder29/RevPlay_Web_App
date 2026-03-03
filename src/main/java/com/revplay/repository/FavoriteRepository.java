@@ -2,6 +2,8 @@ package com.revplay.repository;
 
 import com.revplay.model.Favorite;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -21,6 +23,13 @@ public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
 
     // Remove favorite
     void deleteByUser_IdAndSong_Id(Long userId, Long songId);
+
+    // ── ADDED FOR DAY 6 ANALYTICS ─────────────────────────────────────────────
+
+    // Total favorites across ALL songs of a specific artist
+    // Used in overview endpoint — total times artist's songs were favorited
+    @Query("SELECT COUNT(f) FROM Favorite f WHERE f.song.artist.id = :artistId")
+    long countByArtistId(@Param("artistId") Long artistId);
 
     List<Favorite> findByUser_IdOrderByCreatedAtDesc(Long userId);
 }
