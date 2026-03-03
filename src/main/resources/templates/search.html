@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head('Search')}"></head>
+<body>
+<div th:replace="~{layout :: page(~{::#search-content})}">
+
+    <div id="search-content">
+
+        <!-- ═══ Search Header ═══ -->
+        <div class="search-page-header">
+            <h1>Search</h1>
+            <p class="search-page-subtitle">Find songs, artists, and more</p>
+        </div>
+
+        <!-- ═══ Search Bar ═══ -->
+        <form th:action="@{/search}" method="get" class="search-page-form">
+            <div class="search-input-wrapper" style="max-width: 600px;">
+                <span class="search-icon">🔍</span>
+                <input type="text"
+                       name="q"
+                       class="search-input"
+                       placeholder="What do you want to listen to?"
+                       th:value="${query}"
+                       autofocus>
+            </div>
+            <button type="submit" class="btn-search">Search</button>
+        </form>
+
+        <!-- ═══ Results Summary ═══ -->
+        <div class="search-results-summary" th:if="${query != null && !query.isEmpty()}">
+            <span th:if="${results != null}" th:text="'Found ' + ${results.totalElements} + ' results for '">Found X results for </span>
+            <strong th:if="${results != null}" th:text="'&quot;' + ${query} + '&quot;'">"query"</strong>
+            <span th:if="${results == null || results.totalElements == 0}" class="no-results-text">No results found</span>
+        </div>
+
+        <!-- ═══ Results Grid ═══ -->
+        <div class="song-grid" th:if="${results != null && results.totalElements > 0}">
+            <th:block th:each="song : ${results.content}">
+                <div th:replace="~{fragments/song-card :: card(song=${song})}"></div>
+            </th:block>
+        </div>
+
+        <!-- ═══ Pagination ═══ -->
+        <div class="pagination" th:if="${results != null && results.totalPages > 1}">
+            <!-- Previous -->
+            <a th:if="${results.hasPrevious()}"
+               th:href="@{/search(q=${query}, page=${results.number - 1}, size=${results.size})}"
+               class="page-link">← Previous</a>
+            <span th:if="${!results.hasPrevious()}" class="page-link disabled">← Previous</span>
+
+            <!-- Page Numbers -->
+            <div class="page-numbers">
+                <th:block th:each="i : ${#numbers.sequence(0, results.totalPages - 1)}">
+                    <a th:if="${i != results.number}"
+                       th:href="@{/search(q=${query}, page=${i}, size=${results.size})}"
+                       th:text="${i + 1}"
+                       class="page-num"></a>
+                    <span th:if="${i == results.number}"
+                          th:text="${i + 1}"
+                          class="page-num active"></span>
+                </th:block>
+            </div>
+
+            <!-- Next -->
+            <a th:if="${results.hasNext()}"
+               th:href="@{/search(q=${query}, page=${results.number + 1}, size=${results.size})}"
+               class="page-link">Next →</a>
+            <span th:if="${!results.hasNext()}" class="page-link disabled">Next →</span>
+        </div>
+
+        <!-- ═══ Empty/Initial State ═══ -->
+        <div class="empty-state" th:if="${query == null || query.isEmpty()}">
+            <div class="empty-icon">🔍</div>
+            <h2>Start searching</h2>
+            <p>Type a song name, artist, or genre to find music</p>
+        </div>
+
+        <div class="empty-state" th:if="${query != null && !query.isEmpty() && (results == null || results.totalElements == 0)}">
+            <div class="empty-icon">😔</div>
+            <h2>No results found</h2>
+            <p th:text="'We couldn\'t find anything matching &quot;' + ${query} + '&quot;'">No results</p>
+            <a th:href="@{/library}" class="btn-primary" style="display: inline-block; width: auto; padding: 12px 30px; margin-top: 15px;">
+                Browse Library
+            </a>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

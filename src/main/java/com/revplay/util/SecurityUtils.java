@@ -18,7 +18,7 @@ public class SecurityUtils {
     public User getCurrentUser() {
         String username = SecurityContextHolder.getContext()
                 .getAuthentication().getName();
-        return userRepository.findByUsername(username)
+        return userRepository.findByEmailOrUsername(username, username)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("User", "username", username));
     }

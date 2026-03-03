@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head('Artist Dashboard')}"></head>
+<body>
+<div th:replace="~{layout :: page(~{::#dashboard-content})}">
+
+    <div id="dashboard-content">
+
+        <!-- ═══ Dashboard Header ═══ -->
+        <div class="dashboard-header">
+            <div class="dashboard-header-info">
+                <span class="dashboard-label">ARTIST DASHBOARD</span>
+                <h1 th:text="${profile.artistName}">Artist Name</h1>
+                <p class="dashboard-subtitle" th:if="${profile.genre}" th:text="${profile.genre}">Genre</p>
+            </div>
+        </div>
+
+        <!-- ═══ Stats Cards ═══ -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">🎵</div>
+                <div class="stat-value" th:text="${totalSongs != null ? totalSongs : 0}">0</div>
+                <div class="stat-label">Total Songs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">💿</div>
+                <div class="stat-value" th:text="${totalAlbums != null ? totalAlbums : 0}">0</div>
+                <div class="stat-label">Albums</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">▶️</div>
+                <div class="stat-value" th:text="${totalPlays != null ? totalPlays : 0}">0</div>
+                <div class="stat-label">Total Plays</div>
+            </div>
+        </div>
+
+        <!-- ═══ My Songs Table ═══ -->
+        <section class="dashboard-section">
+            <div class="section-header">
+                <h2 class="section-title">My Songs</h2>
+            </div>
+
+            <div class="dashboard-table-wrapper" th:if="${songs != null && !songs.isEmpty()}">
+                <table class="dashboard-table">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Cover</th>
+                        <th>Title</th>
+                        <th>Album</th>
+                        <th>Plays</th>
+                        <th>Visibility</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="song, iter : ${songs}">
+                        <td th:text="${iter.index + 1}">1</td>
+                        <td>
+                            <img th:src="${song.coverImageUrl != null ? song.coverImageUrl : 'https://www.shutterstock.com/shutterstock/photos/2626947211/display_1500/stock-vector-jazz-music-poster-design-template-2626947211.jpg'}"
+                                 alt="Cover" class="table-cover-img">
+                        </td>
+                        <td class="table-song-title" th:text="${song.title}">Song Title</td>
+                        <td class="table-muted" th:text="${song.albumName != null ? song.albumName : '—'}">Album</td>
+                        <td th:text="${song.playCount != null ? song.playCount : 0}">0</td>
+                        <td>
+                                <span class="visibility-badge"
+                                      th:classappend="${song.visibility == 'PUBLIC' ? 'vis-public' : (song.visibility == 'PRIVATE' ? 'vis-private' : 'vis-unlisted')}"
+                                      th:text="${song.visibility != null ? song.visibility : 'PUBLIC'}">PUBLIC</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="empty-state" th:if="${songs == null || songs.isEmpty()}" style="padding: 40px;">
+                <div class="empty-icon">🎵</div>
+                <h2>No songs uploaded yet</h2>
+                <p>Start uploading your music to see it here</p>
+            </div>
+        </section>
+
+        <!-- ═══ My Albums ═══ -->
+        <section class="dashboard-section" th:if="${albums != null && !albums.isEmpty()}">
+            <div class="section-header">
+                <h2 class="section-title">My Albums</h2>
+            </div>
+            <div class="album-grid">
+                <div th:each="album : ${albums}" class="album-card">
+                    <img th:src="${album.coverImageUrl != null ? album.coverImageUrl : 'https://www.shutterstock.com/shutterstock/photos/2626947211/display_1500/stock-vector-jazz-music-poster-design-template-2626947211.jpg'}"
+                         alt="Album Cover" class="album-cover">
+                    <div class="album-card-name" th:text="${album.name}">Album Name</div>
+                    <div class="album-card-meta">
+                        <span th:text="${album.songCount + ' tracks'}">0 tracks</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+</div>
+</body>
+</html>

@@ -38,8 +38,10 @@ public class SecurityConfig {
                                 "/", "/auth/register", "/auth/login",
                                 "/css/**", "/js/**", "/images/**",
                                 "/api/auth/**",
-                                "/swagger-ui/**", "/v3/api-docs/**"
+                                "/swagger-ui/**", "/v3/api-docs/**",
+                                "/search", "/artist/*"
                         ).permitAll()
+
 
                         // GET — listeners can browse
                         .requestMatchers(HttpMethod.GET, "/api/songs/**")

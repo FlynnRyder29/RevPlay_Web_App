@@ -112,7 +112,7 @@ public class ArtistServiceImpl implements ArtistService {
                 .getAuthentication()
                 .getName();
 
-        return userRepository.findByUsername(username)
+        return userRepository.findByEmailOrUsername(username, username)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "User",
                         "username",
