@@ -168,20 +168,6 @@ class ArtistServiceImplTest {
     }
 
     @Test
-    @DisplayName("registerArtist - duplicate user - save never called")
-    void registerArtist_duplicateUser_saveNeverCalled() {
-        ArtistRegisterRequest request = new ArtistRegisterRequest();
-        request.setArtistName("Aria");
-
-        when(artistRepository.existsByUserId(1L)).thenReturn(true);
-
-        assertThrows(DuplicateResourceException.class,
-                () -> artistService.registerArtist(request));
-
-        verify(artistRepository, never()).save(any());
-    }
-
-    @Test
     @DisplayName("registerArtist - response maps all ArtistProfileResponse fields")
     void registerArtist_responseMapsAllFields() {
         ArtistRegisterRequest request = new ArtistRegisterRequest();

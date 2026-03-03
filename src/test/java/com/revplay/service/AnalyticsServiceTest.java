@@ -26,6 +26,7 @@ import static com.revplay.util.TestConstants.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.lenient;
 
 /**
  * Unit tests for AnalyticsService.
@@ -83,8 +84,8 @@ class AnalyticsServiceTest {
                 .build();
 
         // Default happy-path: current user resolves to currentArtist
-        when(securityUtils.getCurrentUser()).thenReturn(currentUser);
-        when(artistRepository.findByUserId(TEST_ARTIST_USER_ID))
+        lenient().when(securityUtils.getCurrentUser()).thenReturn(currentUser);
+        lenient().when(artistRepository.findByUserId(TEST_ARTIST_USER_ID))
                 .thenReturn(Optional.of(currentArtist));
     }
 

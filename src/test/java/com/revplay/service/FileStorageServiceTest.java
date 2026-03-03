@@ -3,9 +3,7 @@ package com.revplay.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -29,7 +27,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * NOTE: @TempDir creates and cleans up the directory automatically.
  * Do NOT use Files.deleteIfExists inside tests — JUnit handles it.
  */
-@ExtendWith(MockitoExtension.class)
 class FileStorageServiceTest {
 
     @TempDir
@@ -186,7 +183,7 @@ class FileStorageServiceTest {
         );
 
         // Small sleep to ensure different timestamps
-        Thread.sleep(2);
+        Thread.sleep(50);
 
         MockMultipartFile file2 = new MockMultipartFile(
                 "f2", "cover.jpg", "image/jpeg", content
