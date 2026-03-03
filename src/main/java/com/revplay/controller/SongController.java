@@ -11,7 +11,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -49,7 +48,6 @@ public class SongController {
                 ? Sort.by(safeSortBy).ascending()
                 : Sort.by(safeSortBy).descending();
 
-        // ✅ FIX: Construct pageable (TL compile issue)
         Pageable pageable = PageRequest.of(page, size, sort);
 
         return ResponseEntity.ok(songService.getAllSongs(pageable));
@@ -75,7 +73,6 @@ public class SongController {
 
         log.info("GET /api/songs/search - keyword='{}'", keyword);
 
-        // ✅ FIX: Construct pageable (TL compile issue)
         Pageable pageable = PageRequest.of(page, size);
 
         return ResponseEntity.ok(songService.searchSongs(keyword.trim(), pageable));
@@ -91,28 +88,45 @@ public class SongController {
             throw new BadRequestException("Visibility cannot be blank");
         }
 
-        // ✅ FIX: Validate enum BEFORE calling service
         try {
             Song.Visibility.valueOf(visibility.toUpperCase());
         } catch (IllegalArgumentException e) {
             throw new BadRequestException(
                     "Invalid visibility value: " + visibility +
-                            ". Allowed values: PUBLIC, UNLISTED, PRIVATE"
-            );
+                            ". Allowed values: PUBLIC, UNLISTED, PRIVATE");
         }
 
         log.info("PATCH /api/songs/{}/visibility -> {}", id, visibility);
 
-        return ResponseEntity.ok(songService.updateVisibility(id, visibility.toUpperCase()));
+        return ResponseEntity.ok(
+                songService.updateVisibility(id, visibility.toUpperCase()));
     }
+
+    // 🟡 FIX: Added @Min/@Max validation on page size to match other endpoints
+    // Without this, a client can request ?size=100000 and dump the full table
     @GetMapping("/filter")
     public ResponseEntity<Page<SongDTO>> filterSongs(
             @RequestParam(required = false) String genre,
             @RequestParam(required = false) String artist,
             @RequestParam(required = false) String album,
             @RequestParam(required = false) Integer year,
-            @PageableDefault(size = 20) Pageable pageable) {
-        log.info("GET /api/songs/filter");
-        return ResponseEntity.ok(songService.filterSongs(genre, artist, album, year, pageable));
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+
+        String safeSortBy = ALLOWED_SORT_FIELDS.contains(sortBy) ? sortBy : "createdAt";
+
+        log.info("GET /api/songs/filter - genre={}, artist={}, album={}, year={}",
+                genre, artist, album, year);
+
+        Sort sort = sortDir.equalsIgnoreCase("asc")
+                ? Sort.by(safeSortBy).ascending()
+                : Sort.by(safeSortBy).descending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        return ResponseEntity.ok(
+                songService.filterSongs(genre, artist, album, year, pageable));
     }
 }
