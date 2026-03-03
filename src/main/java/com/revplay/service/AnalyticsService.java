@@ -24,6 +24,9 @@ public class AnalyticsService {
 
     private static final Logger log = LoggerFactory.getLogger(AnalyticsService.class);
 
+    // Default limit for top listeners — DB-level, not stream-level
+    private static final int TOP_LISTENERS_LIMIT = 10;
+
     private final PlayEventRepository playEventRepository;
     private final FavoriteRepository favoriteRepository;
     private final SongRepository songRepository;
@@ -41,7 +44,9 @@ public class AnalyticsService {
 
         log.info("Fetching analytics overview for artistId={}", artist.getId());
 
-        long totalSongs = songRepository.findAllByArtistId(artist.getId()).size();
+        // 🔴 FIX: DB-level COUNT — avoids loading all songs into memory
+        // Previously: songRepository.findAllByArtistId(artist.getId()).size()
+        long totalSongs = songRepository.countByArtistId(artist.getId());
         long totalPlays = playEventRepository.countByArtistId(artist.getId());
         long totalFavorites = favoriteRepository.countByArtistId(artist.getId());
 
@@ -92,8 +97,8 @@ public class AnalyticsService {
 
     // ── TOP LISTENERS ─────────────────────────────────────────────────────────
     // GET /api/artists/analytics/top-listeners
-    // Returns users who played this artist's songs the most
-    // Default top 10 listeners
+    // Returns top 10 users who played this artist's songs the most
+    // 🟡 FIX: Limit moved to DB level via PageRequest — removed stream .limit(10)
 
     @Transactional(readOnly = true)
     public AnalyticsDTO getTopListeners() {
@@ -102,12 +107,13 @@ public class AnalyticsService {
 
         log.info("Fetching top listeners for artistId={}", artist.getId());
 
+        // DB-level limit — only fetches top 10 rows from database
         List<Object[]> results = playEventRepository
-                .findTopListenersByArtistId(artist.getId());
+                .findTopListenersByArtistId(
+                        artist.getId(),
+                        PageRequest.of(0, TOP_LISTENERS_LIMIT));
 
-        // Limit to top 10 listeners
         List<AnalyticsDTO.TopListenerDTO> topListeners = results.stream()
-                .limit(10)
                 .map(row -> AnalyticsDTO.TopListenerDTO.builder()
                         .userId(((Number) row[0]).longValue())
                         .username((String) row[1])

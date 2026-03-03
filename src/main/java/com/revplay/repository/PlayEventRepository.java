@@ -1,6 +1,7 @@
 package com.revplay.repository;
 
 import com.revplay.model.PlayEvent;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -10,6 +11,8 @@ import java.util.List;
 
 @Repository
 public interface PlayEventRepository extends JpaRepository<PlayEvent, Long> {
+
+    // ── EXISTING ─────────────────────────────────────────────────────────────
 
     List<PlayEvent> findBySongId(Long songId);
 
@@ -34,6 +37,7 @@ public interface PlayEventRepository extends JpaRepository<PlayEvent, Long> {
 
     // Top listeners — users who played this artist's songs the most
     // Returns Object[] {userId, username, displayName, playCount}
+    // Pageable allows DB-level limiting — e.g. PageRequest.of(0, 10) for top 10
     // user_id is nullable in play_events — only include non-null users
     @Query("SELECT pe.user.id, pe.user.username, pe.user.displayName, COUNT(pe) " +
             "FROM PlayEvent pe " +
@@ -41,5 +45,6 @@ public interface PlayEventRepository extends JpaRepository<PlayEvent, Long> {
             "AND pe.user IS NOT NULL " +
             "GROUP BY pe.user.id, pe.user.username, pe.user.displayName " +
             "ORDER BY COUNT(pe) DESC")
-    List<Object[]> findTopListenersByArtistId(@Param("artistId") Long artistId);
+    List<Object[]> findTopListenersByArtistId(@Param("artistId") Long artistId,
+                                              Pageable pageable);
 }
