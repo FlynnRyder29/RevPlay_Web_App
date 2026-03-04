@@ -30,8 +30,6 @@ public class ArtistCatalogService {
     private final SongRepository songRepository;
     private final AlbumRepository albumRepository;
 
-
-
     @Transactional(readOnly = true)
     public Page<ArtistDTO> getAllArtists(Pageable pageable) {
         log.info("Fetching all artists, page={}", pageable.getPageNumber());
@@ -46,9 +44,15 @@ public class ArtistCatalogService {
 
         ArtistDTO dto = mapToDTO(artist);
 
-        // Populate songs and albums for detail view
+        // 🔴 FIX: Only show PUBLIC songs on public artist profile
+        // Artists manage their own songs (including UNLISTED/PRIVATE) via
+        // the artist dashboard. Public visitors should only see PUBLIC songs.
         dto.setSongs(songRepository.findAllByArtistId(id)
-                .stream().map(this::mapSongToDTO).toList());
+                .stream()
+                .filter(song -> song.getVisibility() == Song.Visibility.PUBLIC)
+                .map(this::mapSongToDTO)
+                .toList());
+
         dto.setAlbums(albumRepository.findAllByArtistId(id)
                 .stream().map(this::mapAlbumToDTO).toList());
 
@@ -76,9 +80,10 @@ public class ArtistCatalogService {
                 .coverImageUrl(song.getCoverImageUrl())
                 .releaseDate(song.getReleaseDate())
                 .playCount(song.getPlayCount())
-                .visibility(song.getVisibility() != null ? song.getVisibility().name() : null)
-                .artistId(song.getArtist().getId())           // ✅ no null check — always present
-                .artistName(song.getArtist().getArtistName()) // ✅ no null check — always present
+                .visibility(song.getVisibility() != null
+                        ? song.getVisibility().name() : null)
+                .artistId(song.getArtist().getId())
+                .artistName(song.getArtist().getArtistName())
                 .albumId(song.getAlbum() != null ? song.getAlbum().getId() : null)
                 .albumName(song.getAlbum() != null ? song.getAlbum().getName() : null)
                 .createdAt(song.getCreatedAt())
@@ -92,9 +97,10 @@ public class ArtistCatalogService {
                 .description(album.getDescription())
                 .coverImageUrl(album.getCoverImageUrl())
                 .releaseDate(album.getReleaseDate())
-                .artistId(album.getArtist() != null ? album.getArtist().getId() : null)
-                .artistName(album.getArtist() != null ? album.getArtist().getArtistName() : "Unknown")
+                .artistId(album.getArtist() != null
+                        ? album.getArtist().getId() : null)
+                .artistName(album.getArtist() != null
+                        ? album.getArtist().getArtistName() : "Unknown")
                 .build();
     }
-
 }
