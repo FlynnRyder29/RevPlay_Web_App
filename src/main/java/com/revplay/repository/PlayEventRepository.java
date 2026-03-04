@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -20,7 +21,7 @@ public interface PlayEventRepository extends JpaRepository<PlayEvent, Long> {
 
     long countBySongId(Long songId);
 
-    // ── ADDED FOR DAY 6 ANALYTICS ─────────────────────────────────────────────
+    // ── DAY 6 ANALYTICS ───────────────────────────────────────────────────────
 
     // Total play events across ALL songs of a specific artist
     @Query("SELECT COUNT(pe) FROM PlayEvent pe WHERE pe.song.artist.id = :artistId")
@@ -47,4 +48,55 @@ public interface PlayEventRepository extends JpaRepository<PlayEvent, Long> {
             "ORDER BY COUNT(pe) DESC")
     List<Object[]> findTopListenersByArtistId(@Param("artistId") Long artistId,
                                               Pageable pageable);
+
+    // ── DAY 7: LISTENING TRENDS (native queries — MySQL + H2 MODE=MySQL) ──────
+
+    // Daily play counts — grouped by calendar date
+    // Returns Object[] {dateString ("yyyy-MM-dd"), playCount}
+    // Lookback window controlled by :from and :to from service layer (last 30 days)
+    @Query(value = "SELECT DATE_FORMAT(pe.played_at, '%Y-%m-%d') AS period, COUNT(*) AS play_count " +
+            "FROM play_events pe " +
+            "JOIN songs s ON pe.song_id = s.id " +
+            "WHERE s.artist_id = :artistId " +
+            "AND pe.played_at >= :from " +
+            "AND pe.played_at <= :to " +
+            "GROUP BY period " +
+            "ORDER BY period ASC",
+            nativeQuery = true)
+    List<Object[]> findDailyTrendsByArtistId(@Param("artistId") Long artistId,
+                                             @Param("from") LocalDateTime from,
+                                             @Param("to") LocalDateTime to);
+
+    // Weekly play counts — grouped by ISO year-week
+    // Returns Object[] {weekString ("yyyy-Www"), playCount}
+    // Uses %x-%v (ISO week, Monday start) instead of %Y-%u (Sunday start, can give W00)
+    // Lookback window controlled by :from and :to from service layer (last 12 weeks)
+    @Query(value = "SELECT DATE_FORMAT(pe.played_at, '%x-W%v') AS period, COUNT(*) AS play_count " +
+            "FROM play_events pe " +
+            "JOIN songs s ON pe.song_id = s.id " +
+            "WHERE s.artist_id = :artistId " +
+            "AND pe.played_at >= :from " +
+            "AND pe.played_at <= :to " +
+            "GROUP BY period " +
+            "ORDER BY period ASC",
+            nativeQuery = true)
+    List<Object[]> findWeeklyTrendsByArtistId(@Param("artistId") Long artistId,
+                                              @Param("from") LocalDateTime from,
+                                              @Param("to") LocalDateTime to);
+
+    // Monthly play counts — grouped by year-month
+    // Returns Object[] {monthString ("yyyy-MM"), playCount}
+    // Lookback window controlled by :from and :to from service layer (last 12 months)
+    @Query(value = "SELECT DATE_FORMAT(pe.played_at, '%Y-%m') AS period, COUNT(*) AS play_count " +
+            "FROM play_events pe " +
+            "JOIN songs s ON pe.song_id = s.id " +
+            "WHERE s.artist_id = :artistId " +
+            "AND pe.played_at >= :from " +
+            "AND pe.played_at <= :to " +
+            "GROUP BY period " +
+            "ORDER BY period ASC",
+            nativeQuery = true)
+    List<Object[]> findMonthlyTrendsByArtistId(@Param("artistId") Long artistId,
+                                               @Param("from") LocalDateTime from,
+                                               @Param("to") LocalDateTime to);
 }
