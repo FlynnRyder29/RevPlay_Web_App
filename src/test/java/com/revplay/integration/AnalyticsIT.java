@@ -434,4 +434,215 @@ class AnalyticsIT extends IntegrationTestBase {
                     .andExpect(status().isUnauthorized());
         }
     }
+
+    // =========================================================================
+    // GET /api/artists/analytics/trends
+    // =========================================================================
+
+    private static final String TRENDS = "/api/artists/analytics/trends";
+
+    @Nested
+    @DisplayName("GET /api/artists/analytics/trends")
+    class GetTrends {
+
+        @Test
+        @DisplayName("daily period - returns trendPeriod and trends array")
+        void getTrends_daily_returnsTrendPoints() throws Exception {
+            seedPlayEvents(songGoldenHour, "trend_listener_1", 3);
+
+            mockMvc.perform(get(TRENDS)
+                            .param("period", "daily")
+                            .with(asArtist()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.trendPeriod").value("daily"))
+                    .andExpect(jsonPath("$.trends").isArray());
+        }
+
+        @Test
+        @DisplayName("weekly period - returns trendPeriod=weekly and trends array")
+        void getTrends_weekly_returnsTrendPoints() throws Exception {
+            seedPlayEvents(songOverdrive, "trend_listener_2", 5);
+
+            mockMvc.perform(get(TRENDS)
+                            .param("period", "weekly")
+                            .with(asArtist()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.trendPeriod").value("weekly"))
+                    .andExpect(jsonPath("$.trends").isArray());
+        }
+
+        @Test
+        @DisplayName("no play events - returns empty trends array")
+        void getTrends_noPlayEvents_returnsEmptyArray() throws Exception {
+            mockMvc.perform(get(TRENDS)
+                            .param("period", "daily")
+                            .with(asArtist()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.trends").isArray());
+        }
+
+        @Test
+        @DisplayName("response contains artistId and artistName")
+        void getTrends_responseContainsArtistIdentifiers() throws Exception {
+            mockMvc.perform(get(TRENDS)
+                            .param("period", "daily")
+                            .with(asArtist()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.artistId").value(savedArtist.getId()))
+                    .andExpect(jsonPath("$.artistName").value("Aria"));
+        }
+
+        @Test
+        @DisplayName("LISTENER role - returns 403")
+        void getTrends_listenerRole_returns403() throws Exception {
+            mockMvc.perform(get(TRENDS)
+                            .param("period", "daily")
+                            .with(asListener()))
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
+        @DisplayName("unauthenticated - returns 401")
+        void getTrends_unauthenticated_returns401() throws Exception {
+            mockMvc.perform(get(TRENDS).param("period", "daily"))
+                    .andExpect(status().isUnauthorized());
+        }
+    }
+
+    // =========================================================================
+    // GET /api/artists/analytics/fans
+    // =========================================================================
+
+    private static final String FANS = "/api/artists/analytics/fans";
+
+    @Nested
+    @DisplayName("GET /api/artists/analytics/fans")
+    class GetFans {
+
+        @Test
+        @DisplayName("with play events - returns fans list")
+        void getFans_withPlayEvents_returnsFansList() throws Exception {
+            seedPlayEvents(songGoldenHour, "fan_listener_1", 4);
+            seedPlayEvents(songOverdrive,  "fan_listener_2", 2);
+
+            mockMvc.perform(get(FANS).with(asArtist()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.fans").isArray())
+                    .andExpect(jsonPath("$.fans", hasSize(2)));
+        }
+
+        @Test
+        @DisplayName("no play events - returns empty fans list")
+        void getFans_noPlayEvents_returnsEmptyList() throws Exception {
+            mockMvc.perform(get(FANS).with(asArtist()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.fans").isArray())
+                    .andExpect(jsonPath("$.fans", hasSize(0)));
+        }
+
+        @Test
+        @DisplayName("anonymous plays excluded - only identified listeners in fans")
+        void getFans_anonymousPlaysExcluded() throws Exception {
+            seedAnonymousPlayEvent(songGoldenHour);
+            seedPlayEvents(songGoldenHour, "fan_real_1", 3);
+
+            mockMvc.perform(get(FANS).with(asArtist()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.fans", hasSize(1)));
+        }
+
+        @Test
+        @DisplayName("response contains artistId and artistName")
+        void getFans_responseContainsArtistIdentifiers() throws Exception {
+            mockMvc.perform(get(FANS).with(asArtist()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.artistId").value(savedArtist.getId()))
+                    .andExpect(jsonPath("$.artistName").value("Aria"));
+        }
+
+        @Test
+        @DisplayName("LISTENER role - returns 403")
+        void getFans_listenerRole_returns403() throws Exception {
+            mockMvc.perform(get(FANS).with(asListener()))
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
+        @DisplayName("unauthenticated - returns 401")
+        void getFans_unauthenticated_returns401() throws Exception {
+            mockMvc.perform(get(FANS))
+                    .andExpect(status().isUnauthorized());
+        }
+    }
+
+    // =========================================================================
+    // GET /api/artists/analytics/songs/{id}/fans
+    // =========================================================================
+
+    @Nested
+    @DisplayName("GET /api/artists/analytics/songs/{id}/fans")
+    class GetSongFans {
+
+        @Test
+        @DisplayName("song with play events - returns fans for that specific song")
+        void getSongFans_withPlayEvents_returnsFans() throws Exception {
+            seedPlayEvents(songGoldenHour, "sf_listener_1", 3);
+            // Overdrive has no plays — should not appear in Golden Hour fans
+            seedPlayEvents(songOverdrive,  "sf_listener_2", 2);
+
+            mockMvc.perform(get("/api/artists/analytics/songs/"
+                            + songGoldenHour.getId() + "/fans")
+                            .with(asArtist()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.fans").isArray())
+                    .andExpect(jsonPath("$.fans", hasSize(1)))
+                    .andExpect(jsonPath("$.fans[0].username").value("sf_listener_1"));
+        }
+
+        @Test
+        @DisplayName("song with no play events - returns empty fans list")
+        void getSongFans_noPlayEvents_returnsEmptyList() throws Exception {
+            mockMvc.perform(get("/api/artists/analytics/songs/"
+                            + songGoldenHour.getId() + "/fans")
+                            .with(asArtist()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.fans").isArray())
+                    .andExpect(jsonPath("$.fans", hasSize(0)));
+        }
+
+        @Test
+        @DisplayName("non-existing song - returns 404")
+        void getSongFans_nonExistingSong_returns404() throws Exception {
+            mockMvc.perform(get("/api/artists/analytics/songs/99999/fans")
+                            .with(asArtist()))
+                    .andExpect(status().isNotFound());
+        }
+
+        @Test
+        @DisplayName("response contains songId in body")
+        void getSongFans_responseContainsSongId() throws Exception {
+            mockMvc.perform(get("/api/artists/analytics/songs/"
+                            + songGoldenHour.getId() + "/fans")
+                            .with(asArtist()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.songId").value(songGoldenHour.getId()));
+        }
+
+        @Test
+        @DisplayName("LISTENER role - returns 403")
+        void getSongFans_listenerRole_returns403() throws Exception {
+            mockMvc.perform(get("/api/artists/analytics/songs/"
+                            + songGoldenHour.getId() + "/fans")
+                            .with(asListener()))
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
+        @DisplayName("unauthenticated - returns 401")
+        void getSongFans_unauthenticated_returns401() throws Exception {
+            mockMvc.perform(get("/api/artists/analytics/songs/"
+                            + songGoldenHour.getId() + "/fans"))
+                    .andExpect(status().isUnauthorized());
+        }
+    }
 }
