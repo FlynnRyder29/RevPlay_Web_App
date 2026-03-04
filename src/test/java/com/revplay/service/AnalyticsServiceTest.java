@@ -201,7 +201,7 @@ class AnalyticsServiceTest {
         // Given — Object[] row: {songId, songTitle, coverImageUrl, playCount}
         Object[] row = {101L, "Golden Hour", "/covers/golden_hour.jpg", 18420L};
         when(playEventRepository.findSongPlayCountsByArtistId(TEST_ARTIST_ID))
-                .thenReturn(List.of(row));
+                .thenReturn(List.<Object[]>of(row));
 
         // When
         AnalyticsDTO result = analyticsService.getSongPlayCounts();
@@ -319,7 +319,7 @@ class AnalyticsServiceTest {
         Object[] row = {10L, "alice_music", "Alice", 42L};
         when(playEventRepository.findTopListenersByArtistId(
                 eq(TEST_ARTIST_ID), any(PageRequest.class)))
-                .thenReturn(List.of(row));
+                .thenReturn(List.<Object[]>of(row));
 
         // When
         AnalyticsDTO result = analyticsService.getTopListeners();

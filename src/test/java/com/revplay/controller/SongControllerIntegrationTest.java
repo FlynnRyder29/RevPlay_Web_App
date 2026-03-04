@@ -26,6 +26,7 @@ import static com.revplay.util.TestConstants.*;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -54,7 +55,7 @@ class SongControllerIntegrationTest {
     @MockitoBean private RevPlayAuthenticationEntryPoint authEntryPoint;
     @MockitoBean private RevPlayAccessDeniedHandler accessDeniedHandler;
 
-    // ── Helper ────────────────────────────────────────────────────
+    // ── Helpers ───────────────────────────────────────────────────
 
     private SongDTO buildSongDTO(Long id, String title, String genre) {
         return SongDTO.builder()
@@ -114,8 +115,8 @@ class SongControllerIntegrationTest {
             when(songService.getAllSongs(any(Pageable.class))).thenReturn(emptyPage());
 
             mockMvc.perform(get(API_SONGS)
-                            .param("page", "2")
-                            .param("size", "5"))
+                    .param("page", "2")
+                    .param("size", "5"))
                     .andExpect(status().isOk());
 
             verify(songService).getAllSongs(argThat(p ->
@@ -129,10 +130,9 @@ class SongControllerIntegrationTest {
             when(songService.getAllSongs(any(Pageable.class))).thenReturn(emptyPage());
 
             mockMvc.perform(get(API_SONGS)
-                            .param("sortBy", "INVALID_FIELD"))
+                    .param("sortBy", "INVALID_FIELD"))
                     .andExpect(status().isOk());
 
-            // Service must still be called (sort silently defaulted)
             verify(songService).getAllSongs(any(Pageable.class));
         }
 
@@ -143,8 +143,8 @@ class SongControllerIntegrationTest {
             when(songService.getAllSongs(any(Pageable.class))).thenReturn(emptyPage());
 
             mockMvc.perform(get(API_SONGS)
-                            .param("sortBy", "playCount")
-                            .param("sortDir", "desc"))
+                    .param("sortBy", "playCount")
+                    .param("sortDir", "desc"))
                     .andExpect(status().isOk());
 
             verify(songService).getAllSongs(argThat(p ->
@@ -156,7 +156,6 @@ class SongControllerIntegrationTest {
         void unauthenticated_returnsUnauthorized() throws Exception {
             mockMvc.perform(get(API_SONGS))
                     .andExpect(status().is3xxRedirection());
-            // Spring Security redirects to /auth/login for form-login
         }
 
         @Test
@@ -213,10 +212,6 @@ class SongControllerIntegrationTest {
     // GET /api/songs/search — Search
     // =================================================================
 
-    // =================================================================
-    // GET /api/songs/search — Search
-    // =================================================================
-
     @Nested
     @DisplayName("GET /api/songs/search")
     class Search {
@@ -230,7 +225,7 @@ class SongControllerIntegrationTest {
                     .thenReturn(singleSongPage(dto));
 
             mockMvc.perform(get(API_SONGS + "/search")
-                            .param("q", "midnight"))
+                    .param("q", "midnight"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content", hasSize(1)))
                     .andExpect(jsonPath("$.content[0].title").value("Midnight City"));
@@ -241,7 +236,7 @@ class SongControllerIntegrationTest {
         @DisplayName("blank keyword — returns 400 Bad Request")
         void blankKeyword_returns400() throws Exception {
             mockMvc.perform(get(API_SONGS + "/search")
-                            .param("q", "   "))
+                    .param("q", " "))
                     .andExpect(status().isBadRequest());
 
             verifyNoInteractions(songService);
@@ -263,7 +258,7 @@ class SongControllerIntegrationTest {
                     .thenReturn(emptyPage());
 
             mockMvc.perform(get(API_SONGS + "/search")
-                            .param("q", "zzzznonexistent"))
+                    .param("q", "zzzznonexistent"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content", hasSize(0)))
                     .andExpect(jsonPath("$.totalElements").value(0));
@@ -271,16 +266,15 @@ class SongControllerIntegrationTest {
 
         @Test
         @WithMockUser
-        @DisplayName("keyword is trimmed before search")
+        @DisplayName("keyword is trimmed before being passed to service")
         void keywordTrimmed_trimmedValuePassedToService() throws Exception {
             when(songService.searchSongs(eq("midnight"), any(Pageable.class)))
                     .thenReturn(emptyPage());
 
             mockMvc.perform(get(API_SONGS + "/search")
-                            .param("q", "  midnight  "))
+                    .param("q", " midnight "))
                     .andExpect(status().isOk());
 
-            // Service receives trimmed keyword
             verify(songService).searchSongs(eq("midnight"), any(Pageable.class));
         }
     }
@@ -303,7 +297,7 @@ class SongControllerIntegrationTest {
                     .thenReturn(singleSongPage(dto));
 
             mockMvc.perform(get(API_SONGS + "/filter")
-                            .param("genre", "Rock"))
+                    .param("genre", "Rock"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content", hasSize(1)))
                     .andExpect(jsonPath("$.content[0].genre").value("Rock"));
@@ -318,10 +312,10 @@ class SongControllerIntegrationTest {
                     .thenReturn(emptyPage());
 
             mockMvc.perform(get(API_SONGS + "/filter")
-                            .param("genre", "Rock")
-                            .param("artist", "Artist1")
-                            .param("album", "Album1")
-                            .param("year", "2024"))
+                    .param("genre", "Rock")
+                    .param("artist", "Artist1")
+                    .param("album", "Album1")
+                    .param("year", "2024"))
                     .andExpect(status().isOk());
 
             verify(songService).filterSongs(
@@ -331,7 +325,7 @@ class SongControllerIntegrationTest {
 
         @Test
         @WithMockUser
-        @DisplayName("no filter params — returns all songs (no filters applied)")
+        @DisplayName("no filter params — returns all songs")
         void noFilters_returnsAll() throws Exception {
             when(songService.filterSongs(isNull(), isNull(), isNull(), isNull(),
                     any(Pageable.class)))
@@ -342,6 +336,17 @@ class SongControllerIntegrationTest {
 
             verify(songService).filterSongs(
                     isNull(), isNull(), isNull(), isNull(), any(Pageable.class));
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("non-numeric year param — returns 400 Bad Request")
+        void nonNumericYear_returns400() throws Exception {
+            mockMvc.perform(get(API_SONGS + "/filter")
+                    .param("year", "abc"))
+                    .andExpect(status().isBadRequest());
+
+            verifyNoInteractions(songService);
         }
     }
 
@@ -361,7 +366,7 @@ class SongControllerIntegrationTest {
             when(songService.updateVisibility(1L, "UNLISTED")).thenReturn(dto);
 
             mockMvc.perform(patch(API_SONGS + "/1/visibility")
-                            .param("visibility", "unlisted"))
+                    .param("visibility", "unlisted"))
                     .andExpect(status().isOk());
 
             verify(songService).updateVisibility(1L, "UNLISTED");
@@ -372,7 +377,7 @@ class SongControllerIntegrationTest {
         @DisplayName("invalid visibility value — returns 400")
         void invalidVisibility_returns400() throws Exception {
             mockMvc.perform(patch(API_SONGS + "/1/visibility")
-                            .param("visibility", "INVALID"))
+                    .param("visibility", "INVALID"))
                     .andExpect(status().isBadRequest());
 
             verifyNoInteractions(songService);
@@ -383,7 +388,7 @@ class SongControllerIntegrationTest {
         @DisplayName("LISTENER role — returns 403 Forbidden")
         void listenerRole_returns403() throws Exception {
             mockMvc.perform(patch(API_SONGS + "/1/visibility")
-                            .param("visibility", "PUBLIC"))
+                    .param("visibility", "PUBLIC"))
                     .andExpect(status().isForbidden());
         }
     }
