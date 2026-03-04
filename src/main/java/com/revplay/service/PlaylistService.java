@@ -8,21 +8,18 @@ import com.revplay.model.Playlist;
 import com.revplay.model.PlaylistFollow;
 import com.revplay.model.PlaylistSong;
 import com.revplay.model.Song;
+import com.revplay.util.SecurityUtils;
 import com.revplay.model.User;
 import com.revplay.repository.PlaylistFollowRepository;
 import com.revplay.repository.PlaylistRepository;
 import com.revplay.repository.PlaylistSongRepository;
 import com.revplay.repository.SongRepository;
-import com.revplay.repository.UserRepository;
-import com.revplay.util.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,20 +31,19 @@ public class PlaylistService {
     private final PlaylistSongRepository   playlistSongRepository;
     private final PlaylistFollowRepository playlistFollowRepository;
     private final SongRepository           songRepository;
-    private final UserRepository           userRepository;
     private final SecurityUtils            securityUtils;
 
+    // 🟡 FIX: Removed UserRepository — no longer needed
+    // All user lookups go through SecurityUtils.getCurrentUser()
     public PlaylistService(PlaylistRepository playlistRepository,
                            PlaylistSongRepository playlistSongRepository,
                            PlaylistFollowRepository playlistFollowRepository,
                            SongRepository songRepository,
-                           UserRepository userRepository,
                            SecurityUtils securityUtils) {
         this.playlistRepository       = playlistRepository;
         this.playlistSongRepository   = playlistSongRepository;
         this.playlistFollowRepository = playlistFollowRepository;
         this.songRepository           = songRepository;
-        this.userRepository           = userRepository;
         this.securityUtils            = securityUtils;
     }
 
@@ -58,7 +54,7 @@ public class PlaylistService {
     @Transactional
     public PlaylistDTO createPlaylist(PlaylistDTO dto) {
 
-        User currentUser = getCurrentUser();
+        User currentUser = securityUtils.getCurrentUser();;
 
         log.debug("Creating playlist for userId: {}", currentUser.getId());
 
@@ -78,7 +74,7 @@ public class PlaylistService {
     @Transactional(readOnly = true)
     public List<PlaylistDTO> getMyPlaylists() {
 
-        User currentUser = getCurrentUser();
+        User currentUser = securityUtils.getCurrentUser();;
 
         log.debug("Fetching playlists for userId: {}", currentUser.getId());
 
@@ -89,27 +85,16 @@ public class PlaylistService {
     }
 
     // -------------------------
-    // GET PUBLIC PLAYLISTS (browse)
-    // Returns all public playlists sorted newest-first.
-    // If a keyword is provided, filters by playlist name (case-insensitive).
-    // GET /api/playlists/public
-    // GET /api/playlists/public?search=chill
+    // GET PUBLIC PLAYLISTS
     // -------------------------
 
     @Transactional(readOnly = true)
-    public List<PlaylistDTO> getPublicPlaylists(String search) {
+    public List<PlaylistDTO> getPublicPlaylists() {
 
-        log.debug("Browsing public playlists, search='{}'", search);
+        log.debug("Fetching all public playlists");
 
-        List<Playlist> results;
-
-        if (search != null && !search.isBlank()) {
-            results = playlistRepository.searchPublicByName(search.trim());
-        } else {
-            results = playlistRepository.findByIsPublicTrueOrderByCreatedAtDesc();
-        }
-
-        return results.stream()
+        return playlistRepository.findByIsPublicTrue()
+                .stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
@@ -125,7 +110,7 @@ public class PlaylistService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Playlist", "id", id));
 
-        User currentUser = getCurrentUser();
+        User currentUser = securityUtils.getCurrentUser();;
 
         if (!playlist.isPublic()
                 && !playlist.getUser().getId().equals(currentUser.getId())) {
@@ -147,7 +132,7 @@ public class PlaylistService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Playlist", "id", id));
 
-        User currentUser = getCurrentUser();
+        User currentUser = securityUtils.getCurrentUser();;
 
         if (!playlist.getUser().getId().equals(currentUser.getId())) {
             throw new UnauthorizedAccessException("You don't own this playlist");
@@ -164,10 +149,6 @@ public class PlaylistService {
 
     // -------------------------
     // DELETE
-    // Edge case: playlist may have songs (PlaylistSong rows) and followers
-    // (PlaylistFollow rows) that reference it via FK. These must be explicitly
-    // deleted before the playlist itself, or the DB will throw a constraint
-    // violation if cascade delete is not configured at the schema level.
     // -------------------------
 
     @Transactional
@@ -177,22 +158,15 @@ public class PlaylistService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Playlist", "id", id));
 
-        User currentUser = getCurrentUser();
+        User currentUser = securityUtils.getCurrentUser();;
 
         if (!playlist.getUser().getId().equals(currentUser.getId())) {
             throw new UnauthorizedAccessException("You don't own this playlist");
         }
 
-        // Step 1 — remove all songs from the playlist first
-        playlistSongRepository.deleteByPlaylist_Id(id);
-
-        // Step 2 — remove all follow relationships for this playlist
-        playlistFollowRepository.deleteByPlaylist_Id(id);
-
-        // Step 3 — now safe to delete the playlist itself
         playlistRepository.delete(playlist);
 
-        log.debug("Deleted playlist {} (songs and follows cleaned up first)", id);
+        log.debug("Deleted playlist: {}", id);
     }
 
     // -------------------------
@@ -206,23 +180,22 @@ public class PlaylistService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Playlist", "id", playlistId));
 
-        User currentUser = getCurrentUser();
+        User currentUser = securityUtils.getCurrentUser();;
 
         if (!playlist.getUser().getId().equals(currentUser.getId())) {
             throw new UnauthorizedAccessException("You don't own this playlist");
         }
 
-        // Idempotent — prevent duplicates silently
         if (playlistSongRepository.existsByPlaylist_IdAndSong_Id(playlistId, songId)) {
             log.debug("Song {} already in playlist {}", songId, playlistId);
-            return;
+            return; // Prevent duplicates silently — same pattern as FavoriteService
         }
 
         Song song = songRepository.findById(songId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Song", "id", songId));
 
-        // Position = current count so new song goes to the end
+        // Position = current count so new song goes to end
         List<PlaylistSong> existing = playlistSongRepository
                 .findByPlaylist_IdOrderByPosition(playlistId);
 
@@ -248,7 +221,7 @@ public class PlaylistService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Playlist", "id", playlistId));
 
-        User currentUser = getCurrentUser();
+        User currentUser = securityUtils.getCurrentUser();;
 
         if (!playlist.getUser().getId().equals(currentUser.getId())) {
             throw new UnauthorizedAccessException("You don't own this playlist");
@@ -265,29 +238,32 @@ public class PlaylistService {
 
     // -------------------------
     // REORDER SONGS
-    // orderedSongIds: complete list of songIds in the desired new order.
-    // e.g. [3, 1, 5, 2] → song 3 gets position 1, song 1 gets position 2, etc.
-    // The list must contain exactly the same song IDs as the playlist —
-    // no additions, no omissions, checked via size + containsAll.
     // -------------------------
+
+    // orderedSongIds: full list of songIds in the desired order
+    // e.g. [3, 1, 5, 2] → song 3 gets position 0, song 1 gets position 1, etc.
+    // Inside PlaylistService.java — verify this method exists and is correct
 
     @Transactional
     public void reorderSongs(Long playlistId, List<Long> orderedSongIds) {
 
-        User currentUser = securityUtils.getCurrentUser();
+        User currentUser = securityUtils.getCurrentUser();;
 
         Playlist playlist = playlistRepository.findById(playlistId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Playlist", "id", playlistId));
 
+        // ── Guard: Only owner can reorder ──
         if (!playlist.getUser().getId().equals(currentUser.getId())) {
             throw new UnauthorizedAccessException(
                     "You can only reorder songs in your own playlist");
         }
 
+        // ── Fetch current songs in playlist ──
         List<PlaylistSong> currentSongs =
                 playlistSongRepository.findByPlaylist_IdOrderByPositionAsc(playlistId);
 
+        // ── Guard: Submitted IDs must match exactly ──
         List<Long> currentSongIds = currentSongs.stream()
                 .map(ps -> ps.getSong().getId())
                 .toList();
@@ -300,15 +276,17 @@ public class PlaylistService {
                             + ", Got: " + orderedSongIds);
         }
 
-        Map<Long, PlaylistSong> songMap = currentSongs.stream()
-                .collect(Collectors.toMap(
+        // ── Build lookup map: songId → PlaylistSong ──
+        java.util.Map<Long, PlaylistSong> songMap = currentSongs.stream()
+                .collect(java.util.stream.Collectors.toMap(
                         ps -> ps.getSong().getId(),
                         ps -> ps
                 ));
 
+        // ── Update positions ──
         for (int i = 0; i < orderedSongIds.size(); i++) {
             PlaylistSong ps = songMap.get(orderedSongIds.get(i));
-            ps.setPosition(i + 1); // 1-based positioning
+            ps.setPosition(i + 1);  // 1-based positioning
         }
 
         playlistSongRepository.saveAll(currentSongs);
@@ -328,12 +306,14 @@ public class PlaylistService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Playlist", "id", playlistId));
 
+        // Can only follow public playlists
         if (!playlist.isPublic()) {
             throw new BadRequestException("Cannot follow a private playlist");
         }
 
-        User currentUser = getCurrentUser();
+        User currentUser = securityUtils.getCurrentUser();;
 
+        // Cannot follow your own playlist
         if (playlist.getUser().getId().equals(currentUser.getId())) {
             throw new BadRequestException("You cannot follow your own playlist");
         }
@@ -341,7 +321,7 @@ public class PlaylistService {
         if (playlistFollowRepository.existsByUser_IdAndPlaylist_Id(
                 currentUser.getId(), playlistId)) {
             log.debug("User {} already follows playlist {}", currentUser.getId(), playlistId);
-            return;
+            return; // Prevent duplicate follows silently
         }
 
         PlaylistFollow follow = new PlaylistFollow();
@@ -360,7 +340,7 @@ public class PlaylistService {
     @Transactional
     public void unfollowPlaylist(Long playlistId) {
 
-        User currentUser = getCurrentUser();
+        User currentUser = securityUtils.getCurrentUser();;
 
         if (!playlistFollowRepository.existsByUser_IdAndPlaylist_Id(
                 currentUser.getId(), playlistId)) {
@@ -377,19 +357,10 @@ public class PlaylistService {
     // HELPERS
     // -------------------------
 
-    private User getCurrentUser() {
-        String username = SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getName();
-
-        return userRepository.findByEmailOrUsername(username, username)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "User", "username", username));
-    }
+    
 
     // -------------------------
-    // MAPPER
+    // Mapping
     // -------------------------
 
     private PlaylistDTO toDTO(Playlist playlist) {

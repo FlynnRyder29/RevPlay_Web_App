@@ -6,7 +6,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${title + ' - RevPlay'}">RevPlay</title>
+
+    <!--
+      CRITICAL: Apply saved theme BEFORE CSS loads to prevent
+      flash of wrong theme. This must be inline & synchronous.
+    -->
+    <script>
+        (function(){
+            var t = localStorage.getItem('revplay-theme');
+            if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+        })();
+    </script>
+
     <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <script th:src="@{/js/theme.js}" defer></script>
     <script th:src="@{/js/player.js}" defer></script>
 </head>
 
@@ -14,7 +27,7 @@
 <div th:fragment="page(content)">
     <div class="app-container">
 
-        <!-- Top Navbar (simplified — brand + search) -->
+        <!-- Top Navbar -->
         <div th:replace="~{fragments/navbar :: mainNav}"></div>
 
         <!-- Main Area: Sidebar + Content -->

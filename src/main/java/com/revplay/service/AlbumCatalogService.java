@@ -26,12 +26,7 @@ public class AlbumCatalogService {
 
     private final AlbumRepository albumRepository;
     private final SongRepository songRepository;
-
-    // SongMapper injected for shared mapping — available for future use
-    // Note: mapSongToDTO(Song, String albumName) kept intentionally below
-    // to avoid lazy-loading album.getName() per song in tracklist queries
     private final SongMapper songMapper;
-    // ArtistRepository removed — not needed, we navigate via album.getArtist()
 
     @Transactional(readOnly = true)
     public Page<AlbumDTO> getAllAlbums(Pageable pageable) {
@@ -48,11 +43,13 @@ public class AlbumCatalogService {
 
         AlbumDTO dto = mapToDTO(album);
 
-        // Pass album.getName() directly — avoids extra DB call per song
+        // 🔴 FIX: Only show PUBLIC songs in album tracklist
+        // UNLISTED/PRIVATE songs should not appear in public album view
         List<SongDTO> tracks = songRepository
                 .findByAlbumId(album.getId(), Pageable.unpaged())
                 .stream()
-                .map(song -> mapSongToDTO(song, album.getName()))  // ← lambda, not method reference
+                .filter(song -> song.getVisibility() == Song.Visibility.PUBLIC)
+                .map(song -> mapSongToDTO(song, album.getName()))
                 .toList();
 
         dto.setTracks(tracks);
@@ -66,8 +63,10 @@ public class AlbumCatalogService {
                 .description(album.getDescription())
                 .coverImageUrl(album.getCoverImageUrl())
                 .releaseDate(album.getReleaseDate())
-                .artistId(album.getArtist() != null ? album.getArtist().getId() : null)        // ← fixed
-                .artistName(album.getArtist() != null ? album.getArtist().getArtistName() : "Unknown") // ← fixed
+                .artistId(album.getArtist() != null
+                        ? album.getArtist().getId() : null)
+                .artistName(album.getArtist() != null
+                        ? album.getArtist().getArtistName() : "Unknown")
                 .build();
     }
 
@@ -81,10 +80,14 @@ public class AlbumCatalogService {
                 .coverImageUrl(song.getCoverImageUrl())
                 .releaseDate(song.getReleaseDate())
                 .playCount(song.getPlayCount())
-                .visibility(song.getVisibility() != null ? song.getVisibility().name() : null)
-                .artistId(song.getArtist() != null ? song.getArtist().getId() : null)
-                .artistName(song.getArtist() != null ? song.getArtist().getArtistName() : "Unknown")
-                .albumId(song.getAlbum() != null ? song.getAlbum().getId() : null)
+                .visibility(song.getVisibility() != null
+                        ? song.getVisibility().name() : null)
+                .artistId(song.getArtist() != null
+                        ? song.getArtist().getId() : null)
+                .artistName(song.getArtist() != null
+                        ? song.getArtist().getArtistName() : "Unknown")
+                .albumId(song.getAlbum() != null
+                        ? song.getAlbum().getId() : null)
                 .albumName(albumName)
                 .createdAt(song.getCreatedAt())
                 .build();
