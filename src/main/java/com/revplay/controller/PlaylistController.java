@@ -24,9 +24,11 @@ public class PlaylistController {
     }
 
     @PostMapping
-    public ResponseEntity<PlaylistDTO> createPlaylist(@Valid @RequestBody PlaylistDTO dto) {
+    public ResponseEntity<PlaylistDTO> createPlaylist(
+            @Valid @RequestBody PlaylistDTO dto) {
         log.info("POST /api/playlists");
-        return ResponseEntity.status(HttpStatus.CREATED).body(playlistService.createPlaylist(dto));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(playlistService.createPlaylist(dto));
     }
 
     @GetMapping("/me")
@@ -35,10 +37,19 @@ public class PlaylistController {
         return ResponseEntity.ok(playlistService.getMyPlaylists());
     }
 
+    // -------------------------
+    // BROWSE PUBLIC PLAYLISTS
+    // Returns all public playlists sorted newest-first.
+    // Optional ?search= param filters by playlist name (case-insensitive).
+    // GET /api/playlists/public
+    // GET /api/playlists/public?search=chill
+    // -------------------------
+
     @GetMapping("/public")
-    public ResponseEntity<List<PlaylistDTO>> getPublicPlaylists() {
-        log.info("GET /api/playlists/public");
-        return ResponseEntity.ok(playlistService.getPublicPlaylists());
+    public ResponseEntity<List<PlaylistDTO>> getPublicPlaylists(
+            @RequestParam(required = false) String search) {
+        log.info("GET /api/playlists/public search='{}'", search);
+        return ResponseEntity.ok(playlistService.getPublicPlaylists(search));
     }
 
     @GetMapping("/{id}")
@@ -48,8 +59,9 @@ public class PlaylistController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PlaylistDTO> update(@PathVariable Long id,
-                                              @Valid @RequestBody PlaylistDTO dto) {
+    public ResponseEntity<PlaylistDTO> update(
+            @PathVariable Long id,
+            @Valid @RequestBody PlaylistDTO dto) {
         log.info("PUT /api/playlists/{}", id);
         return ResponseEntity.ok(playlistService.updatePlaylist(id, dto));
     }
@@ -62,22 +74,27 @@ public class PlaylistController {
     }
 
     @PostMapping("/{id}/songs/{songId}")
-    public ResponseEntity<Void> addSong(@PathVariable Long id, @PathVariable Long songId) {
+    public ResponseEntity<Void> addSong(
+            @PathVariable Long id,
+            @PathVariable Long songId) {
         log.info("POST /api/playlists/{}/songs/{}", id, songId);
         playlistService.addSongToPlaylist(id, songId);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}/songs/{songId}")
-    public ResponseEntity<Void> removeSong(@PathVariable Long id, @PathVariable Long songId) {
+    public ResponseEntity<Void> removeSong(
+            @PathVariable Long id,
+            @PathVariable Long songId) {
         log.info("DELETE /api/playlists/{}/songs/{}", id, songId);
         playlistService.removeSongFromPlaylist(id, songId);
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}/reorder")
-    public ResponseEntity<Void> reorderSongs(@PathVariable Long id,
-                                             @RequestBody List<Long> orderedSongIds) {
+    public ResponseEntity<Void> reorderSongs(
+            @PathVariable Long id,
+            @RequestBody List<Long> orderedSongIds) {
         log.info("PUT /api/playlists/{}/reorder - {} songs", id, orderedSongIds.size());
         playlistService.reorderSongs(id, orderedSongIds);
         return ResponseEntity.noContent().build();
