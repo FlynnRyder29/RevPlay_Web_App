@@ -2462,7 +2462,986 @@ a.page-num:hover {
         font-size: 13px;
     }
 }
+/* ═══════════════════════════════════════════════════════════════
+   ██████████████████████████████████████████████████████████████
+   THEME SYSTEM — Dark / Light Toggle
+   ██████████████████████████████████████████████████████████████
 
+   DARK  (default): black + orange
+   LIGHT          : cream (#e5e8d1) + teal (#099c88)
+
+   Strategy:
+   1. New CSS variables added to :root for hardcoded colors
+   2. [data-theme="light"] overrides ALL variables
+   3. Targeted component overrides where hardcoded values exist
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── 1. New Variables (add to existing :root) ─────────────── */
+
+:root {
+    /* Structural backgrounds (previously hardcoded) */
+    --bg-navbar:         #000000;
+    --bg-sidebar:        #000000;
+    --bg-player:         #181818;
+    --bg-footer:         #000000;
+    --bg-input:          var(--bg-dark);
+    --bg-gradient-start: #1a1a1a;
+
+    /* UI elements */
+    --progress-bg:       #535353;
+    --shadow-color:      rgba(0, 0, 0, 0.5);
+    --divider-subtle:    rgba(255, 255, 255, 0.06);
+
+    /* Control play button */
+    --control-play-bg:    var(--text-main);
+    --control-play-color: #000000;
+
+    /* Icon filter presets (dark mode defaults) */
+    --icon-filter:          brightness(0.7);
+    --icon-filter-hover:    brightness(1);
+    --icon-filter-active:   brightness(1) sepia(1) saturate(5) hue-rotate(350deg);
+    --icon-filter-cta:      brightness(1) sepia(1) saturate(5) hue-rotate(350deg);
+    --icon-filter-danger:   brightness(1) sepia(1) saturate(10) hue-rotate(320deg);
+
+    /* Scrollbar */
+    --scrollbar-thumb:   #535353;
+    --scrollbar-track:   transparent;
+}
+
+
+/* ── 2. Light Theme Variable Overrides ────────────────────── */
+
+[data-theme="light"] {
+    /* Core palette */
+    --bg-dark:           #e5e8d1;
+    --bg-surface:        #f2f4e6;
+    --bg-surface-hover:  #dfe2ce;
+    --primary-color:     #099c88;
+    --primary-hover:     #07b89e;
+    --text-main:         #1a1a1a;
+    --text-muted:        #5a5e4e;
+    --border-color:      #bfc3af;
+    --error-color:       #c0392b;
+
+    /* Structural backgrounds */
+    --bg-navbar:         #d5d9c4;
+    --bg-sidebar:        #d5d9c4;
+    --bg-player:         #cdd1bc;
+    --bg-footer:         #d5d9c4;
+    --bg-input:          #f7f9ec;
+    --bg-gradient-start: #dce0cb;
+
+    /* UI elements */
+    --progress-bg:       #b0b4a0;
+    --shadow-color:      rgba(0, 0, 0, 0.08);
+    --divider-subtle:    rgba(0, 0, 0, 0.08);
+
+    /* Control play */
+    --control-play-bg:    var(--text-main);
+    --control-play-color: #FFFFFF;
+
+    /* Icon filters (light mode — darker icons, teal tint) */
+    --icon-filter:          brightness(0.4);
+    --icon-filter-hover:    brightness(0.15);
+    --icon-filter-active:   brightness(0.8) sepia(1) saturate(5) hue-rotate(145deg);
+    --icon-filter-cta:      brightness(0.8) sepia(1) saturate(5) hue-rotate(145deg);
+    --icon-filter-danger:   brightness(1) sepia(1) saturate(10) hue-rotate(320deg);
+
+    /* Scrollbar */
+    --scrollbar-thumb:   #b0b4a0;
+    --scrollbar-track:   var(--bg-dark);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   3. SMOOTH TRANSITIONS
+   Only enabled after page load (via JS adding this class)
+   ═══════════════════════════════════════════════════════════════ */
+
+.theme-transitions,
+.theme-transitions .navbar,
+.theme-transitions .sidebar,
+.theme-transitions .sidebar-item,
+.theme-transitions .content-area,
+.theme-transitions .player-bar,
+.theme-transitions .site-footer,
+.theme-transitions .footer-content,
+.theme-transitions .footer-bottom,
+.theme-transitions .song-card,
+.theme-transitions .auth-container,
+.theme-transitions .form-control,
+.theme-transitions .search-input,
+.theme-transitions .nav-search-input,
+.theme-transitions .genre-select,
+.theme-transitions .progress-bar-bg,
+.theme-transitions .progress-bar-fill,
+.theme-transitions .theme-toggle-btn {
+    transition: background-color 0.4s ease,
+    color 0.4s ease,
+    border-color 0.4s ease,
+    box-shadow 0.4s ease;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   4. THEME TOGGLE BUTTON
+   ═══════════════════════════════════════════════════════════════ */
+
+.theme-toggle-btn {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    border-radius: 50%;
+    border: 2px solid var(--border-color);
+    background: var(--bg-surface);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+    color: var(--text-muted);
+    transition: background-color 0.3s ease,
+    border-color 0.3s ease,
+    transform 0.2s ease,
+    box-shadow 0.3s ease;
+}
+
+.theme-toggle-btn:hover {
+    transform: scale(1.1);
+    border-color: var(--primary-color);
+    background: var(--bg-surface-hover);
+    color: var(--primary-color);
+    box-shadow: 0 0 16px rgba(var(--primary-color), 0.2);
+}
+
+.theme-toggle-btn:active {
+    transform: scale(0.95);
+}
+
+/* Focus ring for accessibility */
+.theme-toggle-btn:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* ── Sun & Moon Icons ──────────────────────────────────────── */
+
+.theme-icon {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-icon svg {
+    display: block;
+}
+
+/* Dark mode (default): sun visible, moon hidden */
+.theme-icon--sun {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+
+.theme-icon--moon {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.5);
+}
+
+/* Light mode: moon visible, sun hidden */
+[data-theme="light"] .theme-icon--sun {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.5);
+}
+
+[data-theme="light"] .theme-icon--moon {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+
+/* Hover glow */
+[data-theme="light"] .theme-toggle-btn:hover {
+    box-shadow: 0 0 16px rgba(9, 156, 136, 0.3);
+}
+
+/* Dark mode hover glow */
+:root:not([data-theme="light"]) .theme-toggle-btn:hover {
+    box-shadow: 0 0 16px rgba(215, 82, 9, 0.3);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   5. COMPONENT OVERRIDES — Hardcoded colors → Variables
+   (These override the existing CSS rules that use hardcoded values)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Navbar ───────────────────────────────────────────────── */
+
+[data-theme="light"] .navbar {
+    background-color: var(--bg-navbar);
+    border-bottom-color: var(--border-color);
+}
+
+/* Nav search input */
+[data-theme="light"] .nav-search-input {
+    background-color: var(--bg-input);
+    color: var(--text-main);
+}
+
+[data-theme="light"] .nav-search-input:focus {
+    background-color: var(--bg-surface);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(9, 156, 136, 0.2);
+}
+
+[data-theme="light"] .nav-search-input::placeholder {
+    color: var(--text-muted);
+}
+
+/* Login / Signup buttons */
+[data-theme="light"] .nav-login-btn {
+    background-color: var(--text-main);
+    color: var(--bg-dark);
+}
+
+[data-theme="light"] .nav-login-btn:hover {
+    color: var(--bg-dark);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .nav-signup-btn {
+    color: var(--text-muted);
+}
+
+[data-theme="light"] .nav-signup-btn:hover {
+    color: var(--text-main);
+}
+
+/* Profile avatar */
+[data-theme="light"] .nav-profile-avatar {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+}
+
+[data-theme="light"] .nav-profile-avatar:hover {
+    box-shadow: 0 0 12px rgba(9, 156, 136, 0.4);
+}
+
+[data-theme="light"] .nav-avatar-letter {
+    color: #FFFFFF;
+}
+
+/* Search icon brightness */
+[data-theme="light"] .nav-search-icon-img {
+    filter: var(--icon-filter);
+}
+
+[data-theme="light"] .nav-search-form:focus-within .nav-search-icon-img {
+    filter: var(--icon-filter-hover);
+}
+
+
+/* ── Sidebar ──────────────────────────────────────────────── */
+
+[data-theme="light"] .sidebar {
+    background-color: var(--bg-sidebar);
+    border-right-color: var(--border-color);
+}
+
+[data-theme="light"] .sidebar-section + .sidebar-section {
+    border-top-color: var(--divider-subtle);
+}
+
+[data-theme="light"] .sidebar-item--active {
+    background-color: var(--bg-surface);
+}
+
+[data-theme="light"] .sidebar-item--active::before {
+    background-color: var(--primary-color);
+}
+
+/* Sidebar icon filters */
+[data-theme="light"] .sidebar-icon-img {
+    filter: var(--icon-filter);
+}
+
+[data-theme="light"] .sidebar-item:hover .sidebar-icon-img {
+    filter: var(--icon-filter-hover);
+}
+
+[data-theme="light"] .sidebar-item--active .sidebar-icon-img {
+    filter: var(--icon-filter-active);
+}
+
+[data-theme="light"] .sidebar-icon-img--cta {
+    filter: var(--icon-filter-cta);
+}
+
+[data-theme="light"] .sidebar-logout-btn:hover .sidebar-icon-img {
+    filter: var(--icon-filter-danger);
+}
+
+/* Sidebar CTA */
+[data-theme="light"] .sidebar-cta {
+    color: var(--primary-color) !important;
+}
+
+[data-theme="light"] .sidebar-cta:hover {
+    background-color: rgba(9, 156, 136, 0.12) !important;
+    color: var(--primary-hover) !important;
+}
+
+/* Sidebar logout */
+[data-theme="light"] .sidebar-logout-btn:hover {
+    color: var(--error-color) !important;
+    background-color: rgba(192, 57, 43, 0.08) !important;
+}
+
+/* Sidebar bottom border */
+[data-theme="light"] .sidebar-bottom {
+    border-top-color: var(--divider-subtle);
+}
+
+
+/* ── Content Area ─────────────────────────────────────────── */
+
+[data-theme="light"] .content-area {
+    background: linear-gradient(
+            180deg,
+            var(--bg-gradient-start) 0%,
+            var(--bg-dark) 300px
+    );
+}
+
+
+/* ── Brand Icon ───────────────────────────────────────────── */
+
+[data-theme="light"] .brand-icon-img {
+    filter: var(--icon-filter-cta);
+}
+
+[data-theme="light"] .
+
+    /* ═══════════════════════════════════════════════════════════════
+       THEME FIXES — Light Mode Component Corrections
+       Issues: Footer text, Player bar text, Sidebar icons/hover
+       ═══════════════════════════════════════════════════════════════ */
+
+
+    /* ── FIX 1: FOOTER — Text Visibility ─────────────────────── */
+
+[data-theme="light"] .site-footer {
+    background-color: var(--bg-footer);
+    border-top-color: var(--border-color);
+}
+
+[data-theme="light"] .footer-content {
+    background-color: var(--bg-footer);
+}
+
+/* Footer tagline (paragraph below brand) */
+[data-theme="light"] .footer-tagline {
+    color: #3a3f2e;
+}
+
+/* Footer column titles — COMPANY, COMMUNITIES, etc. */
+[data-theme="light"] .footer-col-title {
+    color: #1a1a1a;
+    font-weight: 800;
+}
+
+/* Footer links — individual items */
+[data-theme="light"] .footer-link {
+    color: #3a3f2e;
+}
+
+[data-theme="light"] .footer-link:hover {
+    color: var(--primary-color);
+}
+
+/* Footer bottom bar — copyright area */
+[data-theme="light"] .footer-bottom {
+    background-color: var(--bg-footer);
+    border-top-color: var(--border-color);
+    color: #3a3f2e;
+}
+
+[data-theme="light"] .footer-bottom-links a {
+    color: #3a3f2e;
+}
+
+[data-theme="light"] .footer-bottom-links a:hover {
+    color: var(--primary-color);
+}
+
+/* Footer social icons */
+[data-theme="light"] .social-link {
+    background-color: var(--bg-surface);
+    color: #3a3f2e;
+}
+
+[data-theme="light"] .social-link:hover {
+    background-color: var(--primary-color);
+    color: #FFFFFF;
+}
+
+[data-theme="light"] .social-icon-img {
+    filter: brightness(0.3);
+}
+
+[data-theme="light"] .social-link:hover .social-icon-img {
+    filter: brightness(0) invert(1);
+}
+
+/* Footer logo icon */
+[data-theme="light"] .footer-logo-img {
+    filter: var(--icon-filter-cta);
+}
+
+/* Footer logo text */
+[data-theme="light"] .footer-logo {
+    color: var(--primary-color);
+}
+
+
+/* ── FIX 2: PLAYER BAR — Text & Background Visibility ────── */
+
+[data-theme="light"] .player-bar {
+    background-color: var(--bg-player);
+    border-top-color: var(--border-color);
+}
+
+/* Song title — must be clearly visible */
+[data-theme="light"] .player-track-title {
+    color: #111309;
+    font-weight: 600;
+}
+
+/* Artist name — darker than muted, clearly readable */
+[data-theme="light"] .player-track-artist {
+    color: #3a3f2e;
+}
+
+/* Progress time labels */
+[data-theme="light"] .progress-time {
+    color: #3a3f2e;
+}
+
+/* Progress bar track */
+[data-theme="light"] .progress-bar-bg {
+    background-color: var(--progress-bg);
+}
+
+/* Progress bar filled portion */
+[data-theme="light"] .progress-bar-fill {
+    background-color: var(--text-main);
+}
+
+[data-theme="light"] .progress-bar-bg:hover .progress-bar-fill {
+    background-color: var(--primary-color);
+}
+
+/* Player control buttons — make icons visible */
+[data-theme="light"] .player-bar .control-btn {
+    color: #3a3f2e;
+}
+
+[data-theme="light"] .player-bar .control-btn:hover {
+    color: #111309;
+}
+
+/* Play/Pause circle button */
+[data-theme="light"] .player-bar .control-play {
+    background-color: #111309;
+}
+
+[data-theme="light"] .player-bar .control-play:hover {
+    background-color: #000000;
+}
+
+[data-theme="light"] .player-bar .control-play .player-icon-img {
+    filter: brightness(0) invert(1);
+}
+
+/* Player icon images in bar */
+[data-theme="light"] .player-bar .player-icon-img {
+    filter: brightness(0.25);
+}
+
+[data-theme="light"] .player-bar .control-btn:hover .player-icon-img {
+    filter: brightness(0);
+}
+
+/* Active shuffle/repeat buttons in player */
+[data-theme="light"] .player-bar .control-btn.active {
+    color: var(--primary-color);
+}
+
+[data-theme="light"] .player-bar .control-btn.active .player-icon-img {
+    filter: var(--icon-filter-active);
+}
+
+/* Volume icon */
+[data-theme="light"] .volume-icon .player-icon-img {
+    filter: brightness(0.25);
+}
+
+/* Volume bar */
+[data-theme="light"] .volume-fill {
+    background-color: var(--text-main);
+}
+
+[data-theme="light"] .volume-bar:hover .volume-fill {
+    background-color: var(--primary-color);
+}
+
+/* Favorite button in player */
+[data-theme="light"] .player-fav-btn .player-icon-img {
+    filter: brightness(0.3);
+}
+
+[data-theme="light"] .player-fav-btn:hover .player-icon-img {
+    filter: var(--icon-filter-danger);
+}
+
+[data-theme="light"] .player-fav-btn.favorited .player-icon-img {
+    filter: var(--icon-filter-danger);
+}
+
+/* Player album art shadow */
+[data-theme="light"] .player-album-art {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* Emoji fallbacks in player */
+[data-theme="light"] .player-bar .icon-fallback {
+    color: #3a3f2e;
+}
+
+[data-theme="light"] .player-bar .control-btn:hover .icon-fallback {
+    color: #111309;
+}
+
+[data-theme="light"] .player-bar .control-play .icon-fallback,
+[data-theme="light"] .player-bar .control-play .play-fallback {
+    color: #FFFFFF;
+}
+
+
+/* ── FIX 3: SIDEBAR — Icons & Hover States ───────────────── */
+
+/* Sidebar icon images — stronger contrast */
+[data-theme="light"] .sidebar-icon-img {
+    filter: brightness(0.25);
+}
+
+/* Sidebar text */
+[data-theme="light"] .sidebar-label {
+    color: #3a3f2e;
+    font-weight: 500;
+}
+
+[data-theme="light"] .sidebar-item {
+    color: #3a3f2e;
+}
+
+/* Sidebar section titles */
+[data-theme="light"] .sidebar-section-title {
+    color: #5a5e4e;
+}
+
+/* ── Sidebar Hover: Teal background + light text ──────────── */
+
+[data-theme="light"] .sidebar-item:hover {
+    background-color: var(--primary-color);
+    color: #FFFFFF;
+}
+
+[data-theme="light"] .sidebar-item:hover .sidebar-label {
+    color: #FFFFFF;
+}
+
+[data-theme="light"] .sidebar-item:hover .sidebar-icon-img {
+    filter: brightness(0) invert(1);
+}
+
+/* Emoji fallback icons on hover */
+[data-theme="light"] .sidebar-item:hover .sidebar-icon-fallback {
+    color: #FFFFFF;
+}
+
+[data-theme="light"] .sidebar-item:hover .icon-fallback {
+    color: #FFFFFF;
+}
+
+/* ── Sidebar Active State: Teal indicator + strong text ───── */
+
+[data-theme="light"] .sidebar-item--active {
+    background-color: rgba(9, 156, 136, 0.12);
+    color: var(--primary-color);
+}
+
+[data-theme="light"] .sidebar-item--active .sidebar-label {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+[data-theme="light"] .sidebar-item--active .sidebar-icon-img {
+    filter: var(--icon-filter-active);
+}
+
+/* Active + hover: full teal */
+[data-theme="light"] .sidebar-item--active:hover {
+    background-color: var(--primary-color);
+    color: #FFFFFF;
+}
+
+[data-theme="light"] .sidebar-item--active:hover .sidebar-label {
+    color: #FFFFFF;
+}
+
+[data-theme="light"] .sidebar-item--active:hover .sidebar-icon-img {
+    filter: brightness(0) invert(1);
+}
+
+/* ── Sidebar CTA (Sign Up) ────────────────────────────────── */
+
+[data-theme="light"] .sidebar-cta {
+    color: var(--primary-color) !important;
+}
+
+[data-theme="light"] .sidebar-cta .sidebar-label {
+    color: var(--primary-color);
+}
+
+[data-theme="light"] .sidebar-cta:hover {
+    background-color: var(--primary-color) !important;
+    color: #FFFFFF !important;
+}
+
+[data-theme="light"] .sidebar-cta:hover .sidebar-label {
+    color: #FFFFFF !important;
+}
+
+[data-theme="light"] .sidebar-cta:hover .sidebar-icon-img {
+    filter: brightness(0) invert(1) !important;
+}
+
+/* ── Sidebar Logout — Red hover ───────────────────────────── */
+
+[data-theme="light"] .sidebar-logout-btn {
+    color: #3a3f2e;
+}
+
+[data-theme="light"] .sidebar-logout-btn .sidebar-label {
+    color: #3a3f2e;
+}
+
+[data-theme="light"] .sidebar-logout-btn:hover {
+    background-color: var(--error-color) !important;
+    color: #FFFFFF !important;
+}
+
+[data-theme="light"] .sidebar-logout-btn:hover .sidebar-label {
+    color: #FFFFFF !important;
+}
+
+[data-theme="light"] .sidebar-logout-btn:hover .sidebar-icon-img {
+    filter: brightness(0) invert(1) !important;
+}
+
+/* ── Sidebar Scrollbar ────────────────────────────────────── */
+
+[data-theme="light"] .sidebar-nav::-webkit-scrollbar {
+    width: 4px;
+}
+
+[data-theme="light"] .sidebar-nav::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb);
+    border-radius: 2px;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   FIX 4: ADDITIONAL COMPONENTS — Light Mode Polish
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Song Cards ───────────────────────────────────────────── */
+
+[data-theme="light"] .song-card {
+    background-color: var(--bg-surface);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .song-card:hover {
+    background-color: var(--bg-surface-hover);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .song-title {
+    color: #111309;
+}
+
+[data-theme="light"] .song-artist {
+    color: #5a5e4e;
+}
+
+[data-theme="light"] .song-card img {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Active song card border */
+[data-theme="light"] .song-card--active {
+    outline-color: var(--primary-color);
+}
+
+/* Play overlay on card */
+[data-theme="light"] .play-button-overlay {
+    background-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(9, 156, 136, 0.4);
+}
+
+/* Card play icon */
+[data-theme="light"] .card-play-icon {
+    filter: brightness(0) invert(1);
+}
+
+[data-theme="light"] .card-play-fallback {
+    color: #FFFFFF;
+}
+
+
+/* ── Auth Pages (Login / Register) ────────────────────────── */
+
+[data-theme="light"] .auth-container {
+    background-color: var(--bg-surface);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .auth-container h1 {
+    color: var(--text-main);
+}
+
+[data-theme="light"] .form-control {
+    background-color: var(--bg-input);
+    border-color: var(--border-color);
+    color: var(--text-main);
+}
+
+[data-theme="light"] .form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(9, 156, 136, 0.15);
+}
+
+[data-theme="light"] .alert-success {
+    background-color: rgba(9, 156, 136, 0.1);
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+[data-theme="light"] .alert-error {
+    background-color: rgba(192, 57, 43, 0.08);
+    color: var(--error-color);
+    border-color: var(--error-color);
+}
+
+
+/* ── Hero Section (Guest Landing) ─────────────────────────── */
+
+[data-theme="light"] .hero-glow {
+    background: radial-gradient(
+            ellipse,
+            rgba(9, 156, 136, 0.12) 0%,
+            transparent 70%
+    );
+}
+
+[data-theme="light"] .hero-title {
+    background: linear-gradient(135deg, var(--text-main), var(--primary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+[data-theme="light"] .hero-cta {
+    background-color: var(--primary-color);
+    color: #FFFFFF;
+}
+
+[data-theme="light"] .hero-cta:hover {
+    background-color: var(--primary-hover);
+    color: #FFFFFF;
+    box-shadow: 0 4px 25px rgba(9, 156, 136, 0.35);
+}
+
+
+/* ── Search & Filter Controls ─────────────────────────────── */
+
+[data-theme="light"] .search-input {
+    background-color: var(--bg-input);
+    border-color: var(--border-color);
+    color: var(--text-main);
+}
+
+[data-theme="light"] .search-input:focus {
+    border-color: var(--primary-color);
+    background-color: var(--bg-surface);
+}
+
+[data-theme="light"] .genre-select {
+    background-color: var(--bg-input);
+    border-color: var(--border-color);
+    color: var(--text-main);
+}
+
+[data-theme="light"] .genre-select:focus {
+    border-color: var(--primary-color);
+}
+
+[data-theme="light"] .btn-search {
+    background-color: var(--primary-color);
+    color: #FFFFFF;
+}
+
+[data-theme="light"] .btn-search:hover {
+    background-color: var(--primary-hover);
+}
+
+/* Active filter tags */
+[data-theme="light"] .filter-tag {
+    background-color: rgba(9, 156, 136, 0.12);
+    color: var(--primary-color);
+    border: 1px solid rgba(9, 156, 136, 0.25);
+}
+
+
+/* ── Pagination ───────────────────────────────────────────── */
+
+[data-theme="light"] .page-link {
+    background-color: var(--bg-surface);
+    color: var(--text-main);
+}
+
+[data-theme="light"] .page-link:hover {
+    background-color: var(--bg-surface-hover);
+}
+
+[data-theme="light"] .page-num.active {
+    background-color: var(--primary-color);
+    color: #FFFFFF;
+}
+
+[data-theme="light"] a.page-num:hover {
+    background-color: var(--bg-surface-hover);
+}
+
+
+/* ── Dedicated Player Page ────────────────────────────────── */
+
+[data-theme="light"] .player-hero-art {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .now-playing-label {
+    color: var(--primary-color);
+}
+
+[data-theme="light"] .player-page-controls .control-btn {
+    color: #3a3f2e;
+}
+
+[data-theme="light"] .player-page-controls .control-btn:hover {
+    color: #111309;
+}
+
+[data-theme="light"] .page-ctrl-play {
+    background-color: transparent;
+}
+
+[data-theme="light"] .page-play-icon {
+    box-shadow: 0 4px 20px rgba(9, 156, 136, 0.3) !important;
+}
+
+[data-theme="light"] .page-ctrl-play:hover .page-play-icon {
+    box-shadow: 0 6px 30px rgba(9, 156, 136, 0.5) !important;
+}
+
+/* Page control icon images */
+[data-theme="light"] .page-ctrl-icon {
+    filter: brightness(0.25);
+}
+
+[data-theme="light"] .page-ctrl-secondary:hover .page-ctrl-icon,
+[data-theme="light"] .page-ctrl-lg:hover .page-ctrl-icon {
+    filter: brightness(0);
+}
+
+[data-theme="light"] .page-ctrl-secondary.active .page-ctrl-icon {
+    filter: var(--icon-filter-active);
+}
+
+/* Page control emoji fallbacks */
+[data-theme="light"] .player-page-controls .icon-fallback {
+    color: #3a3f2e;
+}
+
+[data-theme="light"] .player-page-controls .control-btn:hover .icon-fallback {
+    color: #111309;
+}
+
+[data-theme="light"] .player-page-volume .icon-fallback {
+    color: #3a3f2e;
+}
+
+
+/* ── Primary Button Override ──────────────────────────────── */
+
+[data-theme="light"] .btn-primary {
+    background-color: var(--primary-color);
+    color: #FFFFFF;
+}
+
+[data-theme="light"] .btn-primary:hover {
+    background-color: var(--primary-hover);
+    color: #FFFFFF;
+}
+
+
+/* ── General Links ────────────────────────────────────────── */
+
+[data-theme="light"] a:hover {
+    color: var(--primary-color);
+}
+
+
+/* ── Section Headers (Home Page) ──────────────────────────── */
+
+[data-theme="light"] .section-see-all:hover {
+    color: var(--primary-color);
+}
+
+
+/* ── Scrollbar (Global) ───────────────────────────────────── */
+
+[data-theme="light"] .content-area::-webkit-scrollbar {
+    width: 8px;
+}
+
+[data-theme="light"] .content-area::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+}
+
+[data-theme="light"] .content-area::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb);
+    border-radius: 4px;
+}
+
+[data-theme="light"] .content-area::-webkit-scrollbar-thumb:hover {
+    background-color: var(--primary-color);
+}
 
 /* ═══════════════════════════════════════════════════════
    RESPONSIVE — Sidebar hides on mobile

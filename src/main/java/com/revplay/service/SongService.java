@@ -3,6 +3,7 @@ package com.revplay.service;
 import com.revplay.dto.SongDTO;
 import com.revplay.dto.SongCreateRequest;
 import com.revplay.dto.SongUpdateRequest;
+import com.revplay.exception.BadRequestException;
 import com.revplay.exception.ResourceNotFoundException;
 import com.revplay.exception.UnauthorizedAccessException;
 import com.revplay.model.Album;
@@ -13,16 +14,16 @@ import com.revplay.repository.AlbumRepository;
 import com.revplay.repository.ArtistRepository;
 import com.revplay.repository.SongRepository;
 import com.revplay.repository.UserRepository;
+import com.revplay.specification.SongSpecification;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.revplay.specification.SongSpecification;
-import org.springframework.data.jpa.domain.Specification;
 
 @Service
 @RequiredArgsConstructor
@@ -37,22 +38,40 @@ public class SongService {
 
     // ========================= READ =========================
 
+    // 🔴 FIX: Only return PUBLIC songs in browse endpoint
+    // UNLISTED songs are accessible by direct link (getSongById) but should
+    // NOT appear in browse results. PRIVATE songs are only for the artist.
     @Transactional(readOnly = true)
     public Page<SongDTO> getAllSongs(Pageable pageable) {
-        log.debug("Fetching all songs, page={}", pageable.getPageNumber());
-        return songRepository.findAll(pageable).map(this::mapToDTO);
+        log.debug("Fetching all PUBLIC songs, page={}", pageable.getPageNumber());
+        return songRepository.findByVisibility(Song.Visibility.PUBLIC, pageable)
+                .map(this::mapToDTO);
     }
 
+    // getSongById — allows UNLISTED (direct link access) but NOT PRIVATE
+    // PRIVATE songs are only accessible by the owning artist
     @Transactional(readOnly = true)
     public SongDTO getSongById(Long id) {
         Song song = songRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Song", "id", id));
+
+        // 🔴 FIX: Block PRIVATE songs from non-owners
+        if (song.getVisibility() == Song.Visibility.PRIVATE) {
+            User currentUser = getCurrentUser();
+            if (!song.getArtist().getUserId().equals(currentUser.getId())) {
+                throw new ResourceNotFoundException("Song", "id", id);
+                // Return 404 instead of 403 to avoid revealing existence
+            }
+        }
+
         return mapToDTO(song);
     }
 
+    // 🔴 FIX: Only search PUBLIC songs
     @Transactional(readOnly = true)
     public Page<SongDTO> searchSongs(String keyword, Pageable pageable) {
-        return songRepository.searchByKeyword(keyword, pageable)
+        return songRepository.searchByKeywordAndVisibility(
+                        keyword, Song.Visibility.PUBLIC, pageable)
                 .map(this::mapToDTO);
     }
 
@@ -72,6 +91,12 @@ public class SongService {
             album = albumRepository.findById(request.getAlbumId())
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "Album", "id", request.getAlbumId()));
+
+            // 🔴 FIX: Verify album belongs to the current artist
+            if (!album.getArtist().getId().equals(artist.getId())) {
+                throw new BadRequestException(
+                        "Cannot add song to another artist's album");
+            }
         }
 
         Song song = Song.builder()
@@ -88,7 +113,6 @@ public class SongService {
                 .album(album)
                 .build();
 
-        // ✅ FIX: Map the saved entity so id and createdAt are populated
         Song saved = songRepository.save(song);
 
         log.info("Artist {} created song '{}'", currentUser.getUsername(), saved.getTitle());
@@ -133,12 +157,22 @@ public class SongService {
             Album album = albumRepository.findById(request.getAlbumId())
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "Album", "id", request.getAlbumId()));
+
+            // 🔴 FIX: Verify album belongs to the current artist
+            Artist artist = artistRepository.findByUserId(currentUser.getId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Artist", "userId", currentUser.getId()));
+
+            if (!album.getArtist().getId().equals(artist.getId())) {
+                throw new BadRequestException(
+                        "Cannot move song to another artist's album");
+            }
+
             song.setAlbum(album);
         }
 
         log.info("Artist {} updated song id={}", currentUser.getUsername(), id);
 
-        // ✅ FIX: Explicit save — don't rely on dirty checking alone
         return mapToDTO(songRepository.save(song));
     }
 
@@ -173,9 +207,29 @@ public class SongService {
 
         song.setVisibility(Song.Visibility.valueOf(visibility));
 
-        log.info("Artist {} changed visibility of song id={} to {}", currentUser.getUsername(), id, visibility);
+        log.info("Artist {} changed visibility of song id={} to {}",
+                currentUser.getUsername(), id, visibility);
 
         return mapToDTO(songRepository.save(song));
+    }
+
+    // ========================= FILTER =========================
+
+    // 🔴 FIX: Always include visibility=PUBLIC in filter specification
+    @Transactional(readOnly = true)
+    public Page<SongDTO> filterSongs(String genre, String artist, String album,
+                                     Integer year, Pageable pageable) {
+        log.info("Filtering songs - genre={}, artist={}, album={}, year={}",
+                genre, artist, album, year);
+
+        Specification<Song> spec = Specification
+                .where(SongSpecification.isPublic())   // ← FIX: Always filter to PUBLIC
+                .and(SongSpecification.hasGenre(genre))
+                .and(SongSpecification.hasArtistName(artist))
+                .and(SongSpecification.hasAlbumName(album))
+                .and(SongSpecification.hasYear(year));
+
+        return songRepository.findAll(spec, pageable).map(this::mapToDTO);
     }
 
     // ========================= HELPERS =========================
@@ -194,25 +248,10 @@ public class SongService {
     private void validateOwnership(Long artistUserId, Long currentUserId) {
         if (!artistUserId.equals(currentUserId)) {
             throw new UnauthorizedAccessException(
-                    "You are not allowed to modify this song"
-            );
+                    "You are not allowed to modify this song");
         }
     }
 
-    @Transactional(readOnly = true)
-    public Page<SongDTO> filterSongs(String genre, String artist, String album, Integer year, Pageable pageable) {
-        log.info("Filtering songs - genre={}, artist={}, album={}, year={}", genre, artist, album, year);
-
-        Specification<Song> spec = Specification
-                .where(SongSpecification.hasGenre(genre))
-                .and(SongSpecification.hasArtistName(artist))
-                .and(SongSpecification.hasAlbumName(album))
-                .and(SongSpecification.hasYear(year));
-
-        return songRepository.findAll(spec, pageable).map(this::mapToDTO);
-    }
-
-    // ✅ FIX: All fields mapped — title, genre, duration, audioUrl, coverImageUrl restored
     private SongDTO mapToDTO(Song song) {
         return SongDTO.builder()
                 .id(song.getId())
@@ -223,7 +262,8 @@ public class SongService {
                 .coverImageUrl(song.getCoverImageUrl())
                 .releaseDate(song.getReleaseDate())
                 .playCount(song.getPlayCount())
-                .visibility(song.getVisibility() != null ? song.getVisibility().name() : null)
+                .visibility(song.getVisibility() != null
+                        ? song.getVisibility().name() : null)
                 .artistId(song.getArtist().getId())
                 .artistName(song.getArtist().getArtistName())
                 .albumId(song.getAlbum() != null ? song.getAlbum().getId() : null)
