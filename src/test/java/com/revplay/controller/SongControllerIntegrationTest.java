@@ -11,11 +11,11 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.bean.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
@@ -46,12 +46,13 @@ class SongControllerIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean private SongService songService;
+    @MockitoBean
+    private SongService songService;
 
     // ── SecurityConfig dependencies (needed for context startup) ──
-    @MockBean private CustomUserDetailsService customUserDetailsService;
-    @MockBean private RevPlayAuthenticationEntryPoint authEntryPoint;
-    @MockBean private RevPlayAccessDeniedHandler accessDeniedHandler;
+    @MockitoBean private CustomUserDetailsService customUserDetailsService;
+    @MockitoBean private RevPlayAuthenticationEntryPoint authEntryPoint;
+    @MockitoBean private RevPlayAccessDeniedHandler accessDeniedHandler;
 
     // ── Helper ────────────────────────────────────────────────────
 
