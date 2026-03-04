@@ -3,6 +3,7 @@ package com.revplay.controller;
 import com.revplay.dto.PlaylistDTO;
 import com.revplay.service.PlaylistService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -13,15 +14,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/playlists")
+@RequiredArgsConstructor
 public class PlaylistController {
 
     private static final Logger log = LoggerFactory.getLogger(PlaylistController.class);
 
     private final PlaylistService playlistService;
 
-    public PlaylistController(PlaylistService playlistService) {
-        this.playlistService = playlistService;
-    }
 
     @PostMapping
     public ResponseEntity<PlaylistDTO> createPlaylist(

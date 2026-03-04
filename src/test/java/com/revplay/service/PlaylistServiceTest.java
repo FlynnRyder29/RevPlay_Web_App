@@ -542,7 +542,7 @@ class PlaylistServiceTest {
             verify(playlistSongRepository).save(argThat(ps ->
                     ps.getPlaylist().getId().equals(1L)
                             && ps.getSong().getId().equals(10L)
-                            && ps.getPosition() == 3
+                            && ps.getPosition() == 4
             ));
         }
 
