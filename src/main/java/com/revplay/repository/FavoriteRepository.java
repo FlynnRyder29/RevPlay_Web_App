@@ -48,4 +48,16 @@ public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
             "GROUP BY f.user.id, f.user.username, f.user.displayName, f.user.profilePictureUrl " +
             "ORDER BY COUNT(f) DESC")
     List<Object[]> findFansByArtistId(@Param("artistId") Long artistId);
+
+    // ── DAY 7 PR FIX: FANS WHO FAVORITED (specific song) ─────────────────────
+
+    // Returns users who favorited a SPECIFIC song
+    // Returns Object[] {userId, username, displayName, profilePictureUrl, favoriteCount (always 1)}
+    // Ordered by createdAt DESC — most recent fans appear first
+    // Used by GET /api/artists/analytics/songs/{songId}/fans
+    @Query("SELECT f.user.id, f.user.username, f.user.displayName, f.user.profilePictureUrl, 1L " +
+            "FROM Favorite f " +
+            "WHERE f.song.id = :songId " +
+            "ORDER BY f.createdAt DESC")
+    List<Object[]> findFansBySongId(@Param("songId") Long songId);
 }

@@ -29,15 +29,15 @@ public class AnalyticsService {
     private static final int TOP_LISTENERS_LIMIT = 10;
 
     // Lookback windows for trend queries
-    private static final int DAILY_LOOKBACK_DAYS    = 30;  // last 30 days
-    private static final int WEEKLY_LOOKBACK_WEEKS  = 12;  // last 12 weeks
-    private static final int MONTHLY_LOOKBACK_MONTHS = 12; // last 12 months
+    private static final int DAILY_LOOKBACK_DAYS     = 30;  // last 30 days
+    private static final int WEEKLY_LOOKBACK_WEEKS   = 12;  // last 12 weeks
+    private static final int MONTHLY_LOOKBACK_MONTHS = 12;  // last 12 months
 
     private final PlayEventRepository playEventRepository;
-    private final FavoriteRepository favoriteRepository;
-    private final SongRepository songRepository;
-    private final ArtistRepository artistRepository;
-    private final SecurityUtils securityUtils;
+    private final FavoriteRepository  favoriteRepository;
+    private final SongRepository      songRepository;
+    private final ArtistRepository    artistRepository;
+    private final SecurityUtils       securityUtils;
 
     // ── OVERVIEW ──────────────────────────────────────────────────────────────
     // GET /api/artists/analytics/overview
@@ -52,8 +52,8 @@ public class AnalyticsService {
 
         // 🔴 FIX: DB-level COUNT — avoids loading all songs into memory
         // Previously: songRepository.findAllByArtistId(artist.getId()).size()
-        long totalSongs = songRepository.countByArtistId(artist.getId());
-        long totalPlays = playEventRepository.countByArtistId(artist.getId());
+        long totalSongs     = songRepository.countByArtistId(artist.getId());
+        long totalPlays     = playEventRepository.countByArtistId(artist.getId());
         long totalFavorites = favoriteRepository.countByArtistId(artist.getId());
 
         log.info("Overview — artistId={}, totalSongs={}, totalPlays={}, totalFavorites={}",
@@ -84,10 +84,10 @@ public class AnalyticsService {
 
         List<AnalyticsDTO.SongPlayCountDTO> songPlayCounts = results.stream()
                 .map(row -> AnalyticsDTO.SongPlayCountDTO.builder()
-                        .songId(((Number) row[0]).longValue())
-                        .songTitle((String) row[1])
-                        .coverImageUrl((String) row[2])
-                        .playCount(((Number) row[3]).longValue())
+                        .songId(safeLong(row[0]))
+                        .songTitle(safeString(row[1]))
+                        .coverImageUrl(safeString(row[2]))
+                        .playCount(safeLong(row[3]))
                         .build())
                 .toList();
 
@@ -121,10 +121,10 @@ public class AnalyticsService {
 
         List<AnalyticsDTO.TopListenerDTO> topListeners = results.stream()
                 .map(row -> AnalyticsDTO.TopListenerDTO.builder()
-                        .userId(((Number) row[0]).longValue())
-                        .username((String) row[1])
-                        .displayName((String) row[2])
-                        .playCount(((Number) row[3]).longValue())
+                        .userId(safeLong(row[0]))
+                        .username(safeString(row[1]))
+                        .displayName(safeString(row[2]))
+                        .playCount(safeLong(row[3]))
                         .build())
                 .toList();
 
@@ -166,7 +166,10 @@ public class AnalyticsService {
                 results = playEventRepository.findMonthlyTrendsByArtistId(artist.getId(), from, to);
             }
             default -> {
-                // "daily" is the default fallback — safe for unknown values
+                // Issue 6 fix — warn on unknown period values, fall back to daily
+                if (!"daily".equalsIgnoreCase(period)) {
+                    log.warn("Unknown trend period '{}' — falling back to daily", period);
+                }
                 from    = to.minusDays(DAILY_LOOKBACK_DAYS);
                 results = playEventRepository.findDailyTrendsByArtistId(artist.getId(), from, to);
             }
@@ -174,8 +177,8 @@ public class AnalyticsService {
 
         List<AnalyticsDTO.TrendPointDTO> trends = results.stream()
                 .map(row -> AnalyticsDTO.TrendPointDTO.builder()
-                        .period((String) row[0])
-                        .playCount(((Number) row[1]).longValue())
+                        .period(safeString(row[0]))
+                        .playCount(safeLong(row[1]))
                         .build())
                 .toList();
 
@@ -190,7 +193,7 @@ public class AnalyticsService {
                 .build();
     }
 
-    // ── FANS WHO FAVORITED ────────────────────────────────────────────────────
+    // ── FANS WHO FAVORITED (all artist songs) ─────────────────────────────────
     // GET /api/artists/analytics/fans
     // Returns all users who favorited ≥1 of this artist's songs
     // Ordered by favoriteCount DESC — biggest fans appear first
@@ -206,15 +209,55 @@ public class AnalyticsService {
 
         List<AnalyticsDTO.FanDTO> fans = results.stream()
                 .map(row -> AnalyticsDTO.FanDTO.builder()
-                        .userId(((Number) row[0]).longValue())
-                        .username((String) row[1])
-                        .displayName((String) row[2])
-                        .profilePictureUrl((String) row[3])
-                        .favoriteCount(((Number) row[4]).longValue())
+                        .userId(safeLong(row[0]))
+                        .username(safeString(row[1]))
+                        .displayName(safeString(row[2]))
+                        .profilePictureUrl(safeString(row[3]))
+                        .favoriteCount(safeLong(row[4]))
                         .build())
                 .toList();
 
         log.info("Fans fetched — artistId={}, fanCount={}", artist.getId(), fans.size());
+
+        return AnalyticsDTO.builder()
+                .artistId(artist.getId())
+                .artistName(artist.getArtistName())
+                .fans(fans)
+                .build();
+    }
+
+    // ── PR FIX: FANS WHO FAVORITED (specific song) ────────────────────────────
+    // GET /api/artists/analytics/songs/{songId}/fans
+    // Returns users who favorited a SPECIFIC song of this artist
+    // Security check — song must belong to logged-in artist
+
+    @Transactional(readOnly = true)
+    public AnalyticsDTO getSongFans(Long songId) {
+
+        Artist artist = getCurrentArtist();
+
+        log.info("Fetching fans for songId={}, artistId={}", songId, artist.getId());
+
+        // Security check — song must belong to this artist
+        // Throws 404 if song doesn't exist OR doesn't belong to this artist
+        boolean ownsSong = songRepository.existsByIdAndArtistId(songId, artist.getId());
+        if (!ownsSong) {
+            throw new ResourceNotFoundException("Song", "id", songId);
+        }
+
+        List<Object[]> results = favoriteRepository.findFansBySongId(songId);
+
+        List<AnalyticsDTO.FanDTO> fans = results.stream()
+                .map(row -> AnalyticsDTO.FanDTO.builder()
+                        .userId(safeLong(row[0]))
+                        .username(safeString(row[1]))
+                        .displayName(safeString(row[2]))
+                        .profilePictureUrl(safeString(row[3]))
+                        .favoriteCount(safeLong(row[4]))
+                        .build())
+                .toList();
+
+        log.info("Song fans fetched — songId={}, fanCount={}", songId, fans.size());
 
         return AnalyticsDTO.builder()
                 .artistId(artist.getId())
@@ -232,5 +275,17 @@ public class AnalyticsService {
         return artistRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Artist", "userId", user.getId()));
+    }
+
+    // Issue 3 fix — null-safe string cast
+    // Prevents NullPointerException when DB returns NULL for optional fields
+    private String safeString(Object obj) {
+        return obj != null ? (String) obj : null;
+    }
+
+    // Issue 3 fix — null-safe long cast
+    // Prevents NullPointerException when DB returns NULL for count fields
+    private long safeLong(Object obj) {
+        return obj != null ? ((Number) obj).longValue() : 0L;
     }
 }

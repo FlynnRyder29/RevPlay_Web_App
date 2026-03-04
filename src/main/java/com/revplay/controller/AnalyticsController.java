@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -69,7 +70,7 @@ public class AnalyticsController {
         return ResponseEntity.ok(analyticsService.getListeningTrends(period));
     }
 
-    // ── FANS WHO FAVORITED ────────────────────────────────────────────────────
+    // ── FANS WHO FAVORITED (all artist songs) ─────────────────────────────────
     // GET /api/artists/analytics/fans
     // Returns all users who favorited ≥1 of this artist's songs
     // Ordered by favoriteCount DESC — biggest fans appear first
@@ -78,5 +79,16 @@ public class AnalyticsController {
     public ResponseEntity<AnalyticsDTO> getFans() {
         log.info("GET /api/artists/analytics/fans");
         return ResponseEntity.ok(analyticsService.getFans());
+    }
+
+    // ── PR FIX: FANS WHO FAVORITED (specific song) ────────────────────────────
+    // GET /api/artists/analytics/songs/{songId}/fans
+    // Returns users who favorited a SPECIFIC song of this artist
+    // Security: song must belong to logged-in artist — 404 if not
+
+    @GetMapping("/songs/{songId}/fans")
+    public ResponseEntity<AnalyticsDTO> getSongFans(@PathVariable Long songId) {
+        log.info("GET /api/artists/analytics/songs/{}/fans", songId);
+        return ResponseEntity.ok(analyticsService.getSongFans(songId));
     }
 }
