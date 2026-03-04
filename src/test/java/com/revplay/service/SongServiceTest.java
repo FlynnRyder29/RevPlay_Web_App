@@ -99,7 +99,11 @@ class SongServiceTest {
         String keyword = "test";
         PageRequest pageable = PageRequest.of(0, 10);
         Page<Song> mockPage = new PageImpl<>(List.of(createMockSong(1L)));
-        when(songRepository.searchByKeyword(eq(keyword), eq(pageable)))
+        // SongService.searchSongs() calls searchByKeywordAndVisibility(keyword, visibility, pageable)
+        // — 3 args. The original stub used searchByKeyword(keyword, pageable) — 2 args —
+        // so the real call was never stubbed, Mockito returned null, and Page.map() threw NPE.
+        when(songRepository.searchByKeywordAndVisibility(
+                eq(keyword), any(Song.Visibility.class), eq(pageable)))
                 .thenReturn(mockPage);
 
         // When
@@ -108,7 +112,8 @@ class SongServiceTest {
         // Then
         assertFalse(result.isEmpty());
         assertEquals(1, result.getContent().size());
-        verify(songRepository).searchByKeyword(eq(keyword), eq(pageable));
+        verify(songRepository).searchByKeywordAndVisibility(
+                eq(keyword), any(Song.Visibility.class), eq(pageable));
     }
 
     @Test

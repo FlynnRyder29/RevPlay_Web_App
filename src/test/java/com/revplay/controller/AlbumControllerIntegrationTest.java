@@ -178,10 +178,12 @@ class AlbumControllerIntegrationTest {
         }
 
         @Test
-        @DisplayName("unauthenticated — returns redirect to login")
+        @DisplayName("unauthenticated — returns 401 Unauthorized")
         void unauthenticated_returnsRedirect() throws Exception {
+            // SecurityConfig uses RevPlayAuthenticationEntryPoint which returns
+            // HTTP 401 for REST clients — not a form-login redirect (302).
             mockMvc.perform(get(API_ALBUMS + "/1"))
-                    .andExpect(status().is3xxRedirection());
+                    .andExpect(status().isUnauthorized());
         }
     }
 }

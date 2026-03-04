@@ -30,6 +30,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 /**
  * Integration tests for SongController endpoints.
@@ -152,11 +153,12 @@ class SongControllerIntegrationTest {
         }
 
         @Test
-        @DisplayName("unauthenticated request — returns 401 or redirect")
+        @DisplayName("unauthenticated request — returns 401 Unauthorized")
         void unauthenticated_returnsUnauthorized() throws Exception {
+            // SecurityConfig uses RevPlayAuthenticationEntryPoint which returns
+            // HTTP 401 for REST clients — not a form-login redirect (302).
             mockMvc.perform(get(API_SONGS))
-                    .andExpect(status().is3xxRedirection());
-            // Spring Security redirects to /auth/login for form-login
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -360,7 +362,11 @@ class SongControllerIntegrationTest {
             SongDTO dto = buildSongDTO(1L, "Test Song", "Pop");
             when(songService.updateVisibility(1L, "UNLISTED")).thenReturn(dto);
 
+            // PATCH is state-mutating — Spring Security's CSRF filter requires a valid
+            // token. Without .with(csrf()) the filter short-circuits with 403 before
+            // the request ever reaches the controller or the role check.
             mockMvc.perform(patch(API_SONGS + "/1/visibility")
+                            .with(csrf())
                             .param("visibility", "unlisted"))
                     .andExpect(status().isOk());
 
@@ -371,7 +377,10 @@ class SongControllerIntegrationTest {
         @WithMockUser(roles = "ARTIST")
         @DisplayName("invalid visibility value — returns 400")
         void invalidVisibility_returns400() throws Exception {
+            // PATCH requires .with(csrf()). Without it, the CSRF filter returns 403
+            // before the controller validates the parameter — masking the real 400.
             mockMvc.perform(patch(API_SONGS + "/1/visibility")
+                            .with(csrf())
                             .param("visibility", "INVALID"))
                     .andExpect(status().isBadRequest());
 
