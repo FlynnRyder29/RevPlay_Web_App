@@ -17,4 +17,10 @@ public interface PlaylistSongRepository extends JpaRepository<PlaylistSong, Long
 
     // Check if a song already exists in a playlist
     boolean existsByPlaylist_IdAndSong_Id(Long playlistId, Long songId);
+
+    long countByPlaylist_Id(Long playlistId);
+
+    List<PlaylistSong> findByPlaylist_IdAndSong_Id(Long playlistId, Long songId);
+
+    List<PlaylistSong> findByPlaylist_IdOrderByPositionAsc(Long playlistId);
 }
