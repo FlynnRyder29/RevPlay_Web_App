@@ -9,6 +9,7 @@ import com.revplay.repository.*;
 import com.revplay.util.SecurityUtils;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -80,31 +81,31 @@ class PlaylistServiceTest {
                 .visibility(Song.Visibility.PUBLIC)
                 .build();
 
-        // ── Playlists (NO setPlaylistSongs — field doesn't exist) ──
+        // ── Playlists ──
         ownedPlaylist = new Playlist();
         ownedPlaylist.setId(1L);
         ownedPlaylist.setName("My Playlist");
         ownedPlaylist.setDescription("My description");
         ownedPlaylist.setPublic(true);
         ownedPlaylist.setUser(currentUser);
-        ownedPlaylist.setCreatedAt(LocalDateTime.now());
-        ownedPlaylist.setUpdatedAt(LocalDateTime.now());
+        ownedPlaylist.setCreatedAt(LocalDateTime.of(2024, 6, 10, 10, 0));
+        ownedPlaylist.setUpdatedAt(LocalDateTime.of(2024, 6, 10, 10, 0));
 
         otherPublicPlaylist = new Playlist();
         otherPublicPlaylist.setId(2L);
         otherPublicPlaylist.setName("Bob's Public");
         otherPublicPlaylist.setPublic(true);
         otherPublicPlaylist.setUser(otherUser);
-        otherPublicPlaylist.setCreatedAt(LocalDateTime.now());
-        otherPublicPlaylist.setUpdatedAt(LocalDateTime.now());
+        otherPublicPlaylist.setCreatedAt(LocalDateTime.of(2024, 6, 15, 10, 0));
+        otherPublicPlaylist.setUpdatedAt(LocalDateTime.of(2024, 6, 15, 10, 0));
 
         otherPrivatePlaylist = new Playlist();
         otherPrivatePlaylist.setId(3L);
         otherPrivatePlaylist.setName("Bob's Private");
         otherPrivatePlaylist.setPublic(false);
         otherPrivatePlaylist.setUser(otherUser);
-        otherPrivatePlaylist.setCreatedAt(LocalDateTime.now());
-        otherPrivatePlaylist.setUpdatedAt(LocalDateTime.now());
+        otherPrivatePlaylist.setCreatedAt(LocalDateTime.of(2024, 6, 15, 10, 0));
+        otherPrivatePlaylist.setUpdatedAt(LocalDateTime.of(2024, 6, 15, 10, 0));
 
         // ══════════════════════════════════════════════════════════
         // CRITICAL: Mock SecurityContextHolder for private getCurrentUser()
@@ -263,6 +264,10 @@ class PlaylistServiceTest {
 
     // ══════════════════════════════════════════════════════════
     //  getPublicPlaylists
+    //
+    //  UPDATED: service now accepts a String search param.
+    //    - null / blank  → findByIsPublicTrueOrderByCreatedAtDesc()
+    //    - keyword       → searchPublicByName(keyword)
     // ══════════════════════════════════════════════════════════
 
     @Nested
@@ -270,23 +275,61 @@ class PlaylistServiceTest {
     class GetPublicPlaylists {
 
         @Test
-        @DisplayName("returns only public playlists")
-        void getPublicPlaylists_returnsPublicOnly() {
-            when(playlistRepository.findByIsPublicTrue())
-                    .thenReturn(List.of(ownedPlaylist, otherPublicPlaylist));
+        @DisplayName("no search term — empty result when none exist")
+        void getPublicPlaylists_noneExist_returnsEmpty() {
+            when(playlistRepository.findByIsPublicTrueOrderByCreatedAtDesc())
+                    .thenReturn(List.of());
 
-            List<PlaylistDTO> result = playlistService.getPublicPlaylists();
+            List<PlaylistDTO> result = playlistService.getPublicPlaylists(null);
 
-            assertEquals(2, result.size());
+            assertTrue(result.isEmpty());
         }
 
         @Test
-        @DisplayName("empty when no public playlists exist")
-        void getPublicPlaylists_noneExist_returnsEmpty() {
-            when(playlistRepository.findByIsPublicTrue())
+        @DisplayName("no search term — uses sorted query (newest first)")
+        void getPublicPlaylists_noSearch_usesSortedQuery() {
+            when(playlistRepository.findByIsPublicTrueOrderByCreatedAtDesc())
+                    .thenReturn(List.of(otherPublicPlaylist, ownedPlaylist));
+
+            List<PlaylistDTO> result = playlistService.getPublicPlaylists(null);
+
+            assertEquals(2, result.size());
+            verify(playlistRepository).findByIsPublicTrueOrderByCreatedAtDesc();
+            verify(playlistRepository, never()).searchPublicByName(any());
+        }
+
+        @Test
+        @DisplayName("search keyword provided — uses name search query")
+        void getPublicPlaylists_withSearch_usesSearchQuery() {
+            when(playlistRepository.searchPublicByName("chill"))
+                    .thenReturn(List.of(ownedPlaylist));
+
+            List<PlaylistDTO> result = playlistService.getPublicPlaylists("chill");
+
+            assertEquals(1, result.size());
+            verify(playlistRepository).searchPublicByName("chill");
+            verify(playlistRepository, never()).findByIsPublicTrueOrderByCreatedAtDesc();
+        }
+
+        @Test
+        @DisplayName("blank search term — treated as no search, uses sorted query")
+        void getPublicPlaylists_blankSearch_usesDefaultQuery() {
+            when(playlistRepository.findByIsPublicTrueOrderByCreatedAtDesc())
                     .thenReturn(List.of());
 
-            List<PlaylistDTO> result = playlistService.getPublicPlaylists();
+            playlistService.getPublicPlaylists("   ");
+
+            verify(playlistRepository).findByIsPublicTrueOrderByCreatedAtDesc();
+            verify(playlistRepository, never()).searchPublicByName(any());
+        }
+
+        @Test
+        @DisplayName("search keyword — no matches returns empty list")
+        void getPublicPlaylists_searchNoMatch_returnsEmpty() {
+            when(playlistRepository.searchPublicByName("zzznomatch"))
+                    .thenReturn(List.of());
+
+            List<PlaylistDTO> result = playlistService.getPublicPlaylists("zzznomatch");
 
             assertTrue(result.isEmpty());
         }
@@ -404,6 +447,12 @@ class PlaylistServiceTest {
 
     // ══════════════════════════════════════════════════════════
     //  deletePlaylist
+    //
+    //  EDGE CASE: playlist may have songs (PlaylistSong rows) and
+    //  followers (PlaylistFollow rows) that hold FK references to
+    //  playlist_id. These must be deleted before the playlist itself
+    //  or the DB throws a constraint violation.
+    //  Order enforced: songs → follows → playlist.
     // ══════════════════════════════════════════════════════════
 
     @Nested
@@ -411,13 +460,16 @@ class PlaylistServiceTest {
     class DeletePlaylist {
 
         @Test
-        @DisplayName("own playlist — deleted successfully")
+        @DisplayName("own playlist — songs and follows cleaned up, then playlist deleted")
         void delete_ownPlaylist_deletesSuccessfully() {
             when(playlistRepository.findById(1L))
                     .thenReturn(Optional.of(ownedPlaylist));
 
             playlistService.deletePlaylist(1L);
 
+            // Cleanup must happen before playlist delete
+            verify(playlistSongRepository).deleteByPlaylist_Id(1L);
+            verify(playlistFollowRepository).deleteByPlaylist_Id(1L);
             verify(playlistRepository).delete(ownedPlaylist);
         }
 
@@ -441,6 +493,51 @@ class PlaylistServiceTest {
 
             assertThrows(ResourceNotFoundException.class,
                     () -> playlistService.deletePlaylist(99L));
+        }
+
+        @Test
+        @DisplayName("playlist with songs — songs deleted before playlist (edge case)")
+        void delete_playlistWithSongs_deletesSongsFirst() {
+            when(playlistRepository.findById(1L))
+                    .thenReturn(Optional.of(ownedPlaylist));
+
+            playlistService.deletePlaylist(1L);
+
+            // Enforce strict ordering: songs → follows → playlist
+            InOrder order = inOrder(
+                    playlistSongRepository,
+                    playlistFollowRepository,
+                    playlistRepository
+            );
+            order.verify(playlistSongRepository).deleteByPlaylist_Id(1L);
+            order.verify(playlistFollowRepository).deleteByPlaylist_Id(1L);
+            order.verify(playlistRepository).delete(ownedPlaylist);
+        }
+
+        @Test
+        @DisplayName("playlist with followers — follows deleted before playlist (edge case)")
+        void delete_playlistWithFollowers_deletesFollowsBeforePlaylist() {
+            when(playlistRepository.findById(1L))
+                    .thenReturn(Optional.of(ownedPlaylist));
+
+            playlistService.deletePlaylist(1L);
+
+            verify(playlistFollowRepository).deleteByPlaylist_Id(1L);
+            // Playlist deleted only after follow cleanup
+            verify(playlistRepository).delete(ownedPlaylist);
+        }
+
+        @Test
+        @DisplayName("empty playlist — cleanup still called (safe no-op on empty tables)")
+        void delete_emptyPlaylist_cleanupStillCalled() {
+            when(playlistRepository.findById(1L))
+                    .thenReturn(Optional.of(ownedPlaylist));
+
+            playlistService.deletePlaylist(1L);
+
+            // Both delete calls must happen even when playlist has no songs/follows
+            verify(playlistSongRepository).deleteByPlaylist_Id(1L);
+            verify(playlistFollowRepository).deleteByPlaylist_Id(1L);
         }
     }
 
@@ -491,11 +588,9 @@ class PlaylistServiceTest {
             when(playlistSongRepository.existsByPlaylist_IdAndSong_Id(1L, 10L))
                     .thenReturn(true);
 
-            // Should NOT throw — service silently returns
             assertDoesNotThrow(
                     () -> playlistService.addSongToPlaylist(1L, 10L));
 
-            // save() should never be called
             verify(playlistSongRepository, never()).save(any());
         }
 
@@ -659,7 +754,6 @@ class PlaylistServiceTest {
                 List<PlaylistSong> list = new ArrayList<>();
                 songs.forEach(list::add);
 
-                // Find by song ID and check position
                 PlaylistSong forSong20 = list.stream()
                         .filter(ps -> ps.getSong().getId().equals(20L))
                         .findFirst().orElse(null);
