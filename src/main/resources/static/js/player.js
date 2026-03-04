@@ -1,52 +1,53 @@
 /**
  * player.js — RevPlay HTML5 Audio Player
  *
- * Day 5: Wires up player-bar.html controls to the HTML5 <audio> element.
- * Features: play/pause, seek (progress bar click), volume, previous/next,
- *           song card click → play, now-playing display update.
- *
- * This script runs on every page via layout.html <script defer>.
+ * Day 5: play/pause, seek, volume, prev/next, song-card click, now-playing.
+ * Day 7: playlist row click, history recording, favorites toggle,
+ *         keyboard shortcuts, queue display, drag-seek progress bar.
  */
 (function () {
     'use strict';
 
     // ========================= DOM REFERENCES =========================
 
-    const audio        = document.getElementById('audio-element');
-    const btnPlay      = document.getElementById('btn-play');
-    const btnPrev      = document.getElementById('btn-prev');
-    const btnNext      = document.getElementById('btn-next');
-    const btnShuffle   = document.getElementById('btn-shuffle');
-    const btnRepeat    = document.getElementById('btn-repeat');
-    const progressContainer = document.getElementById('progress-container');
-    const progressFill = document.getElementById('progress-fill');
-    const timeCurrent  = document.getElementById('time-current');
-    const timeTotal    = document.getElementById('time-total');
-    const playerTitle  = document.getElementById('player-title');
-    const playerArtist = document.getElementById('player-artist');
-    const playerArt    = document.getElementById('player-art');
-    const playerFav    = document.getElementById('player-favorite');
+    var audio        = document.getElementById('audio-element');
+    var btnPlay      = document.getElementById('btn-play');
+    var btnPrev      = document.getElementById('btn-prev');
+    var btnNext      = document.getElementById('btn-next');
+    var btnShuffle   = document.getElementById('btn-shuffle');
+    var btnRepeat    = document.getElementById('btn-repeat');
+    var progressContainer = document.getElementById('progress-container');
+    var progressFill = document.getElementById('progress-fill');
+    var timeCurrent  = document.getElementById('time-current');
+    var timeTotal    = document.getElementById('time-total');
+    var playerTitle  = document.getElementById('player-title');
+    var playerArtist = document.getElementById('player-artist');
+    var playerArt    = document.getElementById('player-art');
+    var playerFav    = document.getElementById('player-favorite');
 
     // If the player-bar elements don't exist on this page, bail out
     if (!audio || !btnPlay) return;
 
     // ========================= PLAYER STATE =========================
 
-    let queue         = [];   // Array of { id, url, title, artist, cover }
-    let currentIndex  = -1;
-    let isPlaying     = false;
-    let isShuffle     = false;
-    let repeatMode    = 0;    // 0 = off, 1 = repeat all, 2 = repeat one
+    var queue         = [];    // Array of { id, url, title, artist, cover }
+    var currentIndex  = -1;
+    var isPlaying     = false;
+    var isShuffle     = false;
+    var repeatMode    = 0;     // 0 = off, 1 = repeat all, 2 = repeat one
+    var isFavorited   = false; // current song favorite state
+
+    // CSRF token for AJAX calls (read from <meta> tag)
+    var csrfToken = '';
+    var csrfMeta  = document.querySelector('meta[name="_csrf"]');
+    if (csrfMeta) csrfToken = csrfMeta.content;
 
     // ========================= UTILITY FUNCTIONS =========================
 
-    /**
-     * Format seconds into m:ss string
-     */
     function formatTime(seconds) {
         if (isNaN(seconds) || seconds < 0) return '0:00';
-        const mins = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
+        var mins = Math.floor(seconds / 60);
+        var secs = Math.floor(seconds % 60);
         return mins + ':' + (secs < 10 ? '0' : '') + secs;
     }
 
@@ -54,7 +55,7 @@
      * Build the queue from all .song-card elements currently in the DOM.
      */
     function buildQueueFromCards() {
-        const cards = document.querySelectorAll('.song-card');
+        var cards = document.querySelectorAll('.song-card');
         queue = [];
         cards.forEach(function (card) {
             queue.push({
@@ -68,54 +69,51 @@
     }
 
     /**
-     * player.js — Updated icon toggle functions
-     * Supports image icons with emoji fallback
+     * Build the queue from .playlist-song-row elements (playlist detail page).
      */
+    function buildQueueFromPlaylistRows() {
+        var rows = document.querySelectorAll('.playlist-song-row');
+        queue = [];
+        rows.forEach(function (row) {
+            var coverImg = row.querySelector('.song-row-cover');
+            queue.push({
+                id:     row.dataset.id     || '',
+                url:    row.dataset.url     || '',
+                title:  row.dataset.title   || 'Unknown Title',
+                artist: row.dataset.artist  || 'Unknown Artist',
+                cover:  coverImg ? coverImg.src : ''
+            });
+        });
+    }
 
-// ========================= ICON HELPERS =========================
+    // ========================= ICON HELPERS =========================
 
-    /**
-     * Toggle Play/Pause icon on a button.
-     * Handles both image icons and emoji fallbacks.
-     */
     function setPlayIcon(button, playing) {
         if (!button) return;
-
-        // Find the image — could be .player-play-img or .page-play-icon
         var img = button.querySelector('.player-play-img')
             || button.querySelector('.page-play-icon');
         var fallback = button.querySelector('.play-fallback');
 
         if (img && img.style.display !== 'none') {
-            // Image mode — swap src
             img.src = playing
                 ? (img.dataset.pauseSrc || '/images/icons/pause.png')
                 : (img.dataset.playSrc  || '/images/icons/play.png');
             img.alt = playing ? '⏸' : '▶';
         } else if (fallback) {
-            // Fallback mode — swap emoji
             fallback.textContent = playing ? '⏸' : '▶';
         }
-
         button.title = playing ? 'Pause' : 'Play';
     }
 
-    /**
-     * Toggle Repeat icon on a button.
-     * Modes: 0 = off, 1 = repeat all, 2 = repeat one
-     */
     function setRepeatIcon(button, mode) {
         if (!button) return;
-
         if (mode === 0) {
             button.classList.remove('active');
         } else {
             button.classList.add('active');
         }
-
         var img = button.querySelector('.player-repeat-img');
         var fallback = button.querySelector('.repeat-fallback');
-
         if (img && img.style.display !== 'none') {
             img.src = mode === 2
                 ? (img.dataset.repeatOneSrc || '/images/icons/repeat-one.png')
@@ -126,20 +124,67 @@
         }
     }
 
-
-    /**
-     * Toggle Shuffle active state.
-     */
     function setShuffleIcon(button, isActive) {
         if (!button) return;
         button.classList.toggle('active', isActive);
     }
 
-    // ========================= CORE PLAYBACK =========================
+    // ========================= API HELPERS =========================
 
     /**
-     * Load and play a song by queue index.
+     * Record listening history via POST /api/history
      */
+    function recordHistory(songId) {
+        if (!songId) return;
+        fetch('/api/history', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify({ songId: parseInt(songId) })
+        }).catch(function (err) {
+            console.warn('Failed to record history:', err.message);
+        });
+    }
+
+    /**
+     * Toggle favorite for current song
+     */
+    function toggleFavorite() {
+        if (currentIndex < 0 || currentIndex >= queue.length) return;
+        var songId = queue[currentIndex].id;
+        if (!songId) return;
+
+        var method = isFavorited ? 'DELETE' : 'POST';
+        fetch('/api/favorites/' + songId, {
+            method: method,
+            headers: { 'X-CSRF-TOKEN': csrfToken }
+        })
+            .then(function (res) {
+                if (res.ok) {
+                    isFavorited = !isFavorited;
+                    updateFavoriteUI();
+                }
+            })
+            .catch(function (err) {
+                console.warn('Favorite toggle failed:', err.message);
+            });
+    }
+
+    function updateFavoriteUI() {
+        if (!playerFav) return;
+        if (isFavorited) {
+            playerFav.classList.add('favorited');
+            playerFav.title = 'Remove from Favorites';
+        } else {
+            playerFav.classList.remove('favorited');
+            playerFav.title = 'Add to Favorites';
+        }
+    }
+
+    // ========================= CORE PLAYBACK =========================
+
     function playSongAtIndex(index) {
         if (index < 0 || index >= queue.length) return;
 
@@ -152,7 +197,9 @@
             audio.play()
                 .then(function () {
                     isPlaying = true;
-                    setPlayIcon(btnPlay, true);             // ← CHANGED
+                    setPlayIcon(btnPlay, true);
+                    var pageBtnPlay = document.getElementById('page-btn-play');
+                    setPlayIcon(pageBtnPlay, true);
                 })
                 .catch(function (err) {
                     console.warn('Playback failed:', err.message);
@@ -168,16 +215,24 @@
         }
         if (playerFav) playerFav.style.display = 'inline-block';
 
-        // Also update the dedicated player page if we're on it
+        // Reset favorite state for new song
+        isFavorited = false;
+        updateFavoriteUI();
+
+        // Update dedicated player page
         updatePlayerPage(song);
 
-        // Highlight active card
+        // Highlight active card/row
         highlightActiveCard(song.id);
+        highlightActiveRow(song.id);
+
+        // Record to listening history
+        recordHistory(song.id);
+
+        // Update queue display
+        updateQueueDisplay();
     }
 
-    /**
-     * Toggle play / pause.
-     */
     function togglePlayPause() {
         if (!audio.src || audio.src === window.location.href) {
             if (queue.length > 0) {
@@ -189,12 +244,12 @@
         if (isPlaying) {
             audio.pause();
             isPlaying = false;
-            setPlayIcon(btnPlay, false);                    // ← CHANGED
+            setPlayIcon(btnPlay, false);
         } else {
             audio.play()
                 .then(function () {
                     isPlaying = true;
-                    setPlayIcon(btnPlay, true);             // ← CHANGED
+                    setPlayIcon(btnPlay, true);
                 })
                 .catch(function (err) {
                     console.warn('Playback failed:', err.message);
@@ -203,13 +258,9 @@
 
         // Sync dedicated player page button
         var pageBtnPlay = document.getElementById('page-btn-play');
-        setPlayIcon(pageBtnPlay, isPlaying);                // ← CHANGED
+        setPlayIcon(pageBtnPlay, isPlaying);
     }
 
-
-    /**
-     * Play next song in queue.
-     */
     function playNext() {
         if (queue.length === 0) return;
 
@@ -229,9 +280,6 @@
         }
     }
 
-    /**
-     * Play previous song in queue.
-     */
     function playPrev() {
         if (queue.length === 0) return;
 
@@ -250,15 +298,12 @@
 
     // ========================= PROGRESS & SEEK =========================
 
-    /**
-     * Update progress bar and time displays during playback.
-     */
     audio.addEventListener('timeupdate', function () {
         if (audio.duration && !isNaN(audio.duration)) {
             var percent = (audio.currentTime / audio.duration) * 100;
-            progressFill.style.width = percent + '%';
-            timeCurrent.textContent  = formatTime(audio.currentTime);
-            timeTotal.textContent    = formatTime(audio.duration);
+            if (progressFill) progressFill.style.width = percent + '%';
+            if (timeCurrent) timeCurrent.textContent  = formatTime(audio.currentTime);
+            if (timeTotal) timeTotal.textContent    = formatTime(audio.duration);
 
             // Sync dedicated player page progress
             var pageFill    = document.getElementById('page-progress-fill');
@@ -270,9 +315,7 @@
         }
     });
 
-    /**
-     * Seek on progress bar click.
-     */
+    // Seek on progress bar click
     if (progressContainer) {
         progressContainer.addEventListener('click', function (e) {
             if (!audio.duration || isNaN(audio.duration)) return;
@@ -283,12 +326,9 @@
         });
     }
 
-    /**
-     * When song ends, play next.
-     */
+    // When song ends, play next
     audio.addEventListener('ended', function () {
         if (repeatMode === 2) {
-            // Repeat one
             audio.currentTime = 0;
             audio.play();
         } else {
@@ -298,10 +338,6 @@
 
     // ========================= VOLUME =========================
 
-    /**
-     * Set up volume control in the player bar.
-     * The volume bar is the .progress-bar-bg inside .player-right.
-     */
     (function initVolume() {
         var playerRight = document.querySelector('.player-right');
         if (!playerRight) return;
@@ -310,7 +346,6 @@
         var volumeFill = playerRight.querySelector('.progress-bar-fill');
         if (!volumeBar || !volumeFill) return;
 
-        // Set initial volume
         audio.volume = 1.0;
         volumeFill.style.width = '100%';
 
@@ -321,7 +356,6 @@
             audio.volume = percent;
             volumeFill.style.width = (percent * 100) + '%';
 
-            // Sync page volume bar
             var pageVolFill = document.getElementById('page-volume-fill');
             if (pageVolFill) pageVolFill.style.width = (percent * 100) + '%';
         });
@@ -330,36 +364,34 @@
     // ========================= CONTROLS EVENT LISTENERS =========================
 
     btnPlay.addEventListener('click', togglePlayPause);
-    if (btnNext)    btnNext.addEventListener('click', playNext);
-    if (btnPrev)    btnPrev.addEventListener('click', playPrev);
+    if (btnNext) btnNext.addEventListener('click', playNext);
+    if (btnPrev) btnPrev.addEventListener('click', playPrev);
 
     if (btnShuffle) {
         btnShuffle.addEventListener('click', function () {
             isShuffle = !isShuffle;
-            setShuffleIcon(btnShuffle, isShuffle);          // ← CHANGED
-
+            setShuffleIcon(btnShuffle, isShuffle);
             var pageShuffle = document.getElementById('page-btn-shuffle');
-            setShuffleIcon(pageShuffle, isShuffle);          // ← CHANGED
+            setShuffleIcon(pageShuffle, isShuffle);
         });
     }
-
 
     if (btnRepeat) {
         btnRepeat.addEventListener('click', function () {
             repeatMode = (repeatMode + 1) % 3;
-            setRepeatIcon(btnRepeat, repeatMode);            // ← CHANGED
-
+            setRepeatIcon(btnRepeat, repeatMode);
             var pageRepeat = document.getElementById('page-btn-repeat');
-            setRepeatIcon(pageRepeat, repeatMode);           // ← CHANGED
+            setRepeatIcon(pageRepeat, repeatMode);
         });
+    }
+
+    // Favorite button click
+    if (playerFav) {
+        playerFav.addEventListener('click', toggleFavorite);
     }
 
     // ========================= SONG CARD CLICKS =========================
 
-    /**
-     * Attach click listeners to all song cards.
-     * When a card is clicked, rebuild queue and play the clicked song.
-     */
     function attachCardListeners() {
         var cards = document.querySelectorAll('.song-card');
         cards.forEach(function (card, index) {
@@ -370,9 +402,6 @@
         });
     }
 
-    /**
-     * Highlight the currently playing card.
-     */
     function highlightActiveCard(songId) {
         var cards = document.querySelectorAll('.song-card');
         cards.forEach(function (card) {
@@ -384,11 +413,135 @@
         });
     }
 
+    // ========================= PLAYLIST ROW CLICKS (Day 7) =========================
+
+    function attachPlaylistRowListeners() {
+        var rows = document.querySelectorAll('.playlist-song-row');
+        if (rows.length === 0) return;
+
+        rows.forEach(function (row, index) {
+            row.addEventListener('click', function () {
+                buildQueueFromPlaylistRows();
+                playSongAtIndex(index);
+            });
+        });
+    }
+
+    function highlightActiveRow(songId) {
+        var rows = document.querySelectorAll('.playlist-song-row');
+        rows.forEach(function (row) {
+            if (row.dataset.id === String(songId)) {
+                row.classList.add('playlist-row--active');
+            } else {
+                row.classList.remove('playlist-row--active');
+            }
+        });
+    }
+
+    // ========================= KEYBOARD SHORTCUTS (Day 7) =========================
+
+    document.addEventListener('keydown', function (e) {
+        // Don't capture shortcuts when typing in inputs
+        var tag = e.target.tagName.toLowerCase();
+        if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+
+        switch (e.code) {
+            case 'Space':
+                e.preventDefault();
+                togglePlayPause();
+                break;
+            case 'ArrowRight':
+                if (e.shiftKey) {
+                    playNext();
+                } else {
+                    // Seek forward 5 seconds
+                    if (audio.duration) audio.currentTime = Math.min(audio.currentTime + 5, audio.duration);
+                }
+                break;
+            case 'ArrowLeft':
+                if (e.shiftKey) {
+                    playPrev();
+                } else {
+                    // Seek backward 5 seconds
+                    audio.currentTime = Math.max(audio.currentTime - 5, 0);
+                }
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                audio.volume = Math.min(1, audio.volume + 0.1);
+                syncVolumeUI();
+                break;
+            case 'ArrowDown':
+                e.preventDefault();
+                audio.volume = Math.max(0, audio.volume - 0.1);
+                syncVolumeUI();
+                break;
+            case 'KeyM':
+                // Mute/unmute toggle
+                audio.muted = !audio.muted;
+                syncVolumeUI();
+                break;
+            case 'KeyS':
+                // Toggle shuffle
+                if (btnShuffle) btnShuffle.click();
+                break;
+            case 'KeyR':
+                // Cycle repeat
+                if (btnRepeat) btnRepeat.click();
+                break;
+        }
+    });
+
+    function syncVolumeUI() {
+        var vol = audio.muted ? 0 : audio.volume;
+        var pct = (vol * 100) + '%';
+
+        var playerRight = document.querySelector('.player-right');
+        if (playerRight) {
+            var gVolFill = playerRight.querySelector('.progress-bar-fill');
+            if (gVolFill) gVolFill.style.width = pct;
+        }
+        var pageVolFill = document.getElementById('page-volume-fill');
+        if (pageVolFill) pageVolFill.style.width = pct;
+    }
+
+    // ========================= QUEUE DISPLAY (Day 7) =========================
+
+    function updateQueueDisplay() {
+        var queueList = document.getElementById('queue-list');
+        if (!queueList) return;
+
+        queueList.innerHTML = '';
+
+        if (queue.length === 0) {
+            queueList.innerHTML = '<div class="queue-empty">No songs in queue</div>';
+            return;
+        }
+
+        queue.forEach(function (song, idx) {
+            var item = document.createElement('div');
+            item.className = 'queue-item' + (idx === currentIndex ? ' queue-item--active' : '');
+            item.innerHTML =
+                '<span class="queue-num">' + (idx + 1) + '</span>' +
+                '<div class="queue-info">' +
+                '<div class="queue-song-title">' + escapeHtml(song.title) + '</div>' +
+                '<div class="queue-song-artist">' + escapeHtml(song.artist) + '</div>' +
+                '</div>';
+            item.addEventListener('click', function () {
+                playSongAtIndex(idx);
+            });
+            queueList.appendChild(item);
+        });
+    }
+
+    function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     // ========================= DEDICATED PLAYER PAGE SYNC =========================
 
-    /**
-     * If on the /player page, update the hero section with current song info.
-     */
     function updatePlayerPage(song) {
         var pageTitle  = document.getElementById('player-page-title');
         var pageArtist = document.getElementById('player-page-artist');
@@ -399,9 +552,6 @@
         if (pageArt)    pageArt.src = song.cover || pageArt.src;
     }
 
-    /**
-     * Wire up the dedicated player page controls (if they exist).
-     */
     (function initPlayerPage() {
         var pageBtnPlay    = document.getElementById('page-btn-play');
         var pageBtnPrev    = document.getElementById('page-btn-prev');
@@ -417,17 +567,16 @@
 
         if (pageBtnShuffle) {
             pageBtnShuffle.addEventListener('click', function () {
-                btnShuffle.click(); // delegate to global button
+                if (btnShuffle) btnShuffle.click();
             });
         }
 
         if (pageBtnRepeat) {
             pageBtnRepeat.addEventListener('click', function () {
-                btnRepeat.click(); // delegate to global button
+                if (btnRepeat) btnRepeat.click();
             });
         }
 
-        // Seek on page progress bar click
         if (pageProgressBg) {
             pageProgressBg.addEventListener('click', function (e) {
                 if (!audio.duration || isNaN(audio.duration)) return;
@@ -438,7 +587,6 @@
             });
         }
 
-        // Volume on page volume bar click
         if (pageVolumeBar) {
             pageVolumeBar.addEventListener('click', function (e) {
                 var rect    = pageVolumeBar.getBoundingClientRect();
@@ -449,7 +597,6 @@
                 var pageVolFill = document.getElementById('page-volume-fill');
                 if (pageVolFill) pageVolFill.style.width = (percent * 100) + '%';
 
-                // Sync global volume bar
                 var playerRight = document.querySelector('.player-right');
                 if (playerRight) {
                     var gVolFill = playerRight.querySelector('.progress-bar-fill');
@@ -461,8 +608,8 @@
 
     // ========================= INIT =========================
 
-    // Build initial queue and attach listeners on page load
     buildQueueFromCards();
     attachCardListeners();
+    attachPlaylistRowListeners();
 
 })();
