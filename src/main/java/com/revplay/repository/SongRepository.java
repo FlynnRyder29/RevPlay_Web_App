@@ -50,4 +50,8 @@ public interface SongRepository extends JpaRepository<Song, Long>, JpaSpecificat
     // ── FIX: Efficient count for analytics (Day 6 — Member 5) ──
     @Query("SELECT COUNT(s) FROM Song s WHERE s.artist.id = :artistId")
     long countByArtistId(@Param("artistId") Long artistId);
+
+    // ── PR FIX: Ownership check for per-song fans endpoint (Day 7 — Member 5) ──
+    // Spring Data JPA auto-generates: SELECT COUNT(*) > 0 WHERE id = ? AND artist_id = ?
+    boolean existsByIdAndArtistId(Long id, Long artistId);
 }
