@@ -12,6 +12,8 @@ import java.util.Optional;
 @Repository
 public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
 
+    // ── EXISTING ──────────────────────────────────────────────────────────────
+
     // All favorites of a user
     List<Favorite> findByUser_Id(Long userId);
 
@@ -24,55 +26,26 @@ public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
     // Remove favorite
     void deleteByUser_IdAndSong_Id(Long userId, Long songId);
 
-    // ── ADDED FOR DAY 6 ANALYTICS ─────────────────────────────────────────────
+    // All favorites of a user ordered by newest first
+    List<Favorite> findByUser_IdOrderByCreatedAtDesc(Long userId);
+
+    // ── DAY 6 ANALYTICS ───────────────────────────────────────────────────────
 
     // Total favorites across ALL songs of a specific artist
     // Used in overview endpoint — total times artist's songs were favorited
     @Query("SELECT COUNT(f) FROM Favorite f WHERE f.song.artist.id = :artistId")
     long countByArtistId(@Param("artistId") Long artistId);
 
-    List<Favorite> findByUser_IdOrderByCreatedAtDesc(Long userId);
+    // ── DAY 7: FANS WHO FAVORITED ─────────────────────────────────────────────
 
-    // ── ADDED FOR DAY 7 ANALYTICS ─────────────────────────────────────────────
-
-    // Fans who favorited a specific song
-    // Returns Object[] {userId, username, displayName, createdAt}
-    // Used for GET /api/artists/analytics/songs/{id}/fans
-    @Query("SELECT f.user.id, f.user.username, f.user.displayName, f.createdAt " +
+    // Returns distinct users who favorited at least one song of this artist
+    // along with how many of the artist's songs they have favorited
+    // Returns Object[] {userId, username, displayName, profilePictureUrl, favoriteCount}
+    // Ordered by favoriteCount DESC — biggest fans appear first
+    @Query("SELECT f.user.id, f.user.username, f.user.displayName, f.user.profilePictureUrl, COUNT(f) " +
             "FROM Favorite f " +
-            "WHERE f.song.id = :songId " +
-            "ORDER BY f.createdAt DESC")
-    List<Object[]> findFansBySongId(@Param("songId") Long songId);
-
-    // ── ADDED FOR DAY 7 ANALYTICS ─────────────────────────────────────────────
-
-    // Daily trends — play counts grouped by date (YYYY-MM-DD)
-    // Returns Object[] {date, playCount}
-    // Used for GET /api/artists/analytics/trends?period=daily
-    @Query("SELECT FUNCTION('DATE_FORMAT', pe.playedAt, '%Y-%m-%d'), COUNT(pe) " +
-            "FROM PlayEvent pe " +
-            "WHERE pe.song.artist.id = :artistId " +
-            "GROUP BY FUNCTION('DATE_FORMAT', pe.playedAt, '%Y-%m-%d') " +
-            "ORDER BY FUNCTION('DATE_FORMAT', pe.playedAt, '%Y-%m-%d') ASC")
-    List<Object[]> findDailyTrendsByArtistId(@Param("artistId") Long artistId);
-
-    // Weekly trends — play counts grouped by year-week (YYYY-Www)
-    // Returns Object[] {yearWeek, playCount}
-    // Used for GET /api/artists/analytics/trends?period=weekly
-    @Query("SELECT FUNCTION('DATE_FORMAT', pe.playedAt, '%Y-W%u'), COUNT(pe) " +
-            "FROM PlayEvent pe " +
-            "WHERE pe.song.artist.id = :artistId " +
-            "GROUP BY FUNCTION('DATE_FORMAT', pe.playedAt, '%Y-W%u') " +
-            "ORDER BY FUNCTION('DATE_FORMAT', pe.playedAt, '%Y-W%u') ASC")
-    List<Object[]> findWeeklyTrendsByArtistId(@Param("artistId") Long artistId);
-
-    // Monthly trends — play counts grouped by year-month (YYYY-MM)
-    // Returns Object[] {yearMonth, playCount}
-    // Used for GET /api/artists/analytics/trends?period=monthly
-    @Query("SELECT FUNCTION('DATE_FORMAT', pe.playedAt, '%Y-%m'), COUNT(pe) " +
-            "FROM PlayEvent pe " +
-            "WHERE pe.song.artist.id = :artistId " +
-            "GROUP BY FUNCTION('DATE_FORMAT', pe.playedAt, '%Y-%m') " +
-            "ORDER BY FUNCTION('DATE_FORMAT', pe.playedAt, '%Y-%m') ASC")
-    List<Object[]> findMonthlyTrendsByArtistId(@Param("artistId") Long artistId);
+            "WHERE f.song.artist.id = :artistId " +
+            "GROUP BY f.user.id, f.user.username, f.user.displayName, f.user.profilePictureUrl " +
+            "ORDER BY COUNT(f) DESC")
+    List<Object[]> findFansByArtistId(@Param("artistId") Long artistId);
 }

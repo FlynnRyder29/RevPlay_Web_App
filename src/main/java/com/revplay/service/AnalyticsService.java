@@ -1,10 +1,8 @@
 package com.revplay.service;
 
 import com.revplay.dto.AnalyticsDTO;
-import com.revplay.exception.BadRequestException;
 import com.revplay.exception.ResourceNotFoundException;
 import com.revplay.model.Artist;
-import com.revplay.model.Song;
 import com.revplay.model.User;
 import com.revplay.repository.ArtistRepository;
 import com.revplay.repository.FavoriteRepository;
@@ -18,6 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -28,6 +27,11 @@ public class AnalyticsService {
 
     // Default limit for top listeners — DB-level, not stream-level
     private static final int TOP_LISTENERS_LIMIT = 10;
+
+    // Lookback windows for trend queries
+    private static final int DAILY_LOOKBACK_DAYS    = 30;  // last 30 days
+    private static final int WEEKLY_LOOKBACK_WEEKS  = 12;  // last 12 weeks
+    private static final int MONTHLY_LOOKBACK_MONTHS = 12; // last 12 months
 
     private final PlayEventRepository playEventRepository;
     private final FavoriteRepository favoriteRepository;
@@ -46,7 +50,8 @@ public class AnalyticsService {
 
         log.info("Fetching analytics overview for artistId={}", artist.getId());
 
-        // DB-level COUNT — avoids loading all songs into memory
+        // 🔴 FIX: DB-level COUNT — avoids loading all songs into memory
+        // Previously: songRepository.findAllByArtistId(artist.getId()).size()
         long totalSongs = songRepository.countByArtistId(artist.getId());
         long totalPlays = playEventRepository.countByArtistId(artist.getId());
         long totalFavorites = favoriteRepository.countByArtistId(artist.getId());
@@ -99,6 +104,7 @@ public class AnalyticsService {
     // ── TOP LISTENERS ─────────────────────────────────────────────────────────
     // GET /api/artists/analytics/top-listeners
     // Returns top 10 users who played this artist's songs the most
+    // 🟡 FIX: Limit moved to DB level via PageRequest — removed stream .limit(10)
 
     @Transactional(readOnly = true)
     public AnalyticsDTO getTopListeners() {
@@ -132,86 +138,88 @@ public class AnalyticsService {
                 .build();
     }
 
-    // ── FANS WHO FAVORITED ────────────────────────────────────────────────────
-    // GET /api/artists/analytics/songs/{id}/fans
-    // Returns users who favorited a specific song of the logged-in artist
+    // ── LISTENING TRENDS ──────────────────────────────────────────────────────
+    // GET /api/artists/analytics/trends?period=daily|weekly|monthly
+    //
+    // daily   → last 30 days,   grouped by date     (e.g. "2025-03-04")
+    // weekly  → last 12 weeks,  grouped by ISO week (e.g. "2025-W10")
+    // monthly → last 12 months, grouped by month    (e.g. "2025-03")
 
     @Transactional(readOnly = true)
-    public AnalyticsDTO getSongFans(Long songId) {
+    public AnalyticsDTO getListeningTrends(String period) {
 
         Artist artist = getCurrentArtist();
 
-        log.info("Fetching fans for songId={}, artistId={}", songId, artist.getId());
+        log.info("Fetching listening trends — artistId={}, period={}", artist.getId(), period);
 
-        // Verify song exists and belongs to this artist — ownership check
-        Song song = songRepository.findById(songId)
-                .orElseThrow(() -> new ResourceNotFoundException("Song", "id", songId));
+        LocalDateTime to = LocalDateTime.now();
+        LocalDateTime from;
+        List<Object[]> results;
 
-        if (!song.getArtist().getId().equals(artist.getId())) {
-            throw new BadRequestException(
-                    "Song does not belong to the logged-in artist");
+        switch (period.toLowerCase()) {
+            case "weekly" -> {
+                from    = to.minusWeeks(WEEKLY_LOOKBACK_WEEKS);
+                results = playEventRepository.findWeeklyTrendsByArtistId(artist.getId(), from, to);
+            }
+            case "monthly" -> {
+                from    = to.minusMonths(MONTHLY_LOOKBACK_MONTHS);
+                results = playEventRepository.findMonthlyTrendsByArtistId(artist.getId(), from, to);
+            }
+            default -> {
+                // "daily" is the default fallback — safe for unknown values
+                from    = to.minusDays(DAILY_LOOKBACK_DAYS);
+                results = playEventRepository.findDailyTrendsByArtistId(artist.getId(), from, to);
+            }
         }
 
-        List<Object[]> results = favoriteRepository.findFansBySongId(songId);
+        List<AnalyticsDTO.TrendPointDTO> trends = results.stream()
+                .map(row -> AnalyticsDTO.TrendPointDTO.builder()
+                        .period((String) row[0])
+                        .playCount(((Number) row[1]).longValue())
+                        .build())
+                .toList();
+
+        log.info("Trends fetched — artistId={}, period={}, points={}",
+                artist.getId(), period, trends.size());
+
+        return AnalyticsDTO.builder()
+                .artistId(artist.getId())
+                .artistName(artist.getArtistName())
+                .trendPeriod(period.toLowerCase())
+                .trends(trends)
+                .build();
+    }
+
+    // ── FANS WHO FAVORITED ────────────────────────────────────────────────────
+    // GET /api/artists/analytics/fans
+    // Returns all users who favorited ≥1 of this artist's songs
+    // Ordered by favoriteCount DESC — biggest fans appear first
+
+    @Transactional(readOnly = true)
+    public AnalyticsDTO getFans() {
+
+        Artist artist = getCurrentArtist();
+
+        log.info("Fetching fans for artistId={}", artist.getId());
+
+        List<Object[]> results = favoriteRepository.findFansByArtistId(artist.getId());
 
         List<AnalyticsDTO.FanDTO> fans = results.stream()
                 .map(row -> AnalyticsDTO.FanDTO.builder()
                         .userId(((Number) row[0]).longValue())
                         .username((String) row[1])
                         .displayName((String) row[2])
-                        .favoritedAt(row[3] != null ? row[3].toString() : null)
+                        .profilePictureUrl((String) row[3])
+                        .favoriteCount(((Number) row[4]).longValue())
                         .build())
                 .toList();
 
-        log.info("Fans fetched — songId={}, fanCount={}", songId, fans.size());
+        log.info("Fans fetched — artistId={}, fanCount={}", artist.getId(), fans.size());
 
         return AnalyticsDTO.builder()
                 .artistId(artist.getId())
                 .artistName(artist.getArtistName())
                 .fans(fans)
-                .build();
-    }
-
-    // ── LISTENING TRENDS ──────────────────────────────────────────────────────
-    // GET /api/artists/analytics/trends?period=daily|weekly|monthly
-    // Returns play count grouped by time period for the logged-in artist
-
-    @Transactional(readOnly = true)
-    public AnalyticsDTO getTrends(String period) {
-
-        Artist artist = getCurrentArtist();
-
-        log.info("Fetching {} trends for artistId={}", period, artist.getId());
-
-        // Validate period parameter
-        if (period == null || period.isBlank()) {
-            throw new BadRequestException(
-                    "Period cannot be blank. Allowed values: daily, weekly, monthly");
-        }
-
-        List<Object[]> results = switch (period.toLowerCase()) {
-            case "daily"   -> playEventRepository.findDailyTrendsByArtistId(artist.getId());
-            case "weekly"  -> playEventRepository.findWeeklyTrendsByArtistId(artist.getId());
-            case "monthly" -> playEventRepository.findMonthlyTrendsByArtistId(artist.getId());
-            default -> throw new BadRequestException(
-                    "Invalid period: '" + period + "'. Allowed values: daily, weekly, monthly");
-        };
-
-        List<AnalyticsDTO.TrendDTO> trends = results.stream()
-                .map(row -> AnalyticsDTO.TrendDTO.builder()
-                        .period((String) row[0])
-                        .playCount(((Number) row[1]).longValue())
-                        .build())
-                .toList();
-
-        log.info("{} trends fetched — artistId={}, buckets={}",
-                period, artist.getId(), trends.size());
-
-        return AnalyticsDTO.builder()
-                .artistId(artist.getId())
-                .artistName(artist.getArtistName())
-                .period(period.toLowerCase())
-                .trends(trends)
                 .build();
     }
 

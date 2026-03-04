@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -20,7 +21,7 @@ public interface PlayEventRepository extends JpaRepository<PlayEvent, Long> {
 
     long countBySongId(Long songId);
 
-    // ── ADDED FOR DAY 6 ANALYTICS ─────────────────────────────────────────────
+    // ── DAY 6 ANALYTICS ───────────────────────────────────────────────────────
 
     // Total play events across ALL songs of a specific artist
     @Query("SELECT COUNT(pe) FROM PlayEvent pe WHERE pe.song.artist.id = :artistId")
@@ -48,35 +49,47 @@ public interface PlayEventRepository extends JpaRepository<PlayEvent, Long> {
     List<Object[]> findTopListenersByArtistId(@Param("artistId") Long artistId,
                                               Pageable pageable);
 
-    // ── ADDED FOR DAY 7 ANALYTICS ─────────────────────────────────────────────
+    // ── DAY 7: LISTENING TRENDS ───────────────────────────────────────────────
 
-    // Daily trends — play counts grouped by date (YYYY-MM-DD)
-    // Returns Object[] {date, playCount}
-    // Used for GET /api/artists/analytics/trends?period=daily
+    // Daily play counts — grouped by calendar date
+    // Returns Object[] {dateString ("yyyy-MM-dd"), playCount}
+    // :from and :to control the lookback window (last 30 days from service layer)
     @Query("SELECT FUNCTION('DATE_FORMAT', pe.playedAt, '%Y-%m-%d'), COUNT(pe) " +
             "FROM PlayEvent pe " +
             "WHERE pe.song.artist.id = :artistId " +
+            "AND pe.playedAt >= :from " +
+            "AND pe.playedAt <= :to " +
             "GROUP BY FUNCTION('DATE_FORMAT', pe.playedAt, '%Y-%m-%d') " +
             "ORDER BY FUNCTION('DATE_FORMAT', pe.playedAt, '%Y-%m-%d') ASC")
-    List<Object[]> findDailyTrendsByArtistId(@Param("artistId") Long artistId);
+    List<Object[]> findDailyTrendsByArtistId(@Param("artistId") Long artistId,
+                                             @Param("from") LocalDateTime from,
+                                             @Param("to") LocalDateTime to);
 
-    // Weekly trends — play counts grouped by year-week (YYYY-Www)
-    // Returns Object[] {yearWeek, playCount}
-    // Used for GET /api/artists/analytics/trends?period=weekly
+    // Weekly play counts — grouped by ISO year-week
+    // Returns Object[] {weekString ("yyyy-Www"), playCount}
+    // :from and :to control the lookback window (last 12 weeks from service layer)
     @Query("SELECT FUNCTION('DATE_FORMAT', pe.playedAt, '%Y-W%u'), COUNT(pe) " +
             "FROM PlayEvent pe " +
             "WHERE pe.song.artist.id = :artistId " +
+            "AND pe.playedAt >= :from " +
+            "AND pe.playedAt <= :to " +
             "GROUP BY FUNCTION('DATE_FORMAT', pe.playedAt, '%Y-W%u') " +
             "ORDER BY FUNCTION('DATE_FORMAT', pe.playedAt, '%Y-W%u') ASC")
-    List<Object[]> findWeeklyTrendsByArtistId(@Param("artistId") Long artistId);
+    List<Object[]> findWeeklyTrendsByArtistId(@Param("artistId") Long artistId,
+                                              @Param("from") LocalDateTime from,
+                                              @Param("to") LocalDateTime to);
 
-    // Monthly trends — play counts grouped by year-month (YYYY-MM)
-    // Returns Object[] {yearMonth, playCount}
-    // Used for GET /api/artists/analytics/trends?period=monthly
+    // Monthly play counts — grouped by year-month
+    // Returns Object[] {monthString ("yyyy-MM"), playCount}
+    // :from and :to control the lookback window (last 12 months from service layer)
     @Query("SELECT FUNCTION('DATE_FORMAT', pe.playedAt, '%Y-%m'), COUNT(pe) " +
             "FROM PlayEvent pe " +
             "WHERE pe.song.artist.id = :artistId " +
+            "AND pe.playedAt >= :from " +
+            "AND pe.playedAt <= :to " +
             "GROUP BY FUNCTION('DATE_FORMAT', pe.playedAt, '%Y-%m') " +
             "ORDER BY FUNCTION('DATE_FORMAT', pe.playedAt, '%Y-%m') ASC")
-    List<Object[]> findMonthlyTrendsByArtistId(@Param("artistId") Long artistId);
+    List<Object[]> findMonthlyTrendsByArtistId(@Param("artistId") Long artistId,
+                                               @Param("from") LocalDateTime from,
+                                               @Param("to") LocalDateTime to);
 }
