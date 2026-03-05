@@ -34,51 +34,50 @@ public class SecurityConfig {
                 http
                                 .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
 
-                                .authorizeHttpRequests(auth -> auth
-                                                // ✅ Public pages
-                                                .requestMatchers(
-                                                                "/", "/auth/register", "/auth/login",
-                                                                "/css/**", "/js/**", "/images/**",
-                                                                "/uploads/**",
-                                                                "/api/auth/**",
-                                                                "/swagger-ui/**", "/v3/api-docs/**",
-                                                                "/search", "/artist/*")
-                                                .permitAll()
+                        .authorizeHttpRequests(auth -> auth
+                                // ✅ Public pages
+                                .requestMatchers(
+                                        "/", "/auth/register", "/auth/login",
+                                        "/css/**", "/js/**", "/images/**",
+                                        "/uploads/**",
+                                        "/api/auth/**",
+                                        "/swagger-ui/**", "/v3/api-docs/**",
+                                        "/search", "/artist/{id:\\d+}")  // public artist profile (numeric ID only)
+                                .permitAll()
 
-                                                // GET — listeners can browse
-                                                .requestMatchers(HttpMethod.GET, "/api/songs/**")
-                                                .authenticated()
+                                // GET — listeners can browse
+                                .requestMatchers(HttpMethod.GET, "/api/songs/**")
+                                .authenticated()
 
-                                                // Modify — only ARTIST
-                                                .requestMatchers(HttpMethod.POST, "/api/songs/**")
-                                                .hasRole("ARTIST")
+                                // Modify songs — only ARTIST
+                                .requestMatchers(HttpMethod.POST, "/api/songs/**").hasRole("ARTIST")
+                                .requestMatchers(HttpMethod.PUT, "/api/songs/**").hasRole("ARTIST")
+                                .requestMatchers(HttpMethod.DELETE, "/api/songs/**").hasRole("ARTIST")
+                                .requestMatchers(HttpMethod.PATCH, "/api/songs/**").hasRole("ARTIST")
 
-                                                .requestMatchers(HttpMethod.PUT, "/api/songs/**")
-                                                .hasRole("ARTIST")
+                                // ✅ Artist pages (MVC routes)
+                                .requestMatchers("/artist/dashboard", "/artist/songs", "/artist/albums")
+                                .hasRole("ARTIST")
 
-                                                .requestMatchers(HttpMethod.DELETE, "/api/songs/**")
-                                                .hasRole("ARTIST")
+                                // ✅ Artist API — management, songs, albums, analytics
+                                .requestMatchers("/api/artists/me/**").hasRole("ARTIST")
+                                .requestMatchers("/api/artists/songs/**").hasRole("ARTIST")
+                                .requestMatchers("/api/artists/albums/**").hasRole("ARTIST")
+                                .requestMatchers("/api/artists/analytics/**").hasRole("ARTIST")
 
-                                                .requestMatchers(HttpMethod.PATCH, "/api/songs/**")
-                                                .hasRole("ARTIST")
+                                // ✅ Artist registration — any authenticated user can register as artist
+                                .requestMatchers(HttpMethod.POST, "/api/artists/register").authenticated()
 
-                                                // ✅ Artist dashboard & analytics
-                                                .requestMatchers("/artist/dashboard/**",
-                                                                "/api/artists/me/**",
-                                                                "/api/artists/analytics/**")
-                                                .hasRole("ARTIST")
+                                // ✅ Public artist catalog (GET only)
+                                .requestMatchers(HttpMethod.GET, "/api/artists", "/api/artists/{id:\\d+}")
+                                .authenticated()
 
-                                                // ✅ Artist album management (Day 5 — Member 5)
-                                                // Double-layer security: SecurityConfig + @PreAuthorize in controller
-                                                .requestMatchers("/api/artists/albums/**")
-                                                .hasRole("ARTIST")
+                                // ✅ Admin pages and API
+                                .requestMatchers("/admin/**").hasRole("ADMIN")
+                                .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                                        // ✅ Admin pages and API
-                                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-
-                                                // ✅ Everything else
-                                                .anyRequest().authenticated())
+                                // ✅ Everything else
+                                .anyRequest().authenticated())
 
                                 .exceptionHandling(ex -> ex
                                                 .defaultAuthenticationEntryPointFor(

@@ -67,6 +67,11 @@ public class ArtistCatalogService {
                 .genre(artist.getGenre())
                 .profilePictureUrl(artist.getProfilePictureUrl())
                 .bannerImageUrl(artist.getBannerImageUrl())
+                .instagram(artist.getInstagram())
+                .twitter(artist.getTwitter())
+                .youtube(artist.getYoutube())
+                .spotify(artist.getSpotify())
+                .website(artist.getWebsite())
                 .build();
     }
 

@@ -175,8 +175,8 @@ public class PageController {
     }
 
     // ═══════════════════════════════════════════
-    // ARTIST DASHBOARD (ROLE_ARTIST only)
-    // ═══════════════════════════════════════════
+// ARTIST DASHBOARD & PAGES (ROLE_ARTIST only)
+// ═══════════════════════════════════════════
 
     @GetMapping("/artist/dashboard")
     public String showArtistDashboard(Model model) {
@@ -196,17 +196,22 @@ public class PageController {
                 model.addAttribute("songs", artistDetail.getSongs());
                 model.addAttribute("albums", artistDetail.getAlbums());
 
+                // Also pass ALL songs including non-public for artist's own view
+                List<SongDTO> allSongs = songService.getArtistAllSongs(artist.getId());
+                model.addAttribute("allSongs", allSongs);
+
                 long totalPlays = 0;
-                if (artistDetail.getSongs() != null) {
-                    totalPlays = artistDetail.getSongs().stream()
+                long totalFavorites = 0;
+                if (allSongs != null) {
+                    totalPlays = allSongs.stream()
                             .mapToLong(s -> s.getPlayCount() != null ? s.getPlayCount() : 0)
                             .sum();
                 }
-                model.addAttribute("totalSongs",
-                        artistDetail.getSongs() != null ? artistDetail.getSongs().size() : 0);
+                model.addAttribute("totalSongs", allSongs != null ? allSongs.size() : 0);
                 model.addAttribute("totalAlbums",
                         artistDetail.getAlbums() != null ? artistDetail.getAlbums().size() : 0);
                 model.addAttribute("totalPlays", totalPlays);
+                model.addAttribute("artistId", artist.getId());
             }
         }
 
@@ -224,8 +229,12 @@ public class PageController {
         if (user != null) {
             var artist = artistRepository.findByUserId(user.getId()).orElse(null);
             if (artist != null) {
+                // ALL songs — including UNLISTED and PRIVATE (artist's own view)
+                List<SongDTO> allSongs = songService.getArtistAllSongs(artist.getId());
+                model.addAttribute("songs", allSongs);
+
+                // Albums list — needed for upload form album dropdown
                 ArtistDTO artistDetail = artistCatalogService.getArtistById(artist.getId());
-                model.addAttribute("songs", artistDetail.getSongs());
                 model.addAttribute("albums", artistDetail.getAlbums());
             }
         }
@@ -246,6 +255,10 @@ public class PageController {
             if (artist != null) {
                 ArtistDTO artistDetail = artistCatalogService.getArtistById(artist.getId());
                 model.addAttribute("albums", artistDetail.getAlbums());
+
+                // Also pass all songs (for "Add Song to Album" modal)
+                List<SongDTO> allSongs = songService.getArtistAllSongs(artist.getId());
+                model.addAttribute("allSongs", allSongs);
             }
         }
 

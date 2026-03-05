@@ -22,6 +22,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class AlbumServiceImpl implements AlbumService {
@@ -232,7 +234,17 @@ public class AlbumServiceImpl implements AlbumService {
 
         Album album = getOwnedAlbum(albumId, artist.getId());
 
-        return mapToDTO(album);
+        AlbumDTO dto = mapToDTO(album);
+
+        // Include ALL tracks — artist's own view (no visibility filter)
+        List<SongDTO> tracks = songRepository.findByAlbumId(albumId, Pageable.unpaged())
+                .getContent()
+                .stream()
+                .map(songMapper::toDTO)
+                .toList();
+        dto.setTracks(tracks);
+
+        return dto;
     }
 
     // ── PRIVATE HELPERS ──────────────────────────────────────────────────────

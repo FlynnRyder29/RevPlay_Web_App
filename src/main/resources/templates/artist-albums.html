@@ -7,143 +7,356 @@
 
     <div id="artist-albums-content">
 
-        <div class="hero-section" style="background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);">
-            <h1 class="hero-title" style="color: #fff;">My Albums</h1>
-            <p class="hero-subtitle" style="color: rgba(255,255,255,0.7);">Manage your albums</p>
-            <button class="btn-primary" id="btn-create-album" style="margin-top: 20px;">Create New Album</button>
+        <div class="dashboard-header">
+            <div class="dashboard-header-left">
+                <div class="dashboard-header-info">
+                    <a href="/artist/dashboard" class="back-link">← Dashboard</a>
+                    <h1>My Albums</h1>
+                    <p class="dashboard-subtitle" th:text="${albums != null ? albums.size() + ' albums' : '0 albums'}">0 albums</p>
+                </div>
+            </div>
+            <div class="dashboard-actions">
+                <button class="btn-primary" id="btn-create-album">+ Create Album</button>
+            </div>
         </div>
 
-        <!-- ALBUMS GRID -->
-        <div class="song-grid" style="margin-top: 30px;" th:if="${albums != null and !albums.isEmpty()}">
-            <div th:each="album : ${albums}" class="song-card" style="cursor: default;" th:data-id="${album.id}">
-                <div class="song-card-img-wrapper">
-                    <img th:src="${album.coverImageUrl} ?: 'https://www.shutterstock.com/shutterstock/photos/2626947211/display_1500/stock-vector-jazz-music-poster-design-template-2626947211.jpg'"
+        <!-- Albums Grid -->
+        <div class="albums-manage-grid" th:if="${albums != null and !albums.isEmpty()}">
+            <div th:each="album : ${albums}" class="album-manage-card" th:data-id="${album.id}">
+                <div class="album-manage-img">
+                    <img th:src="${album.coverImageUrl != null ? album.coverImageUrl : 'https://placehold.co/200x200/1a1a2e/ffffff?text=💿'}"
                          alt="Album Art">
                 </div>
-                <div class="song-card-info">
-                    <div class="song-card-title" th:text="${album.name}">Album Name</div>
-                    <div class="song-card-artist" th:text="${#temporals.format(album.releaseDate, 'yyyy')}">2023</div>
+                <div class="album-manage-info">
+                    <div class="album-manage-name" th:text="${album.name}">Album Name</div>
+                    <div class="album-manage-meta">
+                        <span th:text="${album.songCount + ' tracks'}">0 tracks</span>
+                        <span th:if="${album.releaseDate != null}" th:text="' • ' + ${album.releaseDate}">• 2026</span>
+                    </div>
+                </div>
+                <div class="album-manage-actions">
+                    <button class="action-btn" title="Manage Songs"
+                            th:data-id="${album.id}" th:data-name="${album.name}"
+                            onclick="openManageSongs(this)">🎵</button>
+                    <button class="action-btn edit-btn" title="Edit"
+                            th:data-id="${album.id}" th:data-name="${album.name}"
+                            th:data-desc="${album.description}" th:data-cover="${album.coverImageUrl}"
+                            onclick="openEditAlbum(this)">✏️</button>
+                    <button class="action-btn delete-btn" title="Delete"
+                            th:data-id="${album.id}" th:data-count="${album.songCount}"
+                            onclick="deleteAlbum(this)">🗑️</button>
                 </div>
             </div>
         </div>
 
-        <div th:if="${albums == null or albums.isEmpty()}" class="empty-state"
-             style="text-align: center; margin-top: 60px;">
-            <div style="font-size: 48px; margin-bottom: 20px;">💿</div>
+        <div th:if="${albums == null or albums.isEmpty()}" class="empty-state">
+            <div class="empty-icon">💿</div>
             <h2>No albums created yet</h2>
-            <p style="color: var(--text-muted);">Organize your songs into albums.</p>
+            <p>Organize your songs into albums</p>
+            <button class="btn-primary" onclick="document.getElementById('btn-create-album').click()">Create Your First Album</button>
         </div>
 
         <!-- Create Album Modal -->
-        <div id="create-album-modal" class="modal-overlay"
-             style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
-            <div class="modal-content auth-container"
-                 style="width: 100%; max-width: 500px; margin: 0; position: relative;">
-                <button class="modal-close" id="btn-close-album"
-                        style="position: absolute; top: 15px; right: 20px; background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;">&times;</button>
+        <div id="create-album-modal" class="modal-overlay" style="display:none;">
+            <div class="modal-content auth-container">
+                <button class="modal-close" onclick="closeModal('create-album-modal')">&times;</button>
                 <h2 class="auth-title">Create New Album</h2>
-
                 <form id="create-album-form">
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-
                     <div class="form-group">
-                        <label class="form-label" for="albumName">Name *</label>
-                        <input class="form-input" type="text" id="albumName" name="name" required
-                               placeholder="Album Name">
+                        <label class="form-label">Name *</label>
+                        <input class="form-input" type="text" id="albumName" required placeholder="Album Name">
                     </div>
-
                     <div class="form-group">
-                        <label class="form-label" for="releaseDate">Release Date *</label>
-                        <input class="form-input" type="date" id="releaseDate" name="releaseDate" required>
+                        <label class="form-label">Release Date</label>
+                        <input class="form-input" type="date" id="albumReleaseDate">
                     </div>
-
                     <div class="form-group">
-                        <label class="form-label" for="coverImageUrl">Cover Image URL</label>
-                        <input class="form-input" type="text" id="coverImageUrl" name="coverImageUrl"
-                               placeholder="https://example.com/image.jpg">
+                        <label class="form-label">Cover Image URL</label>
+                        <input class="form-input" type="text" id="albumCover" placeholder="https://...">
                     </div>
-
                     <div class="form-group">
-                        <label class="form-label" for="description">Description (Optional)</label>
-                        <textarea class="form-input" id="description" name="description" rows="3"
-                                  placeholder="Tell us about this album..."></textarea>
+                        <label class="form-label">Description</label>
+                        <textarea class="form-input" id="albumDesc" rows="3" placeholder="About this album..."></textarea>
                     </div>
-
-                    <button type="submit" class="btn-primary" style="width: 100%; margin-top: 15px;"
-                            id="btn-submit-album">Create Album</button>
+                    <button type="submit" class="btn-primary" style="width:100%" id="btn-submit-album">Create Album</button>
                 </form>
-                <div id="album-status"
-                     style="margin-top: 15px; text-align: center; color: var(--text-main); font-size: 14px;"></div>
+                <div id="album-create-status" class="form-status"></div>
             </div>
         </div>
 
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                var modal = document.getElementById('create-album-modal');
-                var btnOpen = document.getElementById('btn-create-album');
-                var btnClose = document.getElementById('btn-close-album');
-                var form = document.getElementById('create-album-form');
-                var statusDiv = document.getElementById('album-status');
-                var submitBtn = document.getElementById('btn-submit-album');
+        <!-- Edit Album Modal -->
+        <div id="edit-album-modal" class="modal-overlay" style="display:none;">
+            <div class="modal-content auth-container">
+                <button class="modal-close" onclick="closeModal('edit-album-modal')">&times;</button>
+                <h2 class="auth-title">Edit Album</h2>
+                <form id="edit-album-form">
+                    <input type="hidden" id="editAlbumId">
+                    <div class="form-group">
+                        <label class="form-label">Name</label>
+                        <input class="form-input" type="text" id="editAlbumName">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Cover Image URL</label>
+                        <input class="form-input" type="text" id="editAlbumCover">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-input" id="editAlbumDesc" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary" style="width:100%">Save Changes</button>
+                </form>
+                <div id="album-edit-status" class="form-status"></div>
+            </div>
+        </div>
 
-                if (btnOpen) {
-                    btnOpen.addEventListener('click', function () { modal.style.display = 'flex'; });
-                }
-                if (btnClose) {
-                    btnClose.addEventListener('click', function () { modal.style.display = 'none'; });
-                }
+        <!-- Manage Album Songs Modal -->
+        <div id="manage-songs-modal" class="modal-overlay" style="display:none;">
+            <div class="modal-content auth-container" style="max-width:600px;">
+                <button class="modal-close" onclick="closeModal('manage-songs-modal')">&times;</button>
+                <h2 class="auth-title" id="manage-songs-title">Album Songs</h2>
 
-                window.addEventListener('click', function (e) {
-                    if (e.target === modal) modal.style.display = 'none';
+                <div id="album-songs-list" class="manage-songs-list">
+                    <div class="loading-spinner">Loading...</div>
+                </div>
+
+                <hr style="border-color: var(--border-color); margin: 20px 0;">
+
+                <h3 style="margin-bottom: 10px;">Add Song to Album</h3>
+                <div class="add-song-row">
+                    <select class="form-input" id="add-song-select" style="flex:1;">
+                        <option value="">— Select a song —</option>
+                        <th:block th:each="s : ${allSongs}">
+                            <option th:value="${s.id}" th:text="${s.title}" th:if="${s.albumId == null}"></option>
+                        </th:block>
+                    </select>
+                    <button class="btn-primary" id="btn-add-song-to-album" style="white-space:nowrap;">Add</button>
+                </div>
+                <div id="manage-songs-status" class="form-status"></div>
+            </div>
+        </div>
+
+        <script th:inline="javascript">
+            (function() {
+                var csrf = document.querySelector('meta[name="_csrf"]');
+                var csrfToken = csrf ? csrf.getAttribute('content') : '';
+                var currentAlbumId = null;
+
+                // ── Create Album ─────────────────────────────────────────────────
+                document.getElementById('btn-create-album').addEventListener('click', function() {
+                    document.getElementById('create-album-modal').style.display = 'flex';
                 });
 
-                if (form) {
-                    form.addEventListener('submit', function (e) {
-                        e.preventDefault();
+                document.getElementById('create-album-form').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    var status = document.getElementById('album-create-status');
+                    var btn = document.getElementById('btn-submit-album');
+                    btn.disabled = true;
+                    btn.textContent = 'Creating...';
+                    status.textContent = '';
 
-                        var csrfToken = this.querySelector('input[name="_csrf"]').value;
-                        var data = {
+                    fetch('/api/artists/albums', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify({
                             name: document.getElementById('albumName').value,
-                            releaseDate: document.getElementById('releaseDate').value,
-                            coverImageUrl: document.getElementById('coverImageUrl').value,
-                            description: document.getElementById('description').value
-                        };
-
-                        submitBtn.disabled = true;
-                        submitBtn.innerText = 'Creating...';
-                        statusDiv.innerText = '';
-
-                        fetch('/api/artists/albums', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': csrfToken
-                            },
-                            body: JSON.stringify(data)
+                            releaseDate: document.getElementById('albumReleaseDate').value || null,
+                            coverImageUrl: document.getElementById('albumCover').value || null,
+                            description: document.getElementById('albumDesc').value || null
                         })
-                            .then(function (response) {
-                                if (response.ok) {
-                                    statusDiv.style.color = '#4CAF50';
-                                    statusDiv.innerText = 'Album created successfully! Refreshing...';
-                                    setTimeout(function () { window.location.reload(); }, 1000);
-                                } else {
-                                    return response.json().then(function (errData) {
-                                        throw new Error(errData.message || 'Creation failed');
-                                    }).catch(function () {
-                                        throw new Error('Creation failed with status ' + response.status);
-                                    });
-                                }
-                            })
-                            .catch(function (error) {
-                                console.error('Creation Error:', error);
-                                statusDiv.style.color = '#e74c3c';
-                                statusDiv.innerText = error.message;
-                                submitBtn.disabled = false;
-                                submitBtn.innerText = 'Create Album';
-                            });
+                    }).then(function(r) {
+                        if (r.status >= 200 && r.status < 300) {
+                            status.style.color = '#4CAF50';
+                            status.textContent = 'Album created! Refreshing...';
+                            setTimeout(function() { window.location.reload(); }, 800);
+                        } else {
+                            return r.json().then(function(d) { throw new Error(d.message || 'Failed'); });
+                        }
+                    }).catch(function(err) {
+                        status.style.color = '#e74c3c';
+                        status.textContent = err.message;
+                        btn.disabled = false;
+                        btn.textContent = 'Create Album';
                     });
+                });
+
+                // ── Edit Album ───────────────────────────────────────────────────
+                window.openEditAlbum = function(el) {
+                    document.getElementById('editAlbumId').value = el.dataset.id;
+                    document.getElementById('editAlbumName').value = el.dataset.name || '';
+                    document.getElementById('editAlbumCover').value = el.dataset.cover || '';
+                    document.getElementById('editAlbumDesc').value = el.dataset.desc || '';
+                    document.getElementById('edit-album-modal').style.display = 'flex';
+                };
+
+                document.getElementById('edit-album-form').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    var id = document.getElementById('editAlbumId').value;
+                    var status = document.getElementById('album-edit-status');
+
+                    fetch('/api/artists/albums/' + id, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify({
+                            name: document.getElementById('editAlbumName').value,
+                            coverImageUrl: document.getElementById('editAlbumCover').value,
+                            description: document.getElementById('editAlbumDesc').value
+                        })
+                    }).then(function(r) {
+                        if (r.ok) {
+                            status.style.color = '#4CAF50';
+                            status.textContent = 'Saved! Refreshing...';
+                            setTimeout(function() { window.location.reload(); }, 800);
+                        } else {
+                            throw new Error('Save failed');
+                        }
+                    }).catch(function(err) {
+                        status.style.color = '#e74c3c';
+                        status.textContent = err.message;
+                    });
+                });
+
+                // ── Delete Album ─────────────────────────────────────────────────
+                window.deleteAlbum = function(el) {
+                    var count = parseInt(el.dataset.count || '0');
+                    if (count > 0) {
+                        alert('Cannot delete album with ' + count + ' song(s). Remove all songs first.');
+                        return;
+                    }
+                    if (!confirm('Delete this album? This cannot be undone.')) return;
+
+                    fetch('/api/artists/albums/' + el.dataset.id, {
+                        method: 'DELETE',
+                        headers: { 'X-CSRF-TOKEN': csrfToken }
+                    }).then(function(r) {
+                        if (r.status >= 200 && r.status < 300) {
+                            el.closest('.album-manage-card').remove();
+                        } else {
+                            return r.json().then(function(d) { alert(d.message || 'Delete failed'); });
+                        }
+                    });
+                };
+
+                // ── Manage Album Songs ───────────────────────────────────────────
+                window.openManageSongs = function(el) {
+                    currentAlbumId = el.dataset.id;
+                    document.getElementById('manage-songs-title').textContent = el.dataset.name + ' — Songs';
+                    document.getElementById('manage-songs-modal').style.display = 'flex';
+                    loadAlbumSongs(currentAlbumId);
+                };
+
+                function loadAlbumSongs(albumId) {
+                    var container = document.getElementById('album-songs-list');
+                    container.innerHTML = '<div class="loading-spinner">Loading...</div>';
+
+                    fetch('/api/artists/albums/' + albumId)
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            var tracks = data.tracks || [];
+                            if (tracks.length === 0) {
+                                container.innerHTML = '<p class="text-muted" style="text-align:center;padding:20px;">No songs in this album yet</p>';
+                                return;
+                            }
+                            var html = '';
+                            tracks.forEach(function(t) {
+                                html += '<div class="manage-song-row" data-id="' + t.id + '">' +
+                                    '<img class="manage-song-cover" src="' + (t.coverImageUrl || 'https://placehold.co/36x36/1a1a2e/ffffff?text=♪') + '">' +
+                                    '<span class="manage-song-title">' + t.title + '</span>' +
+                                    '<button class="action-btn delete-btn" onclick="removeSongFromAlbum(' + albumId + ',' + t.id + ',this)">✕</button>' +
+                                    '</div>';
+                            });
+                            container.innerHTML = html;
+                        })
+                        .catch(function() {
+                            container.innerHTML = '<p class="text-muted">Failed to load songs</p>';
+                        });
                 }
-            });
+
+                // ── Add Song to Album ────────────────────────────────────────────
+                document.getElementById('btn-add-song-to-album').addEventListener('click', function() {
+                    var select = document.getElementById('add-song-select');
+                    var songId = select.value;
+                    var status = document.getElementById('manage-songs-status');
+
+                    if (!songId || !currentAlbumId) {
+                        status.style.color = '#e74c3c';
+                        status.textContent = 'Select a song first';
+                        return;
+                    }
+
+                    status.textContent = '';
+
+                    fetch('/api/artists/albums/' + currentAlbumId + '/songs/' + songId, {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': csrfToken }
+                    }).then(function(r) {
+                        if (r.status >= 200 && r.status < 300) {
+                            status.style.color = '#4CAF50';
+                            status.textContent = 'Song added!';
+                            // Remove from dropdown (it's now in the album)
+                            select.querySelector('option[value="' + songId + '"]').remove();
+                            select.value = '';
+                            // Reload album songs list
+                            loadAlbumSongs(currentAlbumId);
+                            setTimeout(function() { status.textContent = ''; }, 2000);
+                        } else {
+                            return r.json().then(function(d) {
+                                throw new Error(d.message || 'Failed to add song');
+                            });
+                        }
+                    }).catch(function(err) {
+                        status.style.color = '#e74c3c';
+                        status.textContent = err.message;
+                    });
+                });
+
+                // ── Remove Song from Album ───────────────────────────────────────
+                window.removeSongFromAlbum = function(albumId, songId, el) {
+                    if (!confirm('Remove this song from the album?')) return;
+
+                    fetch('/api/artists/albums/' + albumId + '/songs/' + songId, {
+                        method: 'DELETE',
+                        headers: { 'X-CSRF-TOKEN': csrfToken }
+                    }).then(function(r) {
+                        if (r.status >= 200 && r.status < 300) {
+                            el.closest('.manage-song-row').remove();
+                            // Check if list is now empty
+                            var container = document.getElementById('album-songs-list');
+                            if (!container.querySelector('.manage-song-row')) {
+                                container.innerHTML = '<p class="text-muted" style="text-align:center;padding:20px;">No songs in this album yet</p>';
+                            }
+                        } else {
+                            alert('Failed to remove song');
+                        }
+                    });
+                };
+
+                // ── Modal Close ──────────────────────────────────────────────────
+                window.closeModal = function(id) {
+                    document.getElementById(id).style.display = 'none';
+                    // If closing manage-songs modal, reload page to update song counts
+                    if (id === 'manage-songs-modal') {
+                        window.location.reload();
+                    }
+                };
+
+                document.querySelectorAll('.modal-overlay').forEach(function(m) {
+                    m.addEventListener('click', function(e) {
+                        if (e.target === m) {
+                            m.style.display = 'none';
+                            if (m.id === 'manage-songs-modal') {
+                                window.location.reload();
+                            }
+                        }
+                    });
+                });
+            })();
         </script>
 
     </div>

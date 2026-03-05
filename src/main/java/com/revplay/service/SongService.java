@@ -25,6 +25,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class SongService {
@@ -65,6 +67,17 @@ public class SongService {
         }
 
         return mapToDTO(song);
+    }
+
+    // ── ARTIST'S OWN SONGS (all visibilities) ────────────────────────────────
+// Used by artist dashboard/songs page — shows PUBLIC + UNLISTED + PRIVATE
+    @Transactional(readOnly = true)
+    public List<SongDTO> getArtistAllSongs(Long artistId) {
+        log.debug("Fetching all songs for artistId={} (all visibilities)", artistId);
+        return songRepository.findAllByArtistId(artistId)
+                .stream()
+                .map(this::mapToDTO)
+                .toList();
     }
 
     // 🔴 FIX: Only search PUBLIC songs

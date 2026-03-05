@@ -9,93 +9,557 @@
 
         <!-- ═══ Dashboard Header ═══ -->
         <div class="dashboard-header">
-            <div class="dashboard-header-info">
-                <span class="dashboard-label">ARTIST DASHBOARD</span>
-                <h1 th:text="${profile.artistName}">Artist Name</h1>
-                <p class="dashboard-subtitle" th:if="${profile.genre}" th:text="${profile.genre}">Genre</p>
+            <div class="dashboard-header-left">
+                <div class="dashboard-avatar">
+                    <img th:if="${profile.profilePictureUrl != null}"
+                         th:src="${profile.profilePictureUrl}" alt="Artist">
+                    <div th:if="${profile.profilePictureUrl == null}" class="avatar-fallback-lg">
+                        <span th:text="${profile.artistName != null ? profile.artistName.substring(0,1).toUpperCase() : '?'}">A</span>
+                    </div>
+                </div>
+                <div class="dashboard-header-info">
+                    <span class="dashboard-label">ARTIST DASHBOARD</span>
+                    <h1 th:text="${profile.artistName}">Artist Name</h1>
+                    <p class="dashboard-subtitle" th:if="${profile.genre}" th:text="${profile.genre}">Genre</p>
+                </div>
+            </div>
+            <div class="dashboard-actions">
+                <a href="/artist/songs" class="btn-secondary">🎵 My Songs</a>
+                <a href="/artist/albums" class="btn-secondary">💿 My Albums</a>
             </div>
         </div>
 
-        <!-- ═══ Stats Cards ═══ -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon">🎵</div>
-                <div class="stat-value" th:text="${totalSongs != null ? totalSongs : 0}">0</div>
-                <div class="stat-label">Total Songs</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">💿</div>
-                <div class="stat-value" th:text="${totalAlbums != null ? totalAlbums : 0}">0</div>
-                <div class="stat-label">Albums</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">▶️</div>
-                <div class="stat-value" th:text="${totalPlays != null ? totalPlays : 0}">0</div>
-                <div class="stat-label">Total Plays</div>
-            </div>
+        <!-- ═══ Dashboard Tabs ═══ -->
+        <div class="dash-tabs">
+            <button class="dash-tab active" data-tab="overview">Overview</button>
+            <button class="dash-tab" data-tab="analytics">Analytics</button>
+            <button class="dash-tab" data-tab="settings">Profile Settings</button>
         </div>
 
-        <!-- ═══ My Songs Table ═══ -->
-        <section class="dashboard-section">
-            <div class="section-header">
-                <h2 class="section-title">My Songs</h2>
+        <!-- ═══════════════════════════════════════════
+             TAB 1: OVERVIEW
+             ═══════════════════════════════════════════ -->
+        <div class="dash-tab-content active" id="tab-overview">
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">🎵</div>
+                    <div class="stat-value" th:text="${totalSongs != null ? totalSongs : 0}">0</div>
+                    <div class="stat-label">Total Songs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">💿</div>
+                    <div class="stat-value" th:text="${totalAlbums != null ? totalAlbums : 0}">0</div>
+                    <div class="stat-label">Albums</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">▶️</div>
+                    <div class="stat-value" th:text="${totalPlays != null ? totalPlays : 0}">0</div>
+                    <div class="stat-label">Total Plays</div>
+                </div>
+                <div class="stat-card stat-card-accent">
+                    <div class="stat-icon">❤️</div>
+                    <div class="stat-value" id="total-favorites">—</div>
+                    <div class="stat-label">Total Favorites</div>
+                </div>
             </div>
 
-            <div class="dashboard-table-wrapper" th:if="${songs != null && !songs.isEmpty()}">
-                <table class="dashboard-table">
-                    <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Cover</th>
-                        <th>Title</th>
-                        <th>Album</th>
-                        <th>Plays</th>
-                        <th>Visibility</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="song, iter : ${songs}">
-                        <td th:text="${iter.index + 1}">1</td>
-                        <td>
-                            <img th:src="${song.coverImageUrl != null ? song.coverImageUrl : 'https://www.shutterstock.com/shutterstock/photos/2626947211/display_1500/stock-vector-jazz-music-poster-design-template-2626947211.jpg'}"
-                                 alt="Cover" class="table-cover-img">
-                        </td>
-                        <td class="table-song-title" th:text="${song.title}">Song Title</td>
-                        <td class="table-muted" th:text="${song.albumName != null ? song.albumName : '—'}">Album</td>
-                        <td th:text="${song.playCount != null ? song.playCount : 0}">0</td>
-                        <td>
+            <!-- Recent Songs Table -->
+            <section class="dashboard-section">
+                <div class="section-header">
+                    <h2 class="section-title">Recent Songs</h2>
+                    <a href="/artist/songs" class="section-link">View All →</a>
+                </div>
+
+                <div class="dashboard-table-wrapper" th:if="${allSongs != null && !allSongs.isEmpty()}">
+                    <table class="dashboard-table">
+                        <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Cover</th>
+                            <th>Title</th>
+                            <th>Album</th>
+                            <th>Plays</th>
+                            <th>Visibility</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="song, iter : ${allSongs}" th:if="${iter.index < 10}">
+                            <td th:text="${iter.index + 1}">1</td>
+                            <td>
+                                <img th:src="${song.coverImageUrl != null ? song.coverImageUrl : 'https://placehold.co/40x40/1a1a2e/ffffff?text=♪'}"
+                                     alt="Cover" class="table-cover-img">
+                            </td>
+                            <td class="table-song-title" th:text="${song.title}">Song Title</td>
+                            <td class="table-muted" th:text="${song.albumName != null ? song.albumName : '—'}">—</td>
+                            <td th:text="${song.playCount != null ? song.playCount : 0}">0</td>
+                            <td>
                                 <span class="visibility-badge"
                                       th:classappend="${song.visibility == 'PUBLIC' ? 'vis-public' : (song.visibility == 'PRIVATE' ? 'vis-private' : 'vis-unlisted')}"
                                       th:text="${song.visibility != null ? song.visibility : 'PUBLIC'}">PUBLIC</span>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
 
-            <div class="empty-state" th:if="${songs == null || songs.isEmpty()}" style="padding: 40px;">
-                <div class="empty-icon">🎵</div>
-                <h2>No songs uploaded yet</h2>
-                <p>Start uploading your music to see it here</p>
-            </div>
-        </section>
+                <div class="empty-state" th:if="${allSongs == null || allSongs.isEmpty()}">
+                    <div class="empty-icon">🎵</div>
+                    <h2>No songs uploaded yet</h2>
+                    <p>Start by <a href="/artist/songs">uploading your music</a></p>
+                </div>
+            </section>
 
-        <!-- ═══ My Albums ═══ -->
-        <section class="dashboard-section" th:if="${albums != null && !albums.isEmpty()}">
-            <div class="section-header">
-                <h2 class="section-title">My Albums</h2>
-            </div>
-            <div class="album-grid">
-                <div th:each="album : ${albums}" class="album-card">
-                    <img th:src="${album.coverImageUrl != null ? album.coverImageUrl : 'https://www.shutterstock.com/shutterstock/photos/2626947211/display_1500/stock-vector-jazz-music-poster-design-template-2626947211.jpg'}"
-                         alt="Album Cover" class="album-cover">
-                    <div class="album-card-name" th:text="${album.name}">Album Name</div>
-                    <div class="album-card-meta">
-                        <span th:text="${album.songCount + ' tracks'}">0 tracks</span>
+            <!-- Albums Preview -->
+            <section class="dashboard-section" th:if="${albums != null && !albums.isEmpty()}">
+                <div class="section-header">
+                    <h2 class="section-title">My Albums</h2>
+                    <a href="/artist/albums" class="section-link">Manage →</a>
+                </div>
+                <div class="album-grid">
+                    <div th:each="album : ${albums}" class="album-card">
+                        <img th:src="${album.coverImageUrl != null ? album.coverImageUrl : 'https://placehold.co/200x200/1a1a2e/ffffff?text=💿'}"
+                             alt="Album Cover" class="album-cover">
+                        <div class="album-card-name" th:text="${album.name}">Album</div>
+                        <div class="album-card-meta" th:text="${album.songCount + ' tracks'}">0 tracks</div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
+        </div>
+
+        <!-- ═══════════════════════════════════════════
+             TAB 2: ANALYTICS
+             ═══════════════════════════════════════════ -->
+        <div class="dash-tab-content" id="tab-analytics">
+
+            <!-- Per-Song Performance -->
+            <section class="dashboard-section">
+                <div class="section-header">
+                    <h2 class="section-title">Song Performance</h2>
+                </div>
+                <div id="song-performance-container">
+                    <div class="loading-spinner">Loading analytics...</div>
+                </div>
+            </section>
+
+            <!-- Listening Trends -->
+            <section class="dashboard-section">
+                <div class="section-header">
+                    <h2 class="section-title">Listening Trends</h2>
+                    <div class="trend-period-toggle">
+                        <button class="trend-btn active" data-period="daily">Daily</button>
+                        <button class="trend-btn" data-period="weekly">Weekly</button>
+                        <button class="trend-btn" data-period="monthly">Monthly</button>
+                    </div>
+                </div>
+                <div id="trends-chart-container" class="chart-container">
+                    <div class="loading-spinner">Loading trends...</div>
+                </div>
+            </section>
+
+            <!-- Top Listeners -->
+            <section class="dashboard-section">
+                <div class="section-header">
+                    <h2 class="section-title">Top Listeners</h2>
+                </div>
+                <div id="top-listeners-container">
+                    <div class="loading-spinner">Loading...</div>
+                </div>
+            </section>
+
+            <!-- Fans -->
+            <section class="dashboard-section">
+                <div class="section-header">
+                    <h2 class="section-title">Your Fans</h2>
+                </div>
+                <div id="fans-container">
+                    <div class="loading-spinner">Loading...</div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ═══════════════════════════════════════════
+             TAB 3: PROFILE SETTINGS
+             ═══════════════════════════════════════════ -->
+        <div class="dash-tab-content" id="tab-settings">
+
+            <section class="dashboard-section">
+                <h2 class="section-title">Edit Profile</h2>
+
+                <div class="settings-grid">
+                    <!-- Profile Picture -->
+                    <div class="settings-card">
+                        <h3>Profile Picture</h3>
+                        <div class="picture-upload-area">
+                            <img th:if="${profile.profilePictureUrl != null}"
+                                 th:src="${profile.profilePictureUrl}"
+                                 alt="Profile" class="settings-preview-img" id="picture-preview">
+                            <div th:if="${profile.profilePictureUrl == null}"
+                                 class="avatar-fallback-lg" id="picture-fallback">
+                                <span th:text="${profile.artistName != null ? profile.artistName.substring(0,1).toUpperCase() : '?'}">A</span>
+                            </div>
+                            <input type="file" id="picture-file" accept="image/*" style="display:none">
+                            <button class="btn-secondary" onclick="document.getElementById('picture-file').click()">
+                                Change Picture
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Banner Image -->
+                    <div class="settings-card">
+                        <h3>Banner Image</h3>
+                        <div class="banner-upload-area">
+                            <div class="banner-preview"
+                                 th:style="${profile.bannerImageUrl != null ? 'background-image: url(' + profile.bannerImageUrl + ')' : ''}"
+                                 id="banner-preview">
+                                <span th:if="${profile.bannerImageUrl == null}">No banner set</span>
+                            </div>
+                            <input type="file" id="banner-file" accept="image/*" style="display:none">
+                            <button class="btn-secondary" onclick="document.getElementById('banner-file').click()">
+                                Change Banner
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Info Form -->
+                <div class="settings-card settings-card-wide">
+                    <h3>Profile Information</h3>
+                    <form id="profile-form" class="settings-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Artist Name</label>
+                                <input class="form-input" type="text" id="set-artistName"
+                                       th:value="${profile.artistName}" placeholder="Artist Name">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Genre</label>
+                                <input class="form-input" type="text" id="set-genre"
+                                       th:value="${profile.genre}" placeholder="e.g. Pop, Jazz">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Bio</label>
+                            <textarea class="form-input" id="set-bio" rows="4"
+                                      th:text="${profile.bio}" placeholder="Tell fans about yourself..."></textarea>
+                        </div>
+
+                        <h3 style="margin-top: 30px;">Social Links</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Instagram</label>
+                                <input class="form-input" type="text" id="set-instagram"
+                                       th:value="${profile.instagram}" placeholder="https://instagram.com/...">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Twitter / X</label>
+                                <input class="form-input" type="text" id="set-twitter"
+                                       th:value="${profile.twitter}" placeholder="https://twitter.com/...">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">YouTube</label>
+                                <input class="form-input" type="text" id="set-youtube"
+                                       th:value="${profile.youtube}" placeholder="https://youtube.com/...">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Spotify</label>
+                                <input class="form-input" type="text" id="set-spotify"
+                                       th:value="${profile.spotify}" placeholder="https://open.spotify.com/...">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Website</label>
+                            <input class="form-input" type="text" id="set-website"
+                                   th:value="${profile.website}" placeholder="https://yoursite.com">
+                        </div>
+
+                        <button type="submit" class="btn-primary" id="btn-save-profile">Save Changes</button>
+                        <span id="profile-save-status" class="save-status"></span>
+                    </form>
+                </div>
+            </section>
+        </div>
+
+        <!-- ═══ Dashboard Scripts ═══ -->
+        <script th:inline="javascript">
+            (function() {
+                var csrf = document.querySelector('meta[name="_csrf"]');
+                var csrfToken = csrf ? csrf.getAttribute('content') : '';
+
+                // ── Tab Switching ────────────────────────────────────────────────
+                document.querySelectorAll('.dash-tab').forEach(function(tab) {
+                    tab.addEventListener('click', function() {
+                        document.querySelectorAll('.dash-tab').forEach(function(t) { t.classList.remove('active'); });
+                        document.querySelectorAll('.dash-tab-content').forEach(function(c) { c.classList.remove('active'); });
+                        tab.classList.add('active');
+                        var target = document.getElementById('tab-' + tab.dataset.tab);
+                        if (target) target.classList.add('active');
+
+                        // Lazy-load analytics on first click
+                        if (tab.dataset.tab === 'analytics' && !window._analyticsLoaded) {
+                            window._analyticsLoaded = true;
+                            loadAnalytics();
+                        }
+                    });
+                });
+
+                // ── ANALYTICS LOADERS ────────────────────────────────────────────
+
+                function loadAnalytics() {
+                    loadOverviewFavorites();
+                    loadSongPerformance();
+                    loadTrends('daily');
+                    loadTopListeners();
+                    loadFans();
+                }
+
+                function loadOverviewFavorites() {
+                    fetch('/api/artists/analytics/overview')
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            var el = document.getElementById('total-favorites');
+                            if (el) el.textContent = data.totalFavorites || 0;
+                        })
+                        .catch(function() {});
+                }
+
+                function loadSongPerformance() {
+                    var container = document.getElementById('song-performance-container');
+                    fetch('/api/artists/analytics/songs')
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            var songs = data.songPlayCounts || [];
+                            if (songs.length === 0) {
+                                container.innerHTML = '<div class="empty-state"><p>No play data yet</p></div>';
+                                return;
+                            }
+                            var maxPlays = Math.max.apply(null, songs.map(function(s) { return s.playCount; })) || 1;
+                            var html = '<div class="perf-list">';
+                            songs.forEach(function(s, i) {
+                                var pct = Math.round((s.playCount / maxPlays) * 100);
+                                html += '<div class="perf-row">' +
+                                    '<span class="perf-rank">' + (i+1) + '</span>' +
+                                    '<img class="perf-cover" src="' + (s.coverImageUrl || 'https://placehold.co/36x36/1a1a2e/ffffff?text=♪') + '">' +
+                                    '<span class="perf-title">' + s.songTitle + '</span>' +
+                                    '<div class="perf-bar-bg"><div class="perf-bar-fill" style="width:' + pct + '%"></div></div>' +
+                                    '<span class="perf-count">' + s.playCount + '</span>' +
+                                    '</div>';
+                            });
+                            html += '</div>';
+                            container.innerHTML = html;
+                        })
+                        .catch(function() { container.innerHTML = '<p class="text-muted">Failed to load</p>'; });
+                }
+
+                function loadTrends(period) {
+                    var container = document.getElementById('trends-chart-container');
+                    container.innerHTML = '<div class="loading-spinner">Loading...</div>';
+
+                    fetch('/api/artists/analytics/trends?period=' + period)
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            var points = data.trends || [];
+                            if (points.length === 0) {
+                                container.innerHTML = '<div class="empty-state"><p>No trend data yet</p></div>';
+                                return;
+                            }
+                            var maxVal = Math.max.apply(null, points.map(function(p) { return p.playCount; })) || 1;
+                            var html = '<div class="trend-chart">';
+                            points.forEach(function(p) {
+                                var pct = Math.round((p.playCount / maxVal) * 100);
+                                html += '<div class="trend-bar-col">' +
+                                    '<div class="trend-bar" style="height:' + Math.max(pct, 4) + '%"></div>' +
+                                    '<span class="trend-label">' + formatPeriod(p.period) + '</span>' +
+                                    '</div>';
+                            });
+                            html += '</div>';
+                            container.innerHTML = html;
+                        })
+                        .catch(function() { container.innerHTML = '<p class="text-muted">Failed to load trends</p>'; });
+                }
+
+                function formatPeriod(p) {
+                    if (!p) return '';
+                    if (p.length === 10) return p.substring(5); // "2025-03-04" → "03-04"
+                    if (p.indexOf('W') !== -1) return p.substring(5); // "2025-W10" → "W10"
+                    if (p.length === 7) return p.substring(5); // "2025-03" → "03"
+                    return p;
+                }
+
+                // Trend period toggle
+                document.querySelectorAll('.trend-btn').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        document.querySelectorAll('.trend-btn').forEach(function(b) { b.classList.remove('active'); });
+                        btn.classList.add('active');
+                        loadTrends(btn.dataset.period);
+                    });
+                });
+
+                function loadTopListeners() {
+                    var container = document.getElementById('top-listeners-container');
+                    fetch('/api/artists/analytics/top-listeners')
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            var listeners = data.topListeners || [];
+                            if (listeners.length === 0) {
+                                container.innerHTML = '<div class="empty-state"><p>No listener data yet</p></div>';
+                                return;
+                            }
+                            var html = '<div class="listener-list">';
+                            listeners.forEach(function(l, i) {
+                                html += '<div class="listener-row">' +
+                                    '<span class="listener-rank">#' + (i+1) + '</span>' +
+                                    '<div class="listener-info">' +
+                                    '<span class="listener-name">' + (l.displayName || l.username) + '</span>' +
+                                    '<span class="listener-username">@' + l.username + '</span>' +
+                                    '</div>' +
+                                    '<span class="listener-plays">' + l.playCount + ' plays</span>' +
+                                    '</div>';
+                            });
+                            html += '</div>';
+                            container.innerHTML = html;
+                        })
+                        .catch(function() { container.innerHTML = '<p class="text-muted">Failed to load</p>'; });
+                }
+
+                function loadFans() {
+                    var container = document.getElementById('fans-container');
+                    fetch('/api/artists/analytics/fans')
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            var fans = data.fans || [];
+                            if (fans.length === 0) {
+                                container.innerHTML = '<div class="empty-state"><p>No fans yet — keep uploading!</p></div>';
+                                return;
+                            }
+                            var html = '<div class="fan-grid">';
+                            fans.forEach(function(f) {
+                                var avatar = f.profilePictureUrl
+                                    ? '<img src="' + f.profilePictureUrl + '" class="fan-avatar">'
+                                    : '<div class="fan-avatar fan-avatar-fallback">' + (f.displayName || f.username).charAt(0).toUpperCase() + '</div>';
+                                html += '<div class="fan-card">' +
+                                    avatar +
+                                    '<div class="fan-name">' + (f.displayName || f.username) + '</div>' +
+                                    '<div class="fan-count">♥ ' + f.favoriteCount + ' songs</div>' +
+                                    '</div>';
+                            });
+                            html += '</div>';
+                            container.innerHTML = html;
+                        })
+                        .catch(function() { container.innerHTML = '<p class="text-muted">Failed to load</p>'; });
+                }
+
+                // ── PROFILE SETTINGS ─────────────────────────────────────────────
+
+                // Picture upload
+                var pictureFile = document.getElementById('picture-file');
+                if (pictureFile) {
+                    pictureFile.addEventListener('change', function() {
+                        if (!this.files[0]) return;
+                        var fd = new FormData();
+                        fd.append('file', this.files[0]);
+                        fetch('/api/artists/me/picture', {
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': csrfToken },
+                            body: fd
+                        }).then(function(r) {
+                            if (r.ok) return r.json();
+                            throw new Error('Upload failed');
+                        }).then(function(data) {
+                            var preview = document.getElementById('picture-preview');
+                            var fallback = document.getElementById('picture-fallback');
+                            if (fallback) fallback.style.display = 'none';
+                            if (preview) {
+                                preview.src = data.profilePictureUrl;
+                                preview.style.display = 'block';
+                            } else {
+                                var img = document.createElement('img');
+                                img.src = data.profilePictureUrl;
+                                img.className = 'settings-preview-img';
+                                img.id = 'picture-preview';
+                                document.querySelector('.picture-upload-area').prepend(img);
+                            }
+                        }).catch(function(e) { alert(e.message); });
+                    });
+                }
+
+                // Banner upload
+                var bannerFile = document.getElementById('banner-file');
+                if (bannerFile) {
+                    bannerFile.addEventListener('change', function() {
+                        if (!this.files[0]) return;
+                        var fd = new FormData();
+                        fd.append('file', this.files[0]);
+                        fetch('/api/artists/me/banner', {
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': csrfToken },
+                            body: fd
+                        }).then(function(r) {
+                            if (r.ok) return r.json();
+                            throw new Error('Upload failed');
+                        }).then(function(data) {
+                            var bp = document.getElementById('banner-preview');
+                            if (bp) {
+                                bp.style.backgroundImage = 'url(' + data.bannerImageUrl + ')';
+                                bp.innerHTML = '';
+                            }
+                        }).catch(function(e) { alert(e.message); });
+                    });
+                }
+
+                // Profile form save
+                var profileForm = document.getElementById('profile-form');
+                if (profileForm) {
+                    profileForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        var status = document.getElementById('profile-save-status');
+                        var btn = document.getElementById('btn-save-profile');
+
+                        var payload = {
+                            artistName: document.getElementById('set-artistName').value,
+                            genre: document.getElementById('set-genre').value,
+                            bio: document.getElementById('set-bio').value,
+                            instagram: document.getElementById('set-instagram').value,
+                            twitter: document.getElementById('set-twitter').value,
+                            youtube: document.getElementById('set-youtube').value,
+                            spotify: document.getElementById('set-spotify').value,
+                            website: document.getElementById('set-website').value
+                        };
+
+                        btn.disabled = true;
+                        btn.textContent = 'Saving...';
+
+                        fetch('/api/artists/update', {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken
+                            },
+                            body: JSON.stringify(payload)
+                        }).then(function(r) {
+                            if (r.ok) return r.json();
+                            throw new Error('Save failed');
+                        }).then(function() {
+                            status.textContent = '✓ Saved';
+                            status.className = 'save-status save-success';
+                            setTimeout(function() { status.textContent = ''; }, 3000);
+                        }).catch(function(e) {
+                            status.textContent = '✗ ' + e.message;
+                            status.className = 'save-status save-error';
+                        }).finally(function() {
+                            btn.disabled = false;
+                            btn.textContent = 'Save Changes';
+                        });
+                    });
+                }
+
+                // Auto-load favorites count on page load
+                loadOverviewFavorites();
+            })();
+        </script>
 
     </div>
 </div>
