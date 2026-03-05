@@ -57,7 +57,7 @@ class AnalyticsServiceTest {
         artist = TestDataBuilder.anArtist()
                 .withId(TEST_ARTIST_ID)
                 .withArtistName(TEST_ARTIST_NAME)
-                .withUser(artistUser)
+                .withUserId(TEST_ARTIST_USER_ID)
                 .build();
 
         lenient().when(securityUtils.getCurrentUser()).thenReturn(artistUser);

@@ -79,7 +79,7 @@ class SongServiceTest {
         artist = new Artist();
         artist.setId(ARTIST_ID);
         artist.setArtistName("Mock Artist");
-        artist.setUser(currentUser);
+        artist.setUserId(USER_ID);
 
         album = new Album();
         album.setId(ALBUM_ID);
@@ -542,7 +542,7 @@ class SongServiceTest {
             assertThrows(UnauthorizedAccessException.class,
                     () -> songService.deleteSong(SONG_ID));
 
-            verify(songRepository, never()).delete(any());
+            verify(songRepository, never()).delete(any(Song.class));
         }
 
         @Test

@@ -78,7 +78,7 @@ class AlbumServiceImplTest {
         artist = new Artist();
         artist.setId(ARTIST_ID);
         artist.setArtistName("Aria");
-        artist.setUser(user);
+        artist.setUserId(USER_ID);
 
         album = new Album();
         album.setId(ALBUM_ID);

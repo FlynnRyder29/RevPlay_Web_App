@@ -42,6 +42,30 @@ class PlaylistControllerIntegrationTest {
     @MockitoBean private RevPlayAuthenticationEntryPoint authEntryPoint;
     @MockitoBean private RevPlayAccessDeniedHandler   accessDeniedHandler;
 
+    @org.junit.jupiter.api.BeforeEach
+    void configureSecurityHandlers() throws Exception {
+        org.mockito.Mockito.doAnswer(inv -> {
+            jakarta.servlet.http.HttpServletResponse resp =
+                    inv.getArgument(1, jakarta.servlet.http.HttpServletResponse.class);
+            resp.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+            return null;
+        }).when(authEntryPoint).commence(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any());
+
+        org.mockito.Mockito.doAnswer(inv -> {
+            jakarta.servlet.http.HttpServletResponse resp =
+                    inv.getArgument(1, jakarta.servlet.http.HttpServletResponse.class);
+            resp.setStatus(jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN);
+            return null;
+        }).when(accessDeniedHandler).handle(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any());
+    }
+
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private PlaylistDTO samplePlaylist() {
