@@ -4,6 +4,7 @@ import com.revplay.dto.AlbumDTO;
 import com.revplay.dto.SongDTO;
 import com.revplay.exception.BadRequestException;
 import com.revplay.exception.ResourceNotFoundException;
+import com.revplay.exception.UnauthorizedAccessException;
 import com.revplay.mapper.SongMapper;
 import com.revplay.model.Album;
 import com.revplay.model.Artist;
@@ -259,14 +260,18 @@ public class AlbumServiceImpl implements AlbumService {
     }
 
     // Fetch album and verify it belongs to the given artist (ownership check)
+    // 🔴 Day 8 Fix — Bug 1: Changed BadRequestException (400) to
+    // UnauthorizedAccessException (403) — accessing another artist's album
+    // is an authorization failure, not a bad request.
+    // 🔴 Day 8 Fix — Bug 3: Added albumId to error message for easier debugging
     private Album getOwnedAlbum(Long albumId, Long artistId) {
         Album album = albumRepository.findById(albumId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Album", "id", albumId));
 
         if (!album.getArtist().getId().equals(artistId)) {
-            throw new BadRequestException(
-                    "Album does not belong to the logged-in artist");
+            throw new UnauthorizedAccessException(
+                    "Album id=" + albumId + " does not belong to the logged-in artist");
         }
 
         return album;
