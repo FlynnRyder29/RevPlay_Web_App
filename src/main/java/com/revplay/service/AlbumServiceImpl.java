@@ -136,8 +136,13 @@ public class AlbumServiceImpl implements AlbumService {
         Song song = songRepository.findById(songId)
                 .orElseThrow(() -> new ResourceNotFoundException("Song", "id", songId));
 
+        // 🔴 Day 8 PR Fix — Changed BadRequestException (400) to
+        // UnauthorizedAccessException (403) — accessing another artist's song
+        // is an authorization failure, not a bad request.
+        // Added songId to message for easier debugging.
         if (!song.getArtist().getId().equals(artist.getId())) {
-            throw new BadRequestException("Song does not belong to the logged-in artist");
+            throw new UnauthorizedAccessException(
+                    "Song id=" + songId + " does not belong to the logged-in artist");
         }
 
         // 🟡 MEDIUM — Option A: Block if song belongs to ANY album (same or different)
@@ -176,8 +181,13 @@ public class AlbumServiceImpl implements AlbumService {
         Song song = songRepository.findById(songId)
                 .orElseThrow(() -> new ResourceNotFoundException("Song", "id", songId));
 
+        // 🔴 Day 8 PR Fix — Changed BadRequestException (400) to
+        // UnauthorizedAccessException (403) — accessing another artist's song
+        // is an authorization failure, not a bad request.
+        // Added songId to message for easier debugging.
         if (!song.getArtist().getId().equals(artist.getId())) {
-            throw new BadRequestException("Song does not belong to the logged-in artist");
+            throw new UnauthorizedAccessException(
+                    "Song id=" + songId + " does not belong to the logged-in artist");
         }
 
         // Verify song is actually in this album
