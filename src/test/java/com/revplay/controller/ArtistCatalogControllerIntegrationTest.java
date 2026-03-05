@@ -49,6 +49,22 @@ class ArtistCatalogControllerIntegrationTest {
     @MockitoBean private RevPlayAuthenticationEntryPoint authEntryPoint;
     @MockitoBean private RevPlayAccessDeniedHandler accessDeniedHandler;
 
+
+
+    @org.junit.jupiter.api.BeforeEach
+    void configureAuthEntryPoint() throws Exception {
+        org.mockito.Mockito.doAnswer(inv -> {
+            jakarta.servlet.http.HttpServletResponse resp =
+                    inv.getArgument(1, jakarta.servlet.http.HttpServletResponse.class);
+            resp.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+            return null;
+        }).when(authEntryPoint).commence(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any());
+    }
+
+
     // ── Helpers ───────────────────────────────────────────────────
 
     private ArtistDTO buildArtistDTO(Long id, String name, String genre) {
@@ -183,10 +199,12 @@ class ArtistCatalogControllerIntegrationTest {
         }
 
         @Test
-        @DisplayName("unauthenticated — returns redirect to login")
+        @DisplayName("unauthenticated — returns 401 Unauthorized")
         void unauthenticated_returnsRedirect() throws Exception {
+            // SecurityConfig uses RevPlayAuthenticationEntryPoint which returns
+            // HTTP 401 for REST clients — not a form-login redirect (302).
             mockMvc.perform(get(API_ARTISTS + "/1"))
-                    .andExpect(status().is3xxRedirection());
+                    .andExpect(status().isUnauthorized());
         }
     }
 }

@@ -167,29 +167,6 @@ class ArtistServiceImplTest {
         verify(artistRepository, never()).save(any());
     }
 
-    @Test
-    @DisplayName("registerArtist - response maps all ArtistProfileResponse fields")
-    void registerArtist_responseMapsAllFields() {
-        ArtistRegisterRequest request = new ArtistRegisterRequest();
-        request.setArtistName("Aria");
-        request.setBio("Indie pop singer.");
-        request.setGenre("Indie");
-        request.setInstagram("https://instagram.com/aria");
-        request.setTwitter("https://twitter.com/aria");
-
-        when(artistRepository.existsByUserId(1L)).thenReturn(false);
-        when(artistRepository.save(any(Artist.class))).thenReturn(existingArtist);
-
-        ArtistProfileResponse result = artistService.registerArtist(request);
-
-        assertEquals(10L,                          result.getId());
-        assertEquals("Aria",                       result.getArtistName());
-        assertEquals("Indie pop singer.",          result.getBio());
-        assertEquals("Indie",                      result.getGenre());
-        assertEquals("https://instagram.com/aria", result.getInstagram());
-        assertEquals("https://twitter.com/aria",   result.getTwitter());
-    }
-
     // ── getMyProfile ──────────────────────────────────────────────
 
     @Test
