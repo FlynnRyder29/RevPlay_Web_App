@@ -52,6 +52,19 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
     }
 
+    @Transactional
+    public void updateProfilePicture(String email, String pictureUrl) {
+        log.info("Updating profile picture for: {}", email);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
+
+        user.setProfilePictureUrl(pictureUrl);
+        userRepository.save(user);
+
+        log.info("Profile picture updated for: {}", email);
+    }
+
     private UserDTO mapToDTO(User user) {
         return UserDTO.builder()
                 .id(user.getId())

@@ -1,89 +1,148 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head>
-    <title>Profile - RevPlay</title>
-    <link rel="stylesheet" th:href="@{/css/styles.css}">
-    <style>
-        .profile-header {
-            display: flex;
-            align-items: center;
-            gap: 30px;
-            padding: 40px;
-            background: linear-gradient(180deg, #333 0%, var(--bg-dark) 100%);
-        }
-        .profile-pic {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            background-color: #535353;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 50px;
-            color: #b3b3b3;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-        .profile-info h1 {
-            font-size: 48px;
-            margin: 0 0 10px 0;
-        }
-        .profile-container {
-            padding: 0 40px;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-    </style>
-</head>
+
+<head th:replace="~{layout :: head('Profile')}"></head>
+
 <body>
-<div th:replace="~{fragments/navbar :: mainNav}"></div>
+    <div th:replace="~{layout :: page(~{::#profile-content})}">
 
-<div class="profile-header">
-    <div class="profile-pic">
-        <!-- Show initial of display name -->
-        <span th:text="${#strings.substring(user.displayName, 0, 1).toUpperCase()}">U</span>
-    </div>
-    <div class="profile-info">
-        <span style="text-transform: uppercase; font-size: 12px; font-weight: bold;" th:text="${user.role}">LISTENER</span>
-        <h1 th:text="${user.displayName}">Display Name</h1>
-        <p style="color: var(--text-muted);">
-            <span th:text="${user.username}">@username</span> •
-            Joined <span th:text="${joinedDate}">Jan 2026</span>
-        </p>
-    </div>
-</div>
+        <div id="profile-content">
 
-<div class="profile-container">
-    <h2>Edit Profile</h2>
+            <!-- ============ Profile Header ============ -->
+            <div class="profile-header">
+                <div class="profile-pic">
+                    <!-- Show profile picture if available, otherwise initial -->
+                    <img th:if="${user.profilePictureUrl != null}" th:src="${user.profilePictureUrl}"
+                        alt="Profile Picture" class="profile-avatar-img">
+                    <span th:if="${user.profilePictureUrl == null}"
+                        th:text="${#strings.substring(user.displayName, 0, 1).toUpperCase()}">U</span>
+                </div>
+                <div class="profile-info">
+                    <span style="text-transform: uppercase; font-size: 12px; font-weight: bold;"
+                        th:text="${user.role}">LISTENER</span>
+                    <h1 th:text="${user.displayName}">Display Name</h1>
+                    <p style="color: var(--text-muted);">
+                        <span th:text="${user.username}">@username</span> •
+                        Joined <span th:text="${joinedDate}">Jan 2026</span>
+                    </p>
+                </div>
+            </div>
 
-    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+            <div class="profile-container">
 
-    <form th:action="@{/user/profile}" method="post" style="max-width: 500px; background: var(--bg-surface); padding: 30px; border-radius: 8px;">
+                <!-- ============ User Stats (Day 8) ============ -->
+                <div class="profile-stats">
+                    <div class="profile-stat">
+                        <div class="profile-stat-value" th:text="${playlistCount}">0</div>
+                        <div class="profile-stat-label">Playlists</div>
+                    </div>
+                    <div class="profile-stat">
+                        <div class="profile-stat-value" th:text="${favCount}">0</div>
+                        <div class="profile-stat-label">Favorites</div>
+                    </div>
+                </div>
 
-        <div class="form-group">
-            <label>Email (Cannot be changed)</label>
-            <input type="text" class="form-control" th:value="${user.email}" disabled style="opacity: 0.6;"/>
+                <!-- ============ Profile Picture Upload (Day 8) ============ -->
+                <div class="profile-upload-section">
+                    <h3>📷 Profile Picture</h3>
+                    <form th:action="@{/user/profile/picture}" method="post" enctype="multipart/form-data"
+                        id="profilePicForm">
+                        <div class="upload-area">
+                            <!-- Preview -->
+                            <img th:if="${user.profilePictureUrl != null}" th:src="${user.profilePictureUrl}"
+                                alt="Current picture" class="upload-preview" id="uploadPreview">
+                            <div th:if="${user.profilePictureUrl == null}" class="upload-preview-placeholder"
+                                id="uploadPreviewPlaceholder">
+                                <span th:text="${#strings.substring(user.displayName, 0, 1).toUpperCase()}">U</span>
+                            </div>
+
+                            <!-- File Input -->
+                            <div class="file-input-wrapper">
+                                <input type="file" name="profilePicture" id="profilePicInput" accept="image/*">
+                                <label for="profilePicInput" class="file-input-label">Choose Image</label>
+                            </div>
+
+                            <!-- Upload Button -->
+                            <button type="submit" class="btn-upload">Upload</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- ============ Edit Profile ============ -->
+                <h2 style="margin-top: 30px;">Edit Profile</h2>
+
+                <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+                <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+                <form th:action="@{/user/profile}" method="post"
+                    style="max-width: 500px; background: var(--bg-surface); padding: 30px; border-radius: 8px;">
+
+                    <div class="form-group">
+                        <label>Email (Cannot be changed)</label>
+                        <input type="text" class="form-control" th:value="${user.email}" disabled
+                            style="opacity: 0.6;" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="displayName">Display Name</label>
+                        <input type="text" id="displayName" name="displayName" class="form-control"
+                            th:value="${user.displayName}" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bio">Bio</label>
+                        <textarea id="bio" name="bio" class="form-control" rows="4" th:text="${user.bio}"
+                            placeholder="Tell us about yourself..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-primary"
+                        style="margin-top: 10px; width: auto; padding: 10px 30px;">Save Profile</button>
+                </form>
+
+                <!-- Artist Upgrade Button (If listener) -->
+                <div th:if="${user.role.name() == 'LISTENER'}"
+                    style="margin-top: 40px; padding: 20px; border: 1px dashed var(--border-color); border-radius: 8px;">
+                    <h3>Are you a musician?</h3>
+                    <p>Upload your own music, track analytics, and build your fanbase on RevPlay.</p>
+                    <a href="#" class="btn-primary"
+                        style="display: inline-block; width: auto; background: white; color: black; padding: 10px 20px;">
+                        Upgrade to Artist</a>
+                </div>
+            </div>
+
+            <!-- ============ Live Preview Script ============ -->
+            <script>
+                (function () {
+                    var fileInput = document.getElementById('profilePicInput');
+                    if (!fileInput) return;
+
+                    fileInput.addEventListener('change', function (e) {
+                        var file = e.target.files[0];
+                        if (!file || !file.type.startsWith('image/')) return;
+
+                        var reader = new FileReader();
+                        reader.onload = function (ev) {
+                            // Replace placeholder or update existing preview
+                            var preview = document.getElementById('uploadPreview');
+                            var placeholder = document.getElementById('uploadPreviewPlaceholder');
+
+                            if (preview) {
+                                preview.src = ev.target.result;
+                            } else if (placeholder) {
+                                var img = document.createElement('img');
+                                img.src = ev.target.result;
+                                img.className = 'upload-preview';
+                                img.id = 'uploadPreview';
+                                img.alt = 'Preview';
+                                placeholder.parentNode.replaceChild(img, placeholder);
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                })();
+            </script>
         </div>
-
-        <div class="form-group">
-            <label for="displayName">Display Name</label>
-            <input type="text" id="displayName" name="displayName" class="form-control" th:value="${user.displayName}" required/>
-        </div>
-
-        <div class="form-group">
-            <label for="bio">Bio</label>
-            <textarea id="bio" name="bio" class="form-control" rows="4" th:text="${user.bio}" placeholder="Tell us about yourself..."></textarea>
-        </div>
-
-        <button type="submit" class="btn-primary" style="margin-top: 10px; width: auto; padding: 10px 30px;">Save Profile</button>
-    </form>
-
-    <!-- Artist Upgrade Button (If listener) -->
-    <div th:if="${user.role.name() == 'LISTENER'}" style="margin-top: 40px; padding: 20px; border: 1px dashed var(--border-color); border-radius: 8px;">
-        <h3>Are you a musician?</h3>
-        <p>Upload your own music, track analytics, and build your fanbase on RevPlay.</p>
-        <a href="#" class="btn-primary" style="display: inline-block; width: auto; background: white; color: black; padding: 10px 20px;">Upgrade to Artist</a>
     </div>
-</div>
 </body>
+
 </html>

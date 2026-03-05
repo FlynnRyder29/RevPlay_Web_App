@@ -23,102 +23,96 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final CustomUserDetailsService userDetailsService;
+        private final CustomUserDetailsService userDetailsService;
 
-    private final RevPlayAuthenticationEntryPoint authEntryPoint;
-    private final RevPlayAccessDeniedHandler accessDeniedHandler;
+        private final RevPlayAuthenticationEntryPoint authEntryPoint;
+        private final RevPlayAccessDeniedHandler accessDeniedHandler;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-        http
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
+                http
+                                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
 
-                .authorizeHttpRequests(auth -> auth
-                        // ✅ Public pages
-                        .requestMatchers(
-                                "/", "/auth/register", "/auth/login",
-                                "/css/**", "/js/**", "/images/**",
-                                "/api/auth/**",
-                                "/swagger-ui/**", "/v3/api-docs/**",
-                                "/search", "/artist/*"
-                        ).permitAll()
+                                .authorizeHttpRequests(auth -> auth
+                                                // ✅ Public pages
+                                                .requestMatchers(
+                                                                "/", "/auth/register", "/auth/login",
+                                                                "/css/**", "/js/**", "/images/**",
+                                                                "/uploads/**",
+                                                                "/api/auth/**",
+                                                                "/swagger-ui/**", "/v3/api-docs/**",
+                                                                "/search", "/artist/*")
+                                                .permitAll()
 
+                                                // GET — listeners can browse
+                                                .requestMatchers(HttpMethod.GET, "/api/songs/**")
+                                                .authenticated()
 
-                        // GET — listeners can browse
-                        .requestMatchers(HttpMethod.GET, "/api/songs/**")
-                        .authenticated()
+                                                // Modify — only ARTIST
+                                                .requestMatchers(HttpMethod.POST, "/api/songs/**")
+                                                .hasRole("ARTIST")
 
-                        // Modify — only ARTIST
-                        .requestMatchers(HttpMethod.POST, "/api/songs/**")
-                        .hasRole("ARTIST")
+                                                .requestMatchers(HttpMethod.PUT, "/api/songs/**")
+                                                .hasRole("ARTIST")
 
-                        .requestMatchers(HttpMethod.PUT, "/api/songs/**")
-                        .hasRole("ARTIST")
+                                                .requestMatchers(HttpMethod.DELETE, "/api/songs/**")
+                                                .hasRole("ARTIST")
 
-                        .requestMatchers(HttpMethod.DELETE, "/api/songs/**")
-                        .hasRole("ARTIST")
+                                                .requestMatchers(HttpMethod.PATCH, "/api/songs/**")
+                                                .hasRole("ARTIST")
 
-                        .requestMatchers(HttpMethod.PATCH, "/api/songs/**")
-                        .hasRole("ARTIST")
+                                                // ✅ Artist dashboard & analytics
+                                                .requestMatchers("/artist/dashboard/**",
+                                                                "/api/artists/me/**",
+                                                                "/api/artists/analytics/**")
+                                                .hasRole("ARTIST")
 
-                        // ✅ Artist dashboard & analytics
-                        .requestMatchers("/artist/dashboard/**",
-                                "/api/artists/me/**",
-                                "/api/artists/analytics/**")
-                        .hasRole("ARTIST")
+                                                // ✅ Artist album management (Day 5 — Member 5)
+                                                // Double-layer security: SecurityConfig + @PreAuthorize in controller
+                                                .requestMatchers("/api/artists/albums/**")
+                                                .hasRole("ARTIST")
 
-                        // ✅ Artist album management (Day 5 — Member 5)
-                        // Double-layer security: SecurityConfig + @PreAuthorize in controller
-                        .requestMatchers("/api/artists/albums/**")
-                        .hasRole("ARTIST")
+                                                // ✅ Admin
+                                                .requestMatchers("/admin/**").hasRole("ADMIN")
 
+                                                // ✅ Everything else
+                                                .anyRequest().authenticated())
 
-                        // ✅ Admin
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                                .exceptionHandling(ex -> ex
+                                                .defaultAuthenticationEntryPointFor(
+                                                                authEntryPoint,
+                                                                new AntPathRequestMatcher("/api/**"))
+                                                .accessDeniedHandler(accessDeniedHandler))
 
-                        // ✅ Everything else
-                        .anyRequest().authenticated()
-                )
+                                .formLogin(form -> form
+                                                .loginPage("/auth/login")
+                                                .loginProcessingUrl("/auth/login")
+                                                .usernameParameter("emailOrUsername")
+                                                .passwordParameter("password")
+                                                .defaultSuccessUrl("/", true)
+                                                .failureUrl("/auth/login?error=true")
+                                                .permitAll())
 
-                .exceptionHandling(ex -> ex
-                        .defaultAuthenticationEntryPointFor(
-                                authEntryPoint,
-                                new AntPathRequestMatcher("/api/**")
-                        )
-                        .accessDeniedHandler(accessDeniedHandler)
-                )
+                                .logout(logout -> logout
+                                                .logoutUrl("/auth/logout")
+                                                .logoutSuccessUrl("/auth/login?logout=true")
+                                                .deleteCookies("JSESSIONID")
+                                                .permitAll())
 
-                .formLogin(form -> form
-                        .loginPage("/auth/login")
-                        .loginProcessingUrl("/auth/login")
-                        .usernameParameter("emailOrUsername")
-                        .passwordParameter("password")
-                        .defaultSuccessUrl("/", true)
-                        .failureUrl("/auth/login?error=true")
-                        .permitAll()
-                )
+                                .userDetailsService(userDetailsService);
 
-                .logout(logout -> logout
-                        .logoutUrl("/auth/logout")
-                        .logoutSuccessUrl("/auth/login?logout=true")
-                        .deleteCookies("JSESSIONID")
-                        .permitAll()
-                )
+                return http.build();
+        }
 
-                .userDetailsService(userDetailsService);
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
 
-        return http.build();
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
-            throws Exception {
-        return config.getAuthenticationManager();
-    }
+        @Bean
+        public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
+                        throws Exception {
+                return config.getAuthenticationManager();
+        }
 }

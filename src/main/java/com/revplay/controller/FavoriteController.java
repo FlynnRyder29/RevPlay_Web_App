@@ -60,4 +60,17 @@ public class FavoriteController {
 
         return ResponseEntity.ok(favoriteService.getMyFavorites());
     }
+
+    // -------------------------
+    // GET FAVORITE SONG IDS (Day 8)
+    // Lightweight endpoint for AJAX — returns only song IDs
+    // -------------------------
+
+    @GetMapping("/ids")
+    public ResponseEntity<List<Long>> getMyFavoriteSongIds() {
+
+        log.info("GET /api/favorites/ids");
+
+        return ResponseEntity.ok(favoriteService.getMyFavoriteSongIds());
+    }
 }

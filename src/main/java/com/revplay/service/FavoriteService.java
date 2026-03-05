@@ -26,8 +26,8 @@ public class FavoriteService {
     private static final Logger log = LoggerFactory.getLogger(FavoriteService.class);
 
     private final FavoriteRepository favoriteRepository;
-    private final SongRepository     songRepository;
-    private final SecurityUtils      securityUtils;
+    private final SongRepository songRepository;
+    private final SecurityUtils securityUtils;
 
     // -------------------------
     // ADD FAVORITE
@@ -41,8 +41,7 @@ public class FavoriteService {
         User currentUser = securityUtils.getCurrentUser();
 
         Song song = songRepository.findById(songId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Song", "id", songId));
+                .orElseThrow(() -> new ResourceNotFoundException("Song", "id", songId));
 
         if (favoriteRepository.existsByUser_IdAndSong_Id(currentUser.getId(), songId)) {
             throw new BadRequestException(
@@ -70,8 +69,7 @@ public class FavoriteService {
 
         Favorite favorite = favoriteRepository
                 .findByUser_IdAndSong_Id(currentUser.getId(), songId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Favorite", "songId", songId));
+                .orElseThrow(() -> new ResourceNotFoundException("Favorite", "songId", songId));
 
         favoriteRepository.delete(favorite);
 
@@ -94,6 +92,23 @@ public class FavoriteService {
                 .findByUser_IdOrderByCreatedAtDesc(currentUser.getId())
                 .stream()
                 .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    // -------------------------
+    // GET MY FAVORITE SONG IDS (Day 8)
+    // Lightweight — returns only song IDs for AJAX pre-marking
+    // -------------------------
+
+    @Transactional(readOnly = true)
+    public List<Long> getMyFavoriteSongIds() {
+
+        User currentUser = securityUtils.getCurrentUser();
+
+        return favoriteRepository
+                .findByUser_Id(currentUser.getId())
+                .stream()
+                .map(f -> f.getSong().getId())
                 .collect(Collectors.toList());
     }
 

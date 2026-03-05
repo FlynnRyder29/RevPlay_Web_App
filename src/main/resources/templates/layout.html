@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <head th:fragment="head(title)">
     <meta charset="UTF-8">
@@ -10,7 +9,7 @@
 
     <!-- Theme init (prevents FOUC) -->
     <script>
-        (function(){
+        (function () {
             var t = localStorage.getItem('revplay-theme');
             if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
         })();
@@ -19,37 +18,38 @@
     <link rel="stylesheet" th:href="@{/css/styles.css}">
     <script th:src="@{/js/theme.js}" defer></script>
     <script th:src="@{/js/player.js}" defer></script>
+    <script th:src="@{/js/favorites.js}" defer></script>
 </head>
 
 
 <body>
-<div th:fragment="page(content)">
-    <div class="app-container">
+    <div th:fragment="page(content)">
+        <div class="app-container">
 
-        <!-- Top Navbar -->
-        <div th:replace="~{fragments/navbar :: mainNav}"></div>
+            <!-- Top Navbar -->
+            <div th:replace="~{fragments/navbar :: mainNav}"></div>
 
-        <!-- Main Area: Sidebar + Content -->
-        <div class="main-content">
+            <!-- Main Area: Sidebar + Content -->
+            <div class="main-content">
 
-            <!-- Side Drawer Navigation -->
-            <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+                <!-- Side Drawer Navigation -->
+                <div th:replace="~{fragments/sidebar :: sidebar}"></div>
 
-            <!-- Scrollable Content Area -->
-            <main class="content-area">
-                <th:block th:replace="${content}"></th:block>
+                <!-- Scrollable Content Area -->
+                <main class="content-area">
+                    <th:block th:replace="${content}"></th:block>
 
-                <!-- Footer -->
-                <div th:replace="~{fragments/footer :: mainFooter}"
-                     style="margin-top: 50px;"></div>
-            </main>
-        </div>
+                    <!-- Footer -->
+                    <div th:replace="~{fragments/footer :: mainFooter}" style="margin-top: 50px;"></div>
+                </main>
+            </div>
 
-        <!-- Player Bar (authenticated only) -->
-        <div sec:authorize="isAuthenticated()">
-            <div th:replace="~{fragments/player-bar :: player}"></div>
+            <!-- Player Bar (authenticated only) -->
+            <div sec:authorize="isAuthenticated()">
+                <div th:replace="~{fragments/player-bar :: player}"></div>
+            </div>
         </div>
     </div>
-</div>
 </body>
+
 </html>

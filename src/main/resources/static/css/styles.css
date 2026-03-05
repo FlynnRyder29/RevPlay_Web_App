@@ -3,7 +3,8 @@
     --bg-dark: #121212;
     --bg-surface: #282828;
     --bg-surface-hover: #3E3E3E;
-    --primary-color: #d75209; /* Spotify Green */
+    --primary-color: #d75209;
+    /* Spotify Green */
     --primary-hover: #fd8106;
     --text-main: #FFFFFF;
     --text-muted: #B3B3B3;
@@ -38,7 +39,7 @@ a:hover {
     padding: 40px;
     background-color: var(--bg-surface);
     border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
 }
 
 .auth-container h1 {
@@ -103,16 +104,19 @@ a:hover {
     text-align: center;
     margin-bottom: 20px;
 }
+
 .alert-error {
     background-color: rgba(226, 33, 52, 0.2);
     color: #ff4d4d;
     border: 1px solid var(--error-color);
 }
+
 .alert-success {
     background-color: rgba(29, 185, 84, 0.2);
     color: var(--primary-color);
     border: 1px solid var(--primary-color);
 }
+
 .text-danger {
     color: #ff4d4d;
     font-size: 12px;
@@ -178,7 +182,8 @@ a:hover {
     border-radius: 8px;
     transition: background-color 0.3s;
     cursor: pointer;
-    position: relative;          /* already there, keeping for clarity */
+    position: relative;
+    /* already there, keeping for clarity */
 }
 
 .song-card:hover {
@@ -191,8 +196,9 @@ a:hover {
     object-fit: cover;
     border-radius: 4px;
     margin-bottom: 15px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    display: block;              /* ← FIX: removes inline image bottom gap */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    display: block;
+    /* ← FIX: removes inline image bottom gap */
 }
 
 .song-title {
@@ -215,11 +221,13 @@ a:hover {
 .play-button-overlay {
     position: absolute;
     right: 22px;
-    bottom: 58px;                   /* ← dynamic, scales with card */
+    bottom: 58px;
+    /* ← dynamic, scales with card */
     top: auto;
     width: 48px;
     height: 48px;
-    background-color: transparent;  /* ← KEY FIX: no solid orange circle */
+    background-color: transparent;
+    /* ← KEY FIX: no solid orange circle */
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -227,9 +235,11 @@ a:hover {
     opacity: 0;
     transform: translateY(8px);
     transition: opacity 0.3s ease, transform 0.3s ease;
-    box-shadow: none;               /* ← remove shadow from wrapper */
+    box-shadow: none;
+    /* ← remove shadow from wrapper */
     z-index: 2;
-    pointer-events: none;           /* ← clicks pass through to .song-card */
+    pointer-events: none;
+    /* ← clicks pass through to .song-card */
 }
 
 
@@ -280,14 +290,18 @@ a:hover {
 .control-btn {
     background: none;
     border: none;
-    padding: 0;                  /* ← FIX: remove browser default padding */
-    margin: 0;                   /* ← FIX: remove browser default margin */
-    line-height: 1;              /* ← FIX: prevent line-height expanding button */
+    padding: 0;
+    /* ← FIX: remove browser default padding */
+    margin: 0;
+    /* ← FIX: remove browser default margin */
+    line-height: 1;
+    /* ← FIX: prevent line-height expanding button */
     color: var(--text-muted);
     font-size: 20px;
     cursor: pointer;
     transition: color 0.2s, transform 0.15s;
-    display: inline-flex;        /* ← FIX: flex centers icon content properly */
+    display: inline-flex;
+    /* ← FIX: flex centers icon content properly */
     align-items: center;
     justify-content: center;
 }
@@ -301,7 +315,8 @@ a:hover {
     height: 36px;
     min-width: 36px;
     min-height: 36px;
-    background-color: transparent;   /* ← KEY FIX: no white circle */
+    background-color: transparent;
+    /* ← KEY FIX: no white circle */
     border: none;
     border-radius: 50%;
     display: flex;
@@ -316,7 +331,8 @@ a:hover {
 
 .control-play:hover {
     transform: scale(1.1);
-    background-color: transparent;   /* ← keep transparent on hover */
+    background-color: transparent;
+    /* ← keep transparent on hover */
     color: #000;
 }
 
@@ -346,7 +362,8 @@ a:hover {
     height: 100%;
     background-color: var(--text-main);
     border-radius: 2px;
-    width: 0%; /* JS will update this */
+    width: 0%;
+    /* JS will update this */
 }
 
 .player-right {
@@ -702,7 +719,7 @@ a.page-num:hover {
     flex-direction: column;
     overflow: hidden;
     transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 50;
 }
 
@@ -731,7 +748,7 @@ a.page-num:hover {
     padding: 8px 12px;
 }
 
-.sidebar-section + .sidebar-section {
+.sidebar-section+.sidebar-section {
     border-top: 1px solid rgba(255, 255, 255, 0.06);
     margin-top: 4px;
     padding-top: 12px;
@@ -766,8 +783,8 @@ a.page-num:hover {
     white-space: nowrap;
     cursor: pointer;
     transition: background-color 0.2s ease,
-    color 0.2s ease,
-    transform 0.15s ease;
+        color 0.2s ease,
+        transform 0.15s ease;
     position: relative;
 }
 
@@ -824,7 +841,7 @@ a.page-num:hover {
     opacity: 0;
     transform: translateX(-8px);
     transition: opacity 0.2s ease 0.1s,
-    transform 0.2s ease 0.1s;
+        transform 0.2s ease 0.1s;
 }
 
 .sidebar:hover .sidebar-label {
@@ -838,7 +855,7 @@ a.page-num:hover {
     object-fit: contain;
     filter: brightness(0.7);
     transition: filter 0.25s ease,
-    transform 0.2s ease;
+        transform 0.2s ease;
 }
 
 /* Brighten icon on hover */
@@ -848,26 +865,19 @@ a.page-num:hover {
 
 /* Active page — tint icon with primary color */
 .sidebar-item--active .sidebar-icon-img {
-    filter: brightness(1)
-    sepia(1)
-    saturate(5)
-    hue-rotate(350deg);  /* Shifts to your orange/primary */
+    filter: brightness(1) sepia(1) saturate(5) hue-rotate(350deg);
+    /* Shifts to your orange/primary */
 }
 
 /* CTA icon (Sign Up) — always tinted */
 .sidebar-icon-img--cta {
-    filter: brightness(1)
-    sepia(1)
-    saturate(5)
-    hue-rotate(350deg);
+    filter: brightness(1) sepia(1) saturate(5) hue-rotate(350deg);
 }
 
 /* Logout icon — red tint on hover */
 .sidebar-logout-btn:hover .sidebar-icon-img {
-    filter: brightness(1)
-    sepia(1)
-    saturate(10)
-    hue-rotate(320deg);  /* Red shift */
+    filter: brightness(1) sepia(1) saturate(10) hue-rotate(320deg);
+    /* Red shift */
 }
 
 /* Emoji fallback styling */
@@ -1103,11 +1113,9 @@ a.page-num:hover {
     transform: translateX(-50%);
     width: 600px;
     height: 400px;
-    background: radial-gradient(
-            ellipse,
+    background: radial-gradient(ellipse,
             rgba(215, 82, 9, 0.15) 0%,
-            transparent 70%
-    );
+            transparent 70%);
     pointer-events: none;
     z-index: 0;
 }
@@ -1372,19 +1380,14 @@ a.page-num:hover {
     width: 26px;
     height: 26px;
     object-fit: contain;
-    filter: brightness(1)
-    sepia(1)
-    saturate(5)
-    hue-rotate(350deg);  /* Tint to primary color */
+    filter: brightness(1) sepia(1) saturate(5) hue-rotate(350deg);
+    /* Tint to primary color */
     transition: transform 0.3s ease, filter 0.3s ease;
 }
 
 .nav-brand:hover .brand-icon-img {
     transform: rotate(-10deg) scale(1.1);
-    filter: brightness(1.2)
-    sepia(1)
-    saturate(5)
-    hue-rotate(350deg);
+    filter: brightness(1.2) sepia(1) saturate(5) hue-rotate(350deg);
 }
 
 /* ── Search Icon (Navbar) ────────────────────────── */
@@ -1408,7 +1411,7 @@ a.page-num:hover {
 }
 
 /* Brighten search icon when input is focused */
-.nav-search-input:focus ~ .nav-search-icon .nav-search-icon-img,
+.nav-search-input:focus~.nav-search-icon .nav-search-icon-img,
 .nav-search-form:focus-within .nav-search-icon-img {
     filter: brightness(1);
 }
@@ -1419,7 +1422,8 @@ a.page-num:hover {
     width: 18px;
     height: 18px;
     object-fit: contain;
-    display: block;              /* ← FIX: removes 3-4px inline bottom gap */
+    display: block;
+    /* ← FIX: removes 3-4px inline bottom gap */
     filter: brightness(0.7);
     transition: filter 0.2s ease, transform 0.15s ease;
     pointer-events: none;
@@ -1432,18 +1436,22 @@ a.page-num:hover {
 
 /* Play/Pause button — larger icon */
 .control-play .player-icon-img {
-    width: 36px;                     /* ← fill entire button */
+    width: 36px;
+    /* ← fill entire button */
     height: 36px;
     display: block;
-    filter: none;                    /* ← KEY FIX: no brightness(0) — show gradient */
+    filter: none;
+    /* ← KEY FIX: no brightness(0) — show gradient */
     pointer-events: none;
     object-fit: contain;
     transition: transform 0.15s ease, filter 0.15s ease;
 }
 
 .control-play:hover .player-icon-img {
-    filter: brightness(1.1);         /* ← slight glow on hover */
-    transform: none;                 /* ← button itself scales, not icon */
+    filter: brightness(1.1);
+    /* ← slight glow on hover */
+    transform: none;
+    /* ← button itself scales, not icon */
 }
 
 /* Emoji fallback inside play circle */
@@ -1457,28 +1465,26 @@ a.page-num:hover {
 
 /* Active state for shuffle/repeat (when toggled on) */
 .control-btn.active .player-icon-img {
-    filter: brightness(1)
-    sepia(1)
-    saturate(5)
-    hue-rotate(350deg);  /* Primary color tint */
+    filter: brightness(1) sepia(1) saturate(5) hue-rotate(350deg);
+    /* Primary color tint */
 }
 
 /* Favorite button in player */
 .player-fav-btn .player-icon-img {
     width: 18px;
     height: 18px;
-    filter: brightness(0.7);        /* keep dimmed for heart icon */
+    filter: brightness(0.7);
+    /* keep dimmed for heart icon */
 }
 
 .player-fav-btn:hover .player-icon-img {
-    filter: brightness(1);          /* ← brighten, don't recolor */
+    filter: brightness(1);
+    /* ← brighten, don't recolor */
 }
 
 .player-fav-btn.favorited .player-icon-img {
-    filter: brightness(1)
-    sepia(1)
-    saturate(10)
-    hue-rotate(320deg);     /* red tint when favorited */
+    filter: brightness(1) sepia(1) saturate(10) hue-rotate(320deg);
+    /* red tint when favorited */
 }
 
 /* Volume icon */
@@ -1502,19 +1508,24 @@ a.page-num:hover {
 /* ── Song Card Play Icon ─────────────────────────── */
 
 .card-play-icon {
-    width: 48px;                    /* ← fill entire overlay area */
+    width: 48px;
+    /* ← fill entire overlay area */
     height: 48px;
     object-fit: contain;
     display: block;
-    filter: none;                   /* ← KEY FIX: show original gradient colors */
+    filter: none;
+    /* ← KEY FIX: show original gradient colors */
     pointer-events: none;
-    border-radius: 50%;             /* ← clean circle clipping */
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);  /* ← shadow on icon itself */
+    border-radius: 50%;
+    /* ← clean circle clipping */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+    /* ← shadow on icon itself */
     transition: transform 0.2s ease, filter 0.15s ease;
 }
 
 .song-card:hover .card-play-icon {
-    filter: brightness(1.05);       /* ← subtle glow on hover */
+    filter: brightness(1.05);
+    /* ← subtle glow on hover */
     transform: scale(1.05);
 }
 
@@ -1526,7 +1537,8 @@ a.page-num:hover {
     height: 48px;
     background-color: var(--primary-color);
     border-radius: 50%;
-    display: none;                  /* shown by onerror */
+    display: none;
+    /* shown by onerror */
     align-items: center;
     justify-content: center;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
@@ -1546,10 +1558,7 @@ a.page-num:hover {
     width: 22px;
     height: 22px;
     object-fit: contain;
-    filter: brightness(1)
-    sepia(1)
-    saturate(5)
-    hue-rotate(350deg);
+    filter: brightness(1) sepia(1) saturate(5) hue-rotate(350deg);
 }
 
 .social-icon-img {
@@ -1643,10 +1652,7 @@ a.page-num:hover {
 
 /* Active state (shuffle/repeat toggled on) */
 .page-ctrl-secondary.active .page-ctrl-icon {
-    filter: brightness(1)
-    sepia(1)
-    saturate(5)
-    hue-rotate(350deg);
+    filter: brightness(1) sepia(1) saturate(5) hue-rotate(350deg);
 }
 
 /* ── Page Play/Pause — Large circular gradient icon ── */
@@ -1656,7 +1662,8 @@ a.page-num:hover {
     height: 64px;
     min-width: 64px;
     min-height: 64px;
-    background-color: transparent;  /* ← no extra circle */
+    background-color: transparent;
+    /* ← no extra circle */
     border: none;
     border-radius: 50%;
     display: flex;
@@ -1674,9 +1681,11 @@ a.page-num:hover {
 
 /* The gradient icon IS the button */
 .page-play-icon {
-    width: 64px !important;         /* override .player-icon-img */
+    width: 64px !important;
+    /* override .player-icon-img */
     height: 64px !important;
-    filter: none !important;         /* show full gradient colors */
+    filter: none !important;
+    /* show full gradient colors */
     display: block;
     border-radius: 50%;
     box-shadow: 0 4px 20px rgba(215, 82, 9, 0.3);
@@ -1778,7 +1787,7 @@ a.page-num:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, rgba(215,82,9,0.3), rgba(215,82,9,0.1));
+    background: linear-gradient(135deg, rgba(215, 82, 9, 0.3), rgba(215, 82, 9, 0.1));
     border-radius: 8px;
 }
 
@@ -1914,7 +1923,7 @@ a.page-num:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, rgba(215,82,9,0.4), rgba(215,82,9,0.15));
+    background: linear-gradient(135deg, rgba(215, 82, 9, 0.4), rgba(215, 82, 9, 0.15));
     border-radius: 8px;
     flex-shrink: 0;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
@@ -1968,7 +1977,7 @@ a.page-num:hover {
     grid-template-columns: 40px 1fr 200px 60px;
     gap: 16px;
     padding: 8px 16px;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -2073,7 +2082,7 @@ a.page-num:hover {
 .artist-banner-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(transparent 30%, rgba(18,18,18,0.9) 100%);
+    background: linear-gradient(transparent 30%, rgba(18, 18, 18, 0.9) 100%);
 }
 
 .artist-profile-section {
@@ -2185,7 +2194,7 @@ a.page-num:hover {
     object-fit: cover;
     border-radius: 4px;
     margin-bottom: 12px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 .album-card-name {
@@ -2308,7 +2317,7 @@ a.page-num:hover {
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 1px;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     white-space: nowrap;
 }
 
@@ -2322,7 +2331,7 @@ a.page-num:hover {
 
 .dashboard-table td {
     padding: 12px 16px;
-    border-bottom: 1px solid rgba(255,255,255,0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
     color: var(--text-main);
 }
 
@@ -2462,6 +2471,7 @@ a.page-num:hover {
         font-size: 13px;
     }
 }
+
 /* ═══════════════════════════════════════════════════════════════
    ██████████████████████████████████████████████████████████████
    THEME SYSTEM — Dark / Light Toggle
@@ -2480,32 +2490,32 @@ a.page-num:hover {
 
 :root {
     /* Structural backgrounds (previously hardcoded) */
-    --bg-navbar:         #000000;
-    --bg-sidebar:        #000000;
-    --bg-player:         #181818;
-    --bg-footer:         #000000;
-    --bg-input:          var(--bg-dark);
+    --bg-navbar: #000000;
+    --bg-sidebar: #000000;
+    --bg-player: #181818;
+    --bg-footer: #000000;
+    --bg-input: var(--bg-dark);
     --bg-gradient-start: #1a1a1a;
 
     /* UI elements */
-    --progress-bg:       #535353;
-    --shadow-color:      rgba(0, 0, 0, 0.5);
-    --divider-subtle:    rgba(255, 255, 255, 0.06);
+    --progress-bg: #535353;
+    --shadow-color: rgba(0, 0, 0, 0.5);
+    --divider-subtle: rgba(255, 255, 255, 0.06);
 
     /* Control play button */
-    --control-play-bg:    var(--text-main);
+    --control-play-bg: var(--text-main);
     --control-play-color: #000000;
 
     /* Icon filter presets (dark mode defaults) */
-    --icon-filter:          brightness(0.7);
-    --icon-filter-hover:    brightness(1);
-    --icon-filter-active:   brightness(1) sepia(1) saturate(5) hue-rotate(350deg);
-    --icon-filter-cta:      brightness(1) sepia(1) saturate(5) hue-rotate(350deg);
-    --icon-filter-danger:   brightness(1) sepia(1) saturate(10) hue-rotate(320deg);
+    --icon-filter: brightness(0.7);
+    --icon-filter-hover: brightness(1);
+    --icon-filter-active: brightness(1) sepia(1) saturate(5) hue-rotate(350deg);
+    --icon-filter-cta: brightness(1) sepia(1) saturate(5) hue-rotate(350deg);
+    --icon-filter-danger: brightness(1) sepia(1) saturate(10) hue-rotate(320deg);
 
     /* Scrollbar */
-    --scrollbar-thumb:   #535353;
-    --scrollbar-track:   transparent;
+    --scrollbar-thumb: #535353;
+    --scrollbar-track: transparent;
 }
 
 
@@ -2513,43 +2523,43 @@ a.page-num:hover {
 
 [data-theme="light"] {
     /* Core palette */
-    --bg-dark:           #e5e8d1;
-    --bg-surface:        #f2f4e6;
-    --bg-surface-hover:  #dfe2ce;
-    --primary-color:     #099c88;
-    --primary-hover:     #07b89e;
-    --text-main:         #1a1a1a;
-    --text-muted:        #5a5e4e;
-    --border-color:      #bfc3af;
-    --error-color:       #c0392b;
+    --bg-dark: #e5e8d1;
+    --bg-surface: #f2f4e6;
+    --bg-surface-hover: #dfe2ce;
+    --primary-color: #099c88;
+    --primary-hover: #07b89e;
+    --text-main: #1a1a1a;
+    --text-muted: #5a5e4e;
+    --border-color: #bfc3af;
+    --error-color: #c0392b;
 
     /* Structural backgrounds */
-    --bg-navbar:         #d5d9c4;
-    --bg-sidebar:        #d5d9c4;
-    --bg-player:         #cdd1bc;
-    --bg-footer:         #d5d9c4;
-    --bg-input:          #f7f9ec;
+    --bg-navbar: #d5d9c4;
+    --bg-sidebar: #d5d9c4;
+    --bg-player: #cdd1bc;
+    --bg-footer: #d5d9c4;
+    --bg-input: #f7f9ec;
     --bg-gradient-start: #dce0cb;
 
     /* UI elements */
-    --progress-bg:       #b0b4a0;
-    --shadow-color:      rgba(0, 0, 0, 0.08);
-    --divider-subtle:    rgba(0, 0, 0, 0.08);
+    --progress-bg: #b0b4a0;
+    --shadow-color: rgba(0, 0, 0, 0.08);
+    --divider-subtle: rgba(0, 0, 0, 0.08);
 
     /* Control play */
-    --control-play-bg:    var(--text-main);
+    --control-play-bg: var(--text-main);
     --control-play-color: #FFFFFF;
 
     /* Icon filters (light mode — darker icons, teal tint) */
-    --icon-filter:          brightness(0.4);
-    --icon-filter-hover:    brightness(0.15);
-    --icon-filter-active:   brightness(0.8) sepia(1) saturate(5) hue-rotate(145deg);
-    --icon-filter-cta:      brightness(0.8) sepia(1) saturate(5) hue-rotate(145deg);
-    --icon-filter-danger:   brightness(1) sepia(1) saturate(10) hue-rotate(320deg);
+    --icon-filter: brightness(0.4);
+    --icon-filter-hover: brightness(0.15);
+    --icon-filter-active: brightness(0.8) sepia(1) saturate(5) hue-rotate(145deg);
+    --icon-filter-cta: brightness(0.8) sepia(1) saturate(5) hue-rotate(145deg);
+    --icon-filter-danger: brightness(1) sepia(1) saturate(10) hue-rotate(320deg);
 
     /* Scrollbar */
-    --scrollbar-thumb:   #b0b4a0;
-    --scrollbar-track:   var(--bg-dark);
+    --scrollbar-thumb: #b0b4a0;
+    --scrollbar-track: var(--bg-dark);
 }
 
 
@@ -2577,9 +2587,9 @@ a.page-num:hover {
 .theme-transitions .progress-bar-fill,
 .theme-transitions .theme-toggle-btn {
     transition: background-color 0.4s ease,
-    color 0.4s ease,
-    border-color 0.4s ease,
-    box-shadow 0.4s ease;
+        color 0.4s ease,
+        border-color 0.4s ease,
+        box-shadow 0.4s ease;
 }
 
 
@@ -2603,9 +2613,9 @@ a.page-num:hover {
     overflow: hidden;
     color: var(--text-muted);
     transition: background-color 0.3s ease,
-    border-color 0.3s ease,
-    transform 0.2s ease,
-    box-shadow 0.3s ease;
+        border-color 0.3s ease,
+        transform 0.2s ease,
+        box-shadow 0.3s ease;
 }
 
 .theme-toggle-btn:hover {
@@ -2634,7 +2644,7 @@ a.page-num:hover {
     align-items: center;
     justify-content: center;
     transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .theme-icon svg {
@@ -2751,7 +2761,7 @@ a.page-num:hover {
     border-right-color: var(--border-color);
 }
 
-[data-theme="light"] .sidebar-section + .sidebar-section {
+[data-theme="light"] .sidebar-section+.sidebar-section {
     border-top-color: var(--divider-subtle);
 }
 
@@ -2809,11 +2819,9 @@ a.page-num:hover {
 /* ── Content Area ─────────────────────────────────────────── */
 
 [data-theme="light"] .content-area {
-    background: linear-gradient(
-            180deg,
+    background: linear-gradient(180deg,
             var(--bg-gradient-start) 0%,
-            var(--bg-dark) 300px
-    );
+            var(--bg-dark) 300px);
 }
 
 
@@ -2823,15 +2831,14 @@ a.page-num:hover {
     filter: var(--icon-filter-cta);
 }
 
-[data-theme="light"] .
 
-    /* ═══════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════
        THEME FIXES — Light Mode Component Corrections
        Issues: Footer text, Player bar text, Sidebar icons/hover
        ═══════════════════════════════════════════════════════════════ */
 
 
-    /* ── FIX 1: FOOTER — Text Visibility ─────────────────────── */
+/* ── FIX 1: FOOTER — Text Visibility ─────────────────────── */
 
 [data-theme="light"] .site-footer {
     background-color: var(--bg-footer);
@@ -3252,11 +3259,9 @@ a.page-num:hover {
 /* ── Hero Section (Guest Landing) ─────────────────────────── */
 
 [data-theme="light"] .hero-glow {
-    background: radial-gradient(
-            ellipse,
+    background: radial-gradient(ellipse,
             rgba(9, 156, 136, 0.12) 0%,
-            transparent 70%
-    );
+            transparent 70%);
 }
 
 [data-theme="light"] .hero-title {
@@ -3659,4 +3664,581 @@ a.page-num:hover {
         text-align: center;
         padding: 15px 20px;
     }
+
+    /* Day 8 — Additional mobile rules */
+
+    /* Song grid: 2 columns on mobile */
+    .song-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    /* Player bar: compact layout */
+    .player-bar {
+        height: 70px;
+        padding: 0 12px;
+    }
+
+    .player-left {
+        width: 40%;
+        gap: 8px;
+    }
+
+    .player-left img,
+    .player-album-art {
+        width: 42px;
+        height: 42px;
+    }
+
+    .player-track-title {
+        font-size: 12px;
+    }
+
+    .player-track-artist {
+        font-size: 11px;
+    }
+
+    .player-center {
+        width: 30%;
+    }
+
+    .player-controls {
+        gap: 10px;
+    }
+
+    /* Hide shuffle/repeat in bar on mobile */
+    .player-bar #btn-shuffle,
+    .player-bar #btn-repeat {
+        display: none;
+    }
+
+    .progress-container {
+        display: none;
+    }
+
+    .player-right {
+        width: 30%;
+        gap: 8px;
+    }
+
+    .volume-bar {
+        display: none;
+    }
+
+    /* Library controls: stack */
+    .library-controls {
+        flex-direction: column;
+    }
+
+    .search-form {
+        min-width: 100%;
+    }
+
+    .genre-filter-form {
+        min-width: 100%;
+    }
+
+    /* Auth form: tighter padding */
+    .auth-container {
+        margin: 20px auto;
+        padding: 25px 20px;
+    }
+
+    /* Profile header: stack vertically */
+    .profile-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 25px 20px;
+        gap: 15px;
+    }
+
+    .profile-pic,
+    .profile-avatar-img {
+        width: 100px;
+        height: 100px;
+        font-size: 36px;
+    }
+
+    .profile-info h1 {
+        font-size: 28px;
+    }
+
+    .profile-container {
+        padding: 0 20px;
+    }
+
+    /* Player page: smaller album art */
+    .player-hero-art {
+        width: 220px;
+        height: 220px;
+    }
+
+    .player-hero-title {
+        font-size: 1.3rem;
+    }
+
+    .player-page-controls {
+        gap: 15px;
+    }
+
+    .page-ctrl-play {
+        width: 52px;
+        height: 52px;
+        min-width: 52px;
+        min-height: 52px;
+    }
+
+    .page-play-icon {
+        width: 52px !important;
+        height: 52px !important;
+    }
+
+    /* Search page */
+    .search-page-form {
+        flex-direction: column;
+    }
+
+    /* Greeting */
+    .greeting-text {
+        font-size: 1.5rem;
+    }
+
+    /* Album grid */
+    .album-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   DAY 8 — Tablet Breakpoint (1024px)
+   ═══════════════════════════════════════════════════════ */
+
+@media (max-width: 1024px) and (min-width: 769px) {
+
+    /* Song grid: 3 columns for tablet */
+    .song-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+    }
+
+    /* Album grid: 3 columns */
+    .album-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+    }
+
+    /* Player bar: balanced sizing */
+    .player-bar {
+        padding: 0 15px;
+    }
+
+    .player-left {
+        width: 28%;
+    }
+
+    .player-center {
+        width: 44%;
+    }
+
+    .player-right {
+        width: 28%;
+    }
+
+    /* Artist banner: slightly shorter */
+    .artist-banner {
+        height: 250px;
+    }
+
+    .artist-name {
+        font-size: 2.2rem;
+    }
+
+    .artist-avatar-img,
+    .artist-avatar-fallback {
+        width: 120px;
+        height: 120px;
+        font-size: 48px;
+    }
+
+    /* Queue sidebar: narrower */
+    .queue-sidebar {
+        width: 250px;
+    }
+
+    /* Stats grid: 2 columns */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Sidebar: slightly narrower expanded */
+    .sidebar:hover {
+        width: 200px;
+        min-width: 200px;
+    }
+
+    /* Content padding */
+    .content-area {
+        padding: 25px;
+    }
+
+    /* Hero section */
+    .hero-title {
+        font-size: 2.8rem;
+    }
+
+    .hero-features {
+        gap: 25px;
+    }
+
+    /* Playlist detail */
+    .playlist-detail-name {
+        font-size: 2rem;
+    }
+
+    .playlist-detail-icon {
+        width: 140px;
+        height: 140px;
+        font-size: 60px;
+    }
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   DAY 8 — Small Mobile Breakpoint (480px)
+   ═══════════════════════════════════════════════════════ */
+
+@media (max-width: 480px) {
+
+    /* Song grid: 2 columns with less gap */
+    .song-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .song-card {
+        padding: 10px;
+    }
+
+    .song-card img {
+        margin-bottom: 10px;
+    }
+
+    .song-title {
+        font-size: 13px;
+    }
+
+    .song-artist {
+        font-size: 12px;
+    }
+
+    /* Navbar: compact */
+    .navbar {
+        padding: 10px 15px;
+    }
+
+    .nav-brand {
+        font-size: 18px;
+    }
+
+    /* Player bar: minimal */
+    .player-bar {
+        height: 60px;
+        padding: 0 10px;
+    }
+
+    .player-left img,
+    .player-album-art {
+        width: 36px;
+        height: 36px;
+    }
+
+    .control-play {
+        width: 30px;
+        height: 30px;
+        min-width: 30px;
+        min-height: 30px;
+    }
+
+    .control-play .player-icon-img {
+        width: 30px;
+        height: 30px;
+    }
+
+    /* Hero */
+    .hero-title {
+        font-size: 1.8rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+
+    .hero-cta {
+        padding: 12px 32px;
+        font-size: 0.95rem;
+    }
+
+    /* Profile */
+    .profile-pic,
+    .profile-avatar-img {
+        width: 80px;
+        height: 80px;
+        font-size: 28px;
+    }
+
+    .profile-info h1 {
+        font-size: 22px;
+    }
+
+    /* Player page */
+    .player-hero-art {
+        width: 180px;
+        height: 180px;
+    }
+
+    .player-hero-title {
+        font-size: 1.1rem;
+    }
+
+    .page-ctrl-play {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .page-play-icon {
+        width: 44px !important;
+        height: 44px !important;
+    }
+
+    /* Playlist detail */
+    .playlist-detail-icon {
+        width: 100px;
+        height: 100px;
+        font-size: 40px;
+    }
+
+    .playlist-detail-name {
+        font-size: 1.5rem;
+    }
+
+    /* Dashboard */
+    .dashboard-header h1 {
+        font-size: 1.6rem;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+    }
+
+    /* Library header */
+    .library-header h1 {
+        font-size: 1.6rem;
+    }
+
+    /* Auth container */
+    .auth-container {
+        margin: 10px;
+        padding: 20px 15px;
+        border-radius: 8px;
+    }
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   DAY 8 — Song Card Favorite Button
+   ═══════════════════════════════════════════════════════ */
+
+.song-card-fav-btn {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--text-muted);
+    transition: color 0.2s, transform 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    opacity: 0;
+    border-radius: 50%;
+    padding: 0;
+}
+
+.song-card:hover .song-card-fav-btn {
+    opacity: 1;
+}
+
+.song-card-fav-btn:hover {
+    color: #ff4d4d;
+    transform: scale(1.2);
+}
+
+.song-card-fav-btn.favorited {
+    color: #ff4d4d;
+    opacity: 1;
+}
+
+.song-card-fav-btn.favorited:hover {
+    color: #ff6b6b;
+}
+
+/* Light theme */
+[data-theme="light"] .song-card-fav-btn {
+    color: #5a5e4e;
+}
+
+[data-theme="light"] .song-card-fav-btn:hover {
+    color: #e22134;
+}
+
+[data-theme="light"] .song-card-fav-btn.favorited {
+    color: #e22134;
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   DAY 8 — Enhanced Profile Page
+   ═══════════════════════════════════════════════════════ */
+
+.profile-avatar-img {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+.profile-upload-section {
+    margin-top: 30px;
+    padding: 25px;
+    background: var(--bg-surface);
+    border-radius: 8px;
+}
+
+.profile-upload-section h3 {
+    margin: 0 0 15px;
+    font-size: 1.1rem;
+}
+
+.upload-area {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.upload-preview {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--border-color);
+}
+
+.upload-preview-placeholder {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--bg-surface-hover);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: var(--text-muted);
+    border: 2px dashed var(--border-color);
+}
+
+.file-input-wrapper {
+    position: relative;
+}
+
+.file-input-wrapper input[type="file"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.file-input-label {
+    display: inline-block;
+    padding: 10px 20px;
+    background: var(--bg-surface-hover);
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-main);
+    transition: background-color 0.2s;
+}
+
+.file-input-label:hover {
+    background: var(--primary-color);
+    color: #000;
+}
+
+.btn-upload {
+    padding: 10px 24px;
+    background-color: var(--primary-color);
+    color: #000;
+    border: none;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn-upload:hover {
+    background-color: var(--primary-hover);
+    transform: scale(1.03);
+}
+
+/* Profile stats row */
+.profile-stats {
+    display: flex;
+    gap: 30px;
+    margin: 25px 0;
+    padding: 20px;
+    background: var(--bg-surface);
+    border-radius: 8px;
+}
+
+.profile-stat {
+    text-align: center;
+}
+
+.profile-stat-value {
+    font-size: 1.8rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--text-main), var(--primary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+
+.profile-stat-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Light theme profile */
+[data-theme="light"] .btn-upload {
+    color: #FFFFFF;
+}
+
+[data-theme="light"] .file-input-label:hover {
+    color: #FFFFFF;
 }

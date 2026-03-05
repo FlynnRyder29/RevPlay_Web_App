@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
 
 <div th:fragment="card(song)" class="song-card"
@@ -18,6 +19,13 @@
              onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
         <span class="icon-fallback card-play-fallback" style="display:none;">▶</span>
     </div>
+
+    <!-- Favorite button (Day 8) — visible on hover, stays visible when favorited -->
+    <button sec:authorize="isAuthenticated()"
+            class="song-card-fav-btn"
+            th:data-song-id="${song?.id}"
+            title="Add to Favorites"
+            type="button">♡</button>
 
     <div class="song-title"
          th:text="${song?.title != null ? song.title : 'Unknown Title'}">Song Title</div>

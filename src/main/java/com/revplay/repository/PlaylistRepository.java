@@ -28,4 +28,7 @@ public interface PlaylistRepository extends JpaRepository<Playlist, Long> {
 
     // Public playlists of a specific user
     List<Playlist> findByUser_IdAndIsPublicTrue(Long userId);
+
+    // Count playlists for a user (Day 8 — profile stats)
+    long countByUser_Id(Long userId);
 }
