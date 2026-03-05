@@ -213,12 +213,12 @@ public class PlaylistService {
         PlaylistSong playlistSong = new PlaylistSong();
         playlistSong.setPlaylist(playlist);
         playlistSong.setSong(song);
-        playlistSong.setPosition(existing.size()+1);
+        playlistSong.setPosition(existing.size() + 1); // 1-based: next position after last
 
         playlistSongRepository.save(playlistSong);
 
         log.debug("Added song {} to playlist {} at position {}",
-                songId, playlistId, existing.size()+1);
+                songId, playlistId, existing.size());
     }
 
     // -------------------------

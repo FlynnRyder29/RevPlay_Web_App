@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -80,7 +81,7 @@ class FavoriteControllerIntegrationTest {
         void addFavorite_authenticated_returns201() throws Exception {
             doNothing().when(favoriteService).addFavorite(1L);
 
-            mockMvc.perform(post("/api/favorites/1"))
+            mockMvc.perform(post("/api/favorites/1").with(csrf()))
                     .andExpect(status().isCreated());
 
             verify(favoriteService).addFavorite(1L);
@@ -93,7 +94,7 @@ class FavoriteControllerIntegrationTest {
             doThrow(new ResourceNotFoundException("Song", "id", 99L))
                     .when(favoriteService).addFavorite(99L);
 
-            mockMvc.perform(post("/api/favorites/99"))
+            mockMvc.perform(post("/api/favorites/99").with(csrf()))
                     .andExpect(status().isNotFound());
         }
 
@@ -105,7 +106,7 @@ class FavoriteControllerIntegrationTest {
             doThrow(new BadRequestException("Song 1 is already in your favorites"))
                     .when(favoriteService).addFavorite(1L);
 
-            mockMvc.perform(post("/api/favorites/1"))
+            mockMvc.perform(post("/api/favorites/1").with(csrf()))
                     .andExpect(status().isBadRequest());
 
             verify(favoriteService).addFavorite(1L);
@@ -114,7 +115,7 @@ class FavoriteControllerIntegrationTest {
         @Test
         @DisplayName("unauthenticated — returns 401")
         void addFavorite_unauthenticated_returns401() throws Exception {
-            mockMvc.perform(post("/api/favorites/1"))
+            mockMvc.perform(post("/api/favorites/1").with(csrf()))
                     .andExpect(status().isUnauthorized());
         }
     }
@@ -133,7 +134,7 @@ class FavoriteControllerIntegrationTest {
         void removeFavorite_authenticated_returns204() throws Exception {
             doNothing().when(favoriteService).removeFavorite(1L);
 
-            mockMvc.perform(delete("/api/favorites/1"))
+            mockMvc.perform(delete("/api/favorites/1").with(csrf()))
                     .andExpect(status().isNoContent());
 
             verify(favoriteService).removeFavorite(1L);
@@ -146,14 +147,14 @@ class FavoriteControllerIntegrationTest {
             doThrow(new ResourceNotFoundException("Favorite", "songId", 99L))
                     .when(favoriteService).removeFavorite(99L);
 
-            mockMvc.perform(delete("/api/favorites/99"))
+            mockMvc.perform(delete("/api/favorites/99").with(csrf()))
                     .andExpect(status().isNotFound());
         }
 
         @Test
         @DisplayName("unauthenticated — returns 401")
         void removeFavorite_unauthenticated_returns401() throws Exception {
-            mockMvc.perform(delete("/api/favorites/1"))
+            mockMvc.perform(delete("/api/favorites/1").with(csrf()))
                     .andExpect(status().isUnauthorized());
         }
     }
