@@ -6,6 +6,7 @@ import com.revplay.exception.RevPlayAccessDeniedHandler;
 import com.revplay.exception.RevPlayAuthenticationEntryPoint;
 import com.revplay.service.AnalyticsService;
 import com.revplay.service.CustomUserDetailsService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -17,9 +18,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
@@ -38,7 +38,7 @@ class AnalyticsControllerIntegrationTest {
     @MockitoBean private RevPlayAuthenticationEntryPoint authEntryPoint;
     @MockitoBean private RevPlayAccessDeniedHandler    accessDeniedHandler;
 
-    @org.junit.jupiter.api.BeforeEach
+    @BeforeEach
     void configureSecurityHandlers() throws Exception {
         org.mockito.Mockito.doAnswer(inv -> {
             jakarta.servlet.http.HttpServletResponse resp =
@@ -59,14 +59,6 @@ class AnalyticsControllerIntegrationTest {
                 org.mockito.ArgumentMatchers.any(),
                 org.mockito.ArgumentMatchers.any(),
                 org.mockito.ArgumentMatchers.any());
-    }
-
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
-    private AnalyticsDTO emptyDTO() {
-        return AnalyticsDTO.builder()
-                .artistId(10L).artistName("Aria").build();
     }
 
     // ══════════════════════════════════════════════════════════════════════

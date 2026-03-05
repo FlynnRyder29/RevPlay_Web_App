@@ -70,6 +70,11 @@ class SongServiceTest {
     private Artist artist;
     private Album  album;
 
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
+
     @BeforeEach
     void setUp() {
         currentUser = new User();
@@ -232,7 +237,7 @@ class SongServiceTest {
     class SearchSongs {
 
         @Test
-        @DisplayName("keyword search — calls searchByKeywordAndVisibility with PUBLIC")
+        @DisplayName("keyword search — calls searchByKeywordAndVisibility with PUBLIC visibility")
         void searchSongs_validKeyword_returnsPagedSongs() {
             String keyword = "test";
             Pageable pageable = PageRequest.of(0, 10);
@@ -246,6 +251,38 @@ class SongServiceTest {
             assertEquals(1, result.getContent().size());
             verify(songRepository).searchByKeywordAndVisibility(
                     eq(keyword), any(Song.Visibility.class), eq(pageable));
+        }
+
+        @Test
+        @DisplayName("no matching songs — returns empty page")
+        void searchSongs_noResults_returnsEmptyPage() {
+            Pageable pageable = PageRequest.of(0, 10);
+            when(songRepository.searchByKeywordAndVisibility(
+                    eq("xyznotfound"), any(Song.Visibility.class), eq(pageable)))
+                    .thenReturn(new PageImpl<>(List.of()));
+
+            Page<SongDTO> result = songService.searchSongs("xyznotfound", pageable);
+
+            assertTrue(result.isEmpty());
+            verify(songRepository).searchByKeywordAndVisibility(
+                    eq("xyznotfound"), any(Song.Visibility.class), eq(pageable));
+        }
+
+        @Test
+        @DisplayName("multiple results — all returned and order preserved")
+        void searchSongs_multipleResults_preservesOrder() {
+            Pageable pageable = PageRequest.of(0, 10);
+            Song song1 = createMockSong(1L); song1.setTitle("Midnight");
+            Song song2 = createMockSong(2L); song2.setTitle("Midnight Blue");
+            when(songRepository.searchByKeywordAndVisibility(
+                    eq("midnight"), any(Song.Visibility.class), eq(pageable)))
+                    .thenReturn(new PageImpl<>(List.of(song1, song2)));
+
+            Page<SongDTO> result = songService.searchSongs("midnight", pageable);
+
+            assertEquals(2, result.getContent().size());
+            assertEquals("Midnight",      result.getContent().get(0).getTitle());
+            assertEquals("Midnight Blue", result.getContent().get(1).getTitle());
         }
     }
 
@@ -280,6 +317,20 @@ class SongServiceTest {
             Page<SongDTO> result = songService.filterSongs(null, null, null, null, pageable);
 
             assertNotNull(result);
+        }
+
+        @Test
+        @DisplayName("multiple filters combined — all passed to Specification")
+        void filterSongs_multipleFiltersCombined_passedToSpec() {
+            Pageable pageable = PageRequest.of(0, 10);
+            Song song = createMockSong(1L);
+            when(songRepository.findAll(any(Specification.class), eq(pageable)))
+                    .thenReturn(new PageImpl<>(List.of(song)));
+
+            Page<SongDTO> result = songService.filterSongs("Rock", "Aria", "My Album", 2024, pageable);
+
+            assertFalse(result.isEmpty());
+            verify(songRepository).findAll(any(Specification.class), eq(pageable));
         }
     }
 

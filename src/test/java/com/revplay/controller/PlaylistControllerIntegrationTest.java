@@ -5,8 +5,10 @@ import com.revplay.dto.PlaylistDTO;
 import com.revplay.exception.ResourceNotFoundException;
 import com.revplay.exception.RevPlayAccessDeniedHandler;
 import com.revplay.exception.RevPlayAuthenticationEntryPoint;
+import com.revplay.exception.UnauthorizedAccessException;
 import com.revplay.service.CustomUserDetailsService;
 import com.revplay.service.PlaylistService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -42,7 +44,7 @@ class PlaylistControllerIntegrationTest {
     @MockitoBean private RevPlayAuthenticationEntryPoint authEntryPoint;
     @MockitoBean private RevPlayAccessDeniedHandler   accessDeniedHandler;
 
-    @org.junit.jupiter.api.BeforeEach
+    @BeforeEach
     void configureSecurityHandlers() throws Exception {
         org.mockito.Mockito.doAnswer(inv -> {
             jakarta.servlet.http.HttpServletResponse resp =
@@ -64,7 +66,6 @@ class PlaylistControllerIntegrationTest {
                 org.mockito.ArgumentMatchers.any(),
                 org.mockito.ArgumentMatchers.any());
     }
-
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -101,6 +102,21 @@ class PlaylistControllerIntegrationTest {
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.id").value(1L))
                     .andExpect(jsonPath("$.name").value("Chill Vibes"));
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("blank name — returns 400")
+        void createPlaylist_blankName_returns400() throws Exception {
+            PlaylistDTO request = new PlaylistDTO();
+            request.setName("");
+
+            mockMvc.perform(post("/api/playlists")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(json(request)))
+                    .andExpect(status().isBadRequest());
+
+            verify(playlistService, never()).createPlaylist(any());
         }
 
         @Test
@@ -208,7 +224,7 @@ class PlaylistControllerIntegrationTest {
 
         @Test
         @WithMockUser
-        @DisplayName("existing playlist — returns 200")
+        @DisplayName("existing public playlist — returns 200")
         void getById_existingPlaylist_returns200() throws Exception {
             when(playlistService.getPlaylistById(1L)).thenReturn(samplePlaylist());
 
@@ -226,6 +242,19 @@ class PlaylistControllerIntegrationTest {
 
             mockMvc.perform(get("/api/playlists/999"))
                     .andExpect(status().isNotFound());
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("private playlist by non-owner — returns 403")
+        void getById_privatePlaylistNonOwner_returns403() throws Exception {
+            // PlaylistService.getPlaylistById throws UnauthorizedAccessException
+            // when !playlist.isPublic() && user != owner
+            when(playlistService.getPlaylistById(2L))
+                    .thenThrow(new UnauthorizedAccessException("Access denied to playlist: 2"));
+
+            mockMvc.perform(get("/api/playlists/2"))
+                    .andExpect(status().isForbidden());
         }
 
         @Test
@@ -256,6 +285,21 @@ class PlaylistControllerIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(json(request)))
                     .andExpect(status().isOk());
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("non-owner — returns 403")
+        void updatePlaylist_nonOwner_returns403() throws Exception {
+            // PlaylistService.updatePlaylist throws UnauthorizedAccessException
+            // when current user is not the playlist owner
+            when(playlistService.updatePlaylist(eq(1L), any()))
+                    .thenThrow(new UnauthorizedAccessException("You don't own this playlist"));
+
+            mockMvc.perform(put("/api/playlists/1")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(json(new PlaylistDTO())))
+                    .andExpect(status().isForbidden());
         }
 
         @Test
@@ -299,6 +343,19 @@ class PlaylistControllerIntegrationTest {
                     .andExpect(status().isNoContent());
 
             verify(playlistService).deletePlaylist(1L);
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("non-owner — returns 403")
+        void deletePlaylist_nonOwner_returns403() throws Exception {
+            // PlaylistService.deletePlaylist throws UnauthorizedAccessException
+            // when current user is not the playlist owner
+            doThrow(new UnauthorizedAccessException("You don't own this playlist"))
+                    .when(playlistService).deletePlaylist(1L);
+
+            mockMvc.perform(delete("/api/playlists/1"))
+                    .andExpect(status().isForbidden());
         }
 
         @Test
@@ -352,6 +409,17 @@ class PlaylistControllerIntegrationTest {
         }
 
         @Test
+        @WithMockUser
+        @DisplayName("non-owner — returns 403")
+        void addSong_nonOwner_returns403() throws Exception {
+            doThrow(new UnauthorizedAccessException("You don't own this playlist"))
+                    .when(playlistService).addSongToPlaylist(1L, 2L);
+
+            mockMvc.perform(post("/api/playlists/1/songs/2"))
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
         @DisplayName("unauthenticated — returns 401")
         void addSong_unauthenticated_returns401() throws Exception {
             mockMvc.perform(post("/api/playlists/1/songs/2"))
@@ -375,6 +443,17 @@ class PlaylistControllerIntegrationTest {
 
             mockMvc.perform(delete("/api/playlists/1/songs/2"))
                     .andExpect(status().isNoContent());
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("non-owner — returns 403")
+        void removeSong_nonOwner_returns403() throws Exception {
+            doThrow(new UnauthorizedAccessException("You don't own this playlist"))
+                    .when(playlistService).removeSongFromPlaylist(1L, 2L);
+
+            mockMvc.perform(delete("/api/playlists/1/songs/2"))
+                    .andExpect(status().isForbidden());
         }
 
         @Test
@@ -405,6 +484,19 @@ class PlaylistControllerIntegrationTest {
                     .andExpect(status().isNoContent());
 
             verify(playlistService).reorderSongs(eq(1L), anyList());
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("non-owner — returns 403")
+        void reorderSongs_nonOwner_returns403() throws Exception {
+            doThrow(new UnauthorizedAccessException("You can only reorder songs in your own playlist"))
+                    .when(playlistService).reorderSongs(eq(1L), anyList());
+
+            mockMvc.perform(put("/api/playlists/1/reorder")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("[1, 2, 3]"))
+                    .andExpect(status().isForbidden());
         }
 
         @Test

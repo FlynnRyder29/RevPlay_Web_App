@@ -69,6 +69,11 @@ class AlbumServiceImplTest {
     private Artist artist;
     private Album  album;
 
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
+
     @BeforeEach
     void setUp() {
         user = new User();

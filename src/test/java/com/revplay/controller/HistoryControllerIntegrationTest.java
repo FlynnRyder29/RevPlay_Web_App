@@ -7,6 +7,7 @@ import com.revplay.exception.RevPlayAccessDeniedHandler;
 import com.revplay.exception.RevPlayAuthenticationEntryPoint;
 import com.revplay.service.CustomUserDetailsService;
 import com.revplay.service.HistoryService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -39,12 +40,12 @@ class HistoryControllerIntegrationTest {
     @Autowired private MockMvc       mockMvc;
     @Autowired private ObjectMapper  objectMapper;
 
-    @MockitoBean private HistoryService                 historyService;
-    @MockitoBean private CustomUserDetailsService       customUserDetailsService;
+    @MockitoBean private HistoryService                  historyService;
+    @MockitoBean private CustomUserDetailsService        customUserDetailsService;
     @MockitoBean private RevPlayAuthenticationEntryPoint authEntryPoint;
-    @MockitoBean private RevPlayAccessDeniedHandler     accessDeniedHandler;
+    @MockitoBean private RevPlayAccessDeniedHandler      accessDeniedHandler;
 
-    @org.junit.jupiter.api.BeforeEach
+    @BeforeEach
     void configureSecurityHandlers() throws Exception {
         org.mockito.Mockito.doAnswer(inv -> {
             jakarta.servlet.http.HttpServletResponse resp =
@@ -66,7 +67,6 @@ class HistoryControllerIntegrationTest {
                 org.mockito.ArgumentMatchers.any(),
                 org.mockito.ArgumentMatchers.any());
     }
-
 
     // ══════════════════════════════════════════════════════════════════════
     // POST /api/history
@@ -95,9 +95,10 @@ class HistoryControllerIntegrationTest {
 
         @Test
         @WithMockUser
-        @DisplayName("authenticated — null songId returns 400")
+        @DisplayName("null songId — returns 400 (@NotNull on HistoryRequest.songId)")
         void addToHistory_nullSongId_returns400() throws Exception {
-            HistoryRequest request = new HistoryRequest(); // songId null
+            // HistoryRequest.songId is annotated @NotNull — null value triggers 400
+            HistoryRequest request = new HistoryRequest(); // songId = null
 
             mockMvc.perform(post("/api/history")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -145,7 +146,7 @@ class HistoryControllerIntegrationTest {
 
         @Test
         @WithMockUser
-        @DisplayName("authenticated — custom limit passed to service")
+        @DisplayName("custom limit — passed to service")
         void getMyHistory_customLimit_passedToService() throws Exception {
             when(historyService.getMyHistory(10))
                     .thenReturn(new PageImpl<>(List.of()));
@@ -158,7 +159,7 @@ class HistoryControllerIntegrationTest {
 
         @Test
         @WithMockUser
-        @DisplayName("authenticated — empty history returns 200 with empty page")
+        @DisplayName("empty history — returns 200 with empty page")
         void getMyHistory_empty_returns200Empty() throws Exception {
             when(historyService.getMyHistory(50))
                     .thenReturn(new PageImpl<>(List.of()));
@@ -200,7 +201,7 @@ class HistoryControllerIntegrationTest {
 
         @Test
         @WithMockUser
-        @DisplayName("authenticated — empty history returns 200 with empty list")
+        @DisplayName("empty history — returns 200 with empty list")
         void getAllHistory_empty_returns200Empty() throws Exception {
             when(historyService.getAllHistory()).thenReturn(List.of());
 

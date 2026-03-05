@@ -2,11 +2,13 @@ package com.revplay.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.revplay.dto.FavoriteDTO;
+import com.revplay.exception.BadRequestException;
 import com.revplay.exception.ResourceNotFoundException;
 import com.revplay.exception.RevPlayAccessDeniedHandler;
 import com.revplay.exception.RevPlayAuthenticationEntryPoint;
 import com.revplay.service.CustomUserDetailsService;
 import com.revplay.service.FavoriteService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -41,7 +43,7 @@ class FavoriteControllerIntegrationTest {
     @MockitoBean private RevPlayAuthenticationEntryPoint authEntryPoint;
     @MockitoBean private RevPlayAccessDeniedHandler   accessDeniedHandler;
 
-    @org.junit.jupiter.api.BeforeEach
+    @BeforeEach
     void configureSecurityHandlers() throws Exception {
         org.mockito.Mockito.doAnswer(inv -> {
             jakarta.servlet.http.HttpServletResponse resp =
@@ -63,7 +65,6 @@ class FavoriteControllerIntegrationTest {
                 org.mockito.ArgumentMatchers.any(),
                 org.mockito.ArgumentMatchers.any());
     }
-
 
     // ══════════════════════════════════════════════════════════════════════
     // POST /api/favorites/{songId}
@@ -97,6 +98,20 @@ class FavoriteControllerIntegrationTest {
         }
 
         @Test
+        @WithMockUser
+        @DisplayName("duplicate favorite — returns 400")
+        void addFavorite_duplicate_returns400() throws Exception {
+            // FavoriteService throws BadRequestException when song is already favorited
+            doThrow(new BadRequestException("Song 1 is already in your favorites"))
+                    .when(favoriteService).addFavorite(1L);
+
+            mockMvc.perform(post("/api/favorites/1"))
+                    .andExpect(status().isBadRequest());
+
+            verify(favoriteService).addFavorite(1L);
+        }
+
+        @Test
         @DisplayName("unauthenticated — returns 401")
         void addFavorite_unauthenticated_returns401() throws Exception {
             mockMvc.perform(post("/api/favorites/1"))
@@ -126,9 +141,9 @@ class FavoriteControllerIntegrationTest {
 
         @Test
         @WithMockUser
-        @DisplayName("song not found — returns 404")
+        @DisplayName("song not in favorites — returns 404")
         void removeFavorite_songNotFound_returns404() throws Exception {
-            doThrow(new ResourceNotFoundException("Song", "id", 99L))
+            doThrow(new ResourceNotFoundException("Favorite", "songId", 99L))
                     .when(favoriteService).removeFavorite(99L);
 
             mockMvc.perform(delete("/api/favorites/99"))
