@@ -182,6 +182,7 @@ class FileStorageServiceTest {
                 "f1", "cover.jpg", "image/jpeg", content
         );
 
+        String path1 = fileStorageService.storeFile(file1, "albums");
         // Small sleep to ensure different timestamps
         Thread.sleep(50);
 
@@ -189,7 +190,7 @@ class FileStorageServiceTest {
                 "f2", "cover.jpg", "image/jpeg", content
         );
 
-        String path1 = fileStorageService.storeFile(file1, "albums");
+
         String path2 = fileStorageService.storeFile(file2, "albums");
 
         // Timestamps differ so paths must differ

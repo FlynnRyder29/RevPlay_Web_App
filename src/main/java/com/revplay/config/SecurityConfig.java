@@ -24,7 +24,6 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
-
     private final RevPlayAuthenticationEntryPoint authEntryPoint;
     private final RevPlayAccessDeniedHandler accessDeniedHandler;
 
@@ -35,7 +34,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
 
                 .authorizeHttpRequests(auth -> auth
-                        // ✅ Public pages
+
+                        // ── Public pages & auth ──────────────────────────────
                         .requestMatchers(
                                 "/", "/auth/register", "/auth/login",
                                 "/css/**", "/js/**", "/images/**",
@@ -44,40 +44,48 @@ public class SecurityConfig {
                                 "/search", "/artist/*"
                         ).permitAll()
 
-
-                        // GET — listeners can browse
+                        // ── Songs ────────────────────────────────────────────
+                        // GET — any authenticated user can browse/stream
                         .requestMatchers(HttpMethod.GET, "/api/songs/**")
                         .authenticated()
 
-                        // Modify — only ARTIST
-                        .requestMatchers(HttpMethod.POST, "/api/songs/**")
-                        .hasRole("ARTIST")
+                        // Modify — ARTIST only
+                        .requestMatchers(HttpMethod.POST,   "/api/songs/**").hasRole("ARTIST")
+                        .requestMatchers(HttpMethod.PUT,    "/api/songs/**").hasRole("ARTIST")
+                        .requestMatchers(HttpMethod.DELETE, "/api/songs/**").hasRole("ARTIST")
+                        .requestMatchers(HttpMethod.PATCH,  "/api/songs/**").hasRole("ARTIST")
 
-                        .requestMatchers(HttpMethod.PUT, "/api/songs/**")
-                        .hasRole("ARTIST")
-
-                        .requestMatchers(HttpMethod.DELETE, "/api/songs/**")
-                        .hasRole("ARTIST")
-
-                        .requestMatchers(HttpMethod.PATCH, "/api/songs/**")
-                        .hasRole("ARTIST")
-
-                        // ✅ Artist dashboard & analytics
-                        .requestMatchers("/artist/dashboard/**",
+                        // ── Artist dashboard & analytics ─────────────────────
+                        .requestMatchers(
+                                "/artist/dashboard/**",
                                 "/api/artists/me/**",
-                                "/api/artists/analytics/**")
-                        .hasRole("ARTIST")
+                                "/api/artists/analytics/**"
+                        ).hasRole("ARTIST")
 
-                        // ✅ Artist album management (Day 5 — Member 5)
-                        // Double-layer security: SecurityConfig + @PreAuthorize in controller
-                        .requestMatchers("/api/artists/albums/**")
-                        .hasRole("ARTIST")
+                        // ── Artist album management (Member 5) ───────────────
+                        .requestMatchers("/api/artists/albums/**").hasRole("ARTIST")
 
+                        // ── Playlists (Member 4) ─────────────────────────────
+                        // Public browse — no login required
+                        .requestMatchers(HttpMethod.GET, "/api/playlists/public")
+                        .permitAll()
 
-                        // ✅ Admin
+                        // All other playlist operations — must be logged in
+                        .requestMatchers("/api/playlists/**")
+                        .authenticated()
+
+                        // ── Favorites (Member 4) ─────────────────────────────
+                        .requestMatchers("/api/favorites/**")
+                        .authenticated()
+
+                        // ── History (Member 4) ───────────────────────────────
+                        .requestMatchers("/api/history/**")
+                        .authenticated()
+
+                        // ── Admin ────────────────────────────────────────────
                         .requestMatchers("/admin/**").hasRole("ADMIN")
 
-                        // ✅ Everything else
+                        // ── Everything else requires login ───────────────────
                         .anyRequest().authenticated()
                 )
 

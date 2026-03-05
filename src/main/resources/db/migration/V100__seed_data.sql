@@ -26,12 +26,12 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- ============================================================
 
 INSERT INTO users (id, email, username, password_hash, display_name, bio, role) VALUES
-(1, 'admin@revplay.com', 'admin',       '$2a$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36Q5V2xJHpXHhkEtWb2VVXK', 'RevPlay Admin', 'Platform administrator.',             'ADMIN'),
-(2, 'alice@mail.com',    'alice_music', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'Alice',         'Music lover. Playlist curator.',      'LISTENER'),
-(3, 'bob@mail.com',      'bob_beats',  '$2a$10$GDvJEJVGNaAVFQdFPlYS4OhBZ9MjNoNrRtlA28g8EGqFGPXP6WDSC', 'Bob',           'Hip-hop and chill vibes only.',       'LISTENER'),
-(4, 'aria@mail.com',     'aria_artist','$2a$10$TKh8H1.PfQx37YgCzwiKb.KjNyWgaHb9cbcoQgdIVFlYg7B9tpZ/e', 'Aria',          'Singer-songwriter. Indie pop artist.','ARTIST'),
-(5, 'djnova@mail.com',   'dj_nova',    '$2a$10$jemhoQ3ksTqqkktHHG6ohOGQ3Bu6K24jKDVc2WcHKEZqCPJi9PBTS', 'DJ Nova',       'Electronic and house music producer.','ARTIST'),
-(6, 'marco@mail.com',    'marco_jazz', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Marco Jazz',    'Jazz guitarist. Bringing classics back.','ARTIST');
+(1, 'admin@revplay.com', 'admin',       '$2b$12$0cfRzzj9DathC2D5Z09KOei8iqM3ertj/wpSRyHVU5qqsoVR9QNPu', 'RevPlay Admin', 'Platform administrator.',             'ADMIN'),
+(2, 'alice@mail.com',    'alice_music', '$2b$12$Q7aTmvskio0upCAhKQY/IOtH4g54vd0rerkCDjP4zNEL/yB9ywAMW', 'Alice',         'Music lover. Playlist curator.',      'LISTENER'),
+(3, 'bob@mail.com',      'bob_beats',  '$2b$12$KqVbQqYuVfuS9PZP0Zvm2.5ND8xMrKhl9ITBQjT23F1Qx4YPVNvt.', 'Bob',           'Hip-hop and chill vibes only.',       'LISTENER'),
+(4, 'aria@mail.com',     'aria_artist','$2b$12$00/7sieERo7NkR8efLu5C..90W16GzW7l9pRx8DgEe2Qm2E7bGRw2', 'Aria',          'Singer-songwriter. Indie pop artist.','ARTIST'),
+(5, 'djnova@mail.com',   'dj_nova',    '$2b$12$ynDFideg8lr41cjtjZecIeF4MCuL93EKbMzjx7iAr6OlHcQ0qMjuC', 'DJ Nova',       'Electronic and house music producer.','ARTIST'),
+(6, 'marco@mail.com',    'marco_jazz', '$2b$12$Wsu2G7H9n1JAge9be/0TuuPdcAVGCOasMDHj2qy8Qc1b74rSGrUlO', 'Marco Jazz',    'Jazz guitarist. Bringing classics back.','ARTIST');
 
 -- ============================================================
 -- GENRES
