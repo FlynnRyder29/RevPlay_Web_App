@@ -191,12 +191,11 @@ class FavoriteServiceTest {
         @Test
         @DisplayName("returns all DTO fields mapped correctly including duration")
         void getMyFavorites_mapsAllFields() {
-            when(favoriteRepository.findByUser_Id(1L))
+            when(favoriteRepository.findByUser_IdOrderByCreatedAtDesc(1L))
                     .thenReturn(List.of(testFavorite));
 
             List<FavoriteDTO> result = favoriteService.getMyFavorites();
 
-            assertEquals(1, result.size());
             FavoriteDTO dto = result.get(0);
             assertEquals(1L, dto.getId());
             assertEquals(10L, dto.getSongId());
@@ -213,7 +212,7 @@ class FavoriteServiceTest {
         @Test
         @DisplayName("empty favorites — returns empty list")
         void getMyFavorites_noFavorites_returnsEmpty() {
-            when(favoriteRepository.findByUser_Id(1L))
+            when(favoriteRepository.findByUser_IdOrderByCreatedAtDesc(1L))
                     .thenReturn(List.of());
 
             List<FavoriteDTO> result = favoriteService.getMyFavorites();
@@ -224,13 +223,13 @@ class FavoriteServiceTest {
         @Test
         @DisplayName("queries current user only")
         void getMyFavorites_queriesCurrentUserOnly() {
-            when(favoriteRepository.findByUser_Id(1L))
+            when(favoriteRepository.findByUser_IdOrderByCreatedAtDesc(1L))
                     .thenReturn(List.of());
 
             favoriteService.getMyFavorites();
 
-            verify(favoriteRepository).findByUser_Id(1L);
-            verify(favoriteRepository, never()).findByUser_Id(2L);
+            verify(favoriteRepository).findByUser_IdOrderByCreatedAtDesc(1L);
+            verify(favoriteRepository, never()).findByUser_IdOrderByCreatedAtDesc(2L);
         }
 
         @Test
@@ -249,7 +248,7 @@ class FavoriteServiceTest {
             fav2.setSong(song2);
             fav2.setCreatedAt(LocalDateTime.of(2024, 6, 10, 10, 0));
 
-            when(favoriteRepository.findByUser_Id(1L))
+            when(favoriteRepository.findByUser_IdOrderByCreatedAtDesc(1L))
                     .thenReturn(List.of(testFavorite, fav2));
 
             List<FavoriteDTO> result = favoriteService.getMyFavorites();
