@@ -10,7 +10,11 @@ import com.revplay.repository.UserRepository;
 import com.revplay.service.ArtistCatalogService;
 import com.revplay.service.ArtistService;
 import com.revplay.service.PlaylistService;
+import com.revplay.service.PlaylistFollowService;
 import com.revplay.service.SongService;
+import com.revplay.service.FavoriteService;
+import com.revplay.service.HistoryService;
+import com.revplay.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,27 +39,42 @@ public class PageController {
     private static final Logger log = LoggerFactory.getLogger(PageController.class);
 
     private final PlaylistService playlistService;
+    private final PlaylistFollowService playlistFollowService;
     private final PlaylistSongRepository playlistSongRepository;
     private final SongService songService;
     private final ArtistCatalogService artistCatalogService;
     private final ArtistService artistService;
     private final ArtistRepository artistRepository;
     private final UserRepository userRepository;
+    private final FavoriteService favoriteService;
+    private final HistoryService historyService;
+    private final SecurityUtils securityUtils;
 
     // ═══════════════════════════════════════════
-    //  PLAYLISTS PAGE
+    // PLAYLISTS PAGE
     // ═══════════════════════════════════════════
 
     /**
-     * GET /playlists — Show user's playlists list
+     * GET /playlists — Show user's playlists + public playlists tab
      */
     @GetMapping("/playlists")
-    public String showPlaylists(Model model) {
-        log.info("GET /playlists");
+    public String showPlaylists(
+            @RequestParam(defaultValue = "mine") String tab,
+            @RequestParam(required = false) String search,
+            Model model) {
+        log.info("GET /playlists tab={} search={}", tab, search);
 
+        // Always load my playlists for the "My Playlists" tab
         List<PlaylistDTO> myPlaylists = playlistService.getMyPlaylists();
         model.addAttribute("playlists", myPlaylists);
+
+        // Load public playlists for the "Discover" tab
+        List<PlaylistDTO> publicPlaylists = playlistService.getPublicPlaylists(search);
+        model.addAttribute("publicPlaylists", publicPlaylists);
+
         model.addAttribute("viewMode", "list");
+        model.addAttribute("activeTab", tab);
+        model.addAttribute("searchQuery", search);
 
         return "playlist";
     }
@@ -92,20 +111,33 @@ public class PageController {
                         .build())
                 .collect(Collectors.toList());
 
+        // Check ownership
+        Long currentUserId = securityUtils.getCurrentUser().getId();
+        boolean isOwner = playlist.getUserId().equals(currentUserId);
+
+        // Check follow status (only relevant for non-owners)
+        boolean isFollowing = false;
+        if (!isOwner) {
+            try {
+                isFollowing = playlistFollowService.isFollowing(id);
+            } catch (Exception e) {
+                log.debug("Could not check follow status: {}", e.getMessage());
+            }
+        }
+
         model.addAttribute("playlist", playlist);
         model.addAttribute("songs", songs);
         model.addAttribute("viewMode", "detail");
+        model.addAttribute("isOwner", isOwner);
+        model.addAttribute("isFollowing", isFollowing);
 
         return "playlist";
     }
 
     // ═══════════════════════════════════════════
-    //  SEARCH PAGE
+    // SEARCH PAGE
     // ═══════════════════════════════════════════
 
-    /**
-     * GET /search?q=keyword — Search results page
-     */
     @GetMapping("/search")
     public String showSearch(
             @RequestParam(required = false) String q,
@@ -129,12 +161,9 @@ public class PageController {
     }
 
     // ═══════════════════════════════════════════
-    //  PUBLIC ARTIST PROFILE PAGE
+    // PUBLIC ARTIST PROFILE PAGE
     // ═══════════════════════════════════════════
 
-    /**
-     * GET /artist/{id} — Public artist profile
-     */
     @GetMapping("/artist/{id}")
     public String showArtistProfile(@PathVariable Long id, Model model) {
         log.info("GET /artist/{}", id);
@@ -146,21 +175,16 @@ public class PageController {
     }
 
     // ═══════════════════════════════════════════
-    //  ARTIST DASHBOARD (ROLE_ARTIST only)
+    // ARTIST DASHBOARD (ROLE_ARTIST only)
     // ═══════════════════════════════════════════
 
-    /**
-     * GET /artist/dashboard — Artist's own dashboard
-     */
     @GetMapping("/artist/dashboard")
     public String showArtistDashboard(Model model) {
         log.info("GET /artist/dashboard");
 
-        // Get current user's artist profile
         var profile = artistService.getMyProfile();
         model.addAttribute("profile", profile);
 
-        // Get artist's songs
         String username = SecurityContextHolder.getContext()
                 .getAuthentication().getName();
         var user = userRepository.findByEmailOrUsername(username, username).orElse(null);
@@ -172,7 +196,6 @@ public class PageController {
                 model.addAttribute("songs", artistDetail.getSongs());
                 model.addAttribute("albums", artistDetail.getAlbums());
 
-                // Calculate stats
                 long totalPlays = 0;
                 if (artistDetail.getSongs() != null) {
                     totalPlays = artistDetail.getSongs().stream()
@@ -188,5 +211,100 @@ public class PageController {
         }
 
         return "artist-dashboard";
+    }
+
+    @GetMapping("/artist/songs")
+    public String showArtistSongs(Model model) {
+        log.info("GET /artist/songs");
+
+        String username = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+        var user = userRepository.findByEmailOrUsername(username, username).orElse(null);
+
+        if (user != null) {
+            var artist = artistRepository.findByUserId(user.getId()).orElse(null);
+            if (artist != null) {
+                ArtistDTO artistDetail = artistCatalogService.getArtistById(artist.getId());
+                model.addAttribute("songs", artistDetail.getSongs());
+                model.addAttribute("albums", artistDetail.getAlbums());
+            }
+        }
+
+        return "artist-songs";
+    }
+
+    @GetMapping("/artist/albums")
+    public String showArtistAlbums(Model model) {
+        log.info("GET /artist/albums");
+
+        String username = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+        var user = userRepository.findByEmailOrUsername(username, username).orElse(null);
+
+        if (user != null) {
+            var artist = artistRepository.findByUserId(user.getId()).orElse(null);
+            if (artist != null) {
+                ArtistDTO artistDetail = artistCatalogService.getArtistById(artist.getId());
+                model.addAttribute("albums", artistDetail.getAlbums());
+            }
+        }
+
+        return "artist-albums";
+    }
+
+    // ═══════════════════════════════════════════
+    // ADMIN, FAVORITES, HISTORY
+    // ═══════════════════════════════════════════
+
+    @GetMapping("/admin")
+    public String showAdminPanel(Model model) {
+        log.info("GET /admin");
+
+        long totalUsers = userRepository.count();
+        long totalArtists = artistRepository.count();
+        long totalPlaylists = playlistService.getPublicPlaylists("").size();
+
+        model.addAttribute("totalUsers", totalUsers);
+        model.addAttribute("totalArtists", totalArtists);
+        model.addAttribute("totalPlaylists", totalPlaylists);
+
+        return "admin";
+    }
+
+    @GetMapping("/favorites")
+    public String showFavoritesPage(Model model) {
+        log.info("GET /favorites");
+
+        List<SongDTO> songs = favoriteService.getMyFavorites().stream()
+                .map(f -> SongDTO.builder()
+                        .id(f.getSongId())
+                        .title(f.getSongTitle())
+                        .audioUrl(f.getAudioUrl())
+                        .artistName(f.getArtistName())
+                        .coverImageUrl(f.getCoverImageUrl())
+                        .duration(f.getDuration())
+                        .build())
+                .collect(Collectors.toList());
+
+        model.addAttribute("songs", songs);
+        return "favorites";
+    }
+
+    @GetMapping("/history")
+    public String showHistoryPage(Model model) {
+        log.info("GET /history");
+
+        List<SongDTO> songs = historyService.getAllHistory().stream()
+                .map(h -> SongDTO.builder()
+                        .id(h.getSongId())
+                        .title(h.getSongTitle())
+                        .audioUrl(h.getAudioUrl())
+                        .artistName(h.getArtistName())
+                        .coverImageUrl(h.getCoverImageUrl())
+                        .build())
+                .collect(Collectors.toList());
+
+        model.addAttribute("songs", songs);
+        return "history";
     }
 }

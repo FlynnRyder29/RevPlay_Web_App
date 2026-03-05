@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head('My Songs')}"></head>
+<body>
+<div th:replace="~{layout :: page(~{::#artist-songs-content})}">
+
+    <div id="artist-songs-content">
+
+        <div class="hero-section" style="background: linear-gradient(135deg, #1c1c1c 0%, #3e3e3e 100%);">
+            <h1 class="hero-title" style="color: #fff;">My Songs</h1>
+            <p class="hero-subtitle" style="color: rgba(255,255,255,0.7);">Manage your uploaded tracks</p>
+            <button class="btn-primary" id="btn-upload-song" style="margin-top: 20px;">Upload New Song</button>
+        </div>
+
+        <!-- SONG GRID FOR SONGS -->
+        <div class="song-grid" style="margin-top: 30px;" th:if="${songs != null and !songs.isEmpty()}">
+            <th:block th:each="song : ${songs}">
+                <div th:replace="~{fragments/song-card :: card(song=${song})}"></div>
+            </th:block>
+        </div>
+
+        <div th:if="${songs == null or songs.isEmpty()}" class="empty-state"
+             style="text-align: center; margin-top: 60px;">
+            <div style="font-size: 48px; margin-bottom: 20px;">🎵</div>
+            <h2>No songs uploaded yet</h2>
+            <p style="color: var(--text-muted);">Share your music with the world.</p>
+        </div>
+
+        <!-- Upload Song Modal -->
+        <div id="upload-song-modal" class="modal-overlay"
+             style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
+            <div class="modal-content auth-container"
+                 style="width: 100%; max-width: 500px; margin: 0; position: relative;">
+                <button class="modal-close" id="btn-close-upload"
+                        style="position: absolute; top: 15px; right: 20px; background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;">&times;</button>
+                <h2 class="auth-title">Upload New Song</h2>
+
+                <form id="upload-song-form" enctype="multipart/form-data">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                    <div class="form-group">
+                        <label class="form-label" for="songTitle">Title *</label>
+                        <input class="form-input" type="text" id="songTitle" name="title" required
+                               placeholder="Song Title">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="genre">Genre *</label>
+                        <input class="form-input" type="text" id="genre" name="genre" required
+                               placeholder="e.g. Pop, Jazz, Hip Hop">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="albumId">Album (Optional)</label>
+                        <select class="form-input" id="albumId" name="albumId"
+                                style="background-color: var(--bg-dark); color: var(--text-main);">
+                            <option value="">-- No Album (Single) --</option>
+                            <option th:each="album : ${albums}" th:value="${album.id}" th:text="${album.name}"></option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="audioFile">Audio File (MP3) *</label>
+                        <input class="form-input" type="file" id="audioFile" name="audio" accept=".mp3,audio/mpeg"
+                               required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="coverFile">Cover Image (Optional)</label>
+                        <input class="form-input" type="file" id="coverFile" name="cover" accept=".jpg,.jpeg,.png">
+                    </div>
+
+                    <button type="submit" class="btn-primary" style="width: 100%; margin-top: 15px;"
+                            id="btn-submit-upload">Upload Song</button>
+                </form>
+                <div id="upload-status"
+                     style="margin-top: 15px; text-align: center; color: var(--text-main); font-size: 14px;"></div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var modal = document.getElementById('upload-song-modal');
+                var btnOpen = document.getElementById('btn-upload-song');
+                var btnClose = document.getElementById('btn-close-upload');
+                var form = document.getElementById('upload-song-form');
+                var statusDiv = document.getElementById('upload-status');
+                var submitBtn = document.getElementById('btn-submit-upload');
+
+                if (btnOpen) {
+                    btnOpen.addEventListener('click', function () { modal.style.display = 'flex'; });
+                }
+                if (btnClose) {
+                    btnClose.addEventListener('click', function () { modal.style.display = 'none'; });
+                }
+
+                window.addEventListener('click', function (e) {
+                    if (e.target === modal) modal.style.display = 'none';
+                });
+
+                if (form) {
+                    form.addEventListener('submit', function (e) {
+                        e.preventDefault();
+
+                        var formData = new FormData(this);
+                        var csrfToken = formData.get('_csrf');
+
+                        submitBtn.disabled = true;
+                        submitBtn.innerText = 'Uploading...';
+                        statusDiv.innerText = '';
+
+                        fetch('/api/artist/songs', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': csrfToken
+                            },
+                            body: formData
+                        })
+                            .then(function (response) {
+                                if (response.ok) {
+                                    statusDiv.style.color = '#4CAF50';
+                                    statusDiv.innerText = 'Upload successful! Refreshing...';
+                                    setTimeout(function () { window.location.reload(); }, 1000);
+                                } else {
+                                    return response.json().then(function (data) {
+                                        throw new Error(data.message || 'Upload failed');
+                                    }).catch(function () {
+                                        throw new Error('Upload failed with status ' + response.status);
+                                    });
+                                }
+                            })
+                            .catch(function (error) {
+                                console.error('Upload Error:', error);
+                                statusDiv.style.color = '#e74c3c';
+                                statusDiv.innerText = error.message;
+                                submitBtn.disabled = false;
+                                submitBtn.innerText = 'Upload Song';
+                            });
+                    });
+                }
+            });
+        </script>
+
+    </div>
+</div>
+</body>
+</html>

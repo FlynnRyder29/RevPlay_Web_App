@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head('Admin Panel')}"></head>
+<body>
+<div th:replace="~{layout :: page(~{::#admin-content})}">
+
+    <div id="admin-content">
+
+        <div class="hero-section" style="background: linear-gradient(135deg, #1c1c1c 0%, #3e3e3e 100%);">
+            <h1 class="hero-title" style="color: #fff;">Admin Dashboard</h1>
+            <p class="hero-subtitle" style="color: rgba(255,255,255,0.7);">Platform management & statistics</p>
+        </div>
+
+        <div class="profile-container" style="margin-top: 30px;">
+            <h2 style="margin-bottom: 20px;">Platform Statistics</h2>
+
+            <div class="stats-grid"
+                 style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px;">
+                <div class="stat-card"
+                     style="background: var(--bg-surface); padding: 25px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center;">
+                    <div style="font-size: 36px; margin-bottom: 10px;">👥</div>
+                    <div style="font-size: 14px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">
+                        Total Users</div>
+                    <div style="font-size: 32px; font-weight: bold; margin-top: 5px;" th:text="${totalUsers}">0</div>
+                </div>
+
+                <div class="stat-card"
+                     style="background: var(--bg-surface); padding: 25px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center;">
+                    <div style="font-size: 36px; margin-bottom: 10px;">🎤</div>
+                    <div style="font-size: 14px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">
+                        Total Artists</div>
+                    <div style="font-size: 32px; font-weight: bold; margin-top: 5px;" th:text="${totalArtists}">0</div>
+                </div>
+
+                <div class="stat-card"
+                     style="background: var(--bg-surface); padding: 25px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center;">
+                    <div style="font-size: 36px; margin-bottom: 10px;">📑</div>
+                    <div style="font-size: 14px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">
+                        Public Playlists</div>
+                    <div style="font-size: 32px; font-weight: bold; margin-top: 5px;" th:text="${totalPlaylists}">0</div>
+                </div>
+
+                <div class="stat-card"
+                     style="background: var(--bg-surface); padding: 25px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center;">
+                    <div style="font-size: 36px; margin-bottom: 10px;">🎵</div>
+                    <div style="font-size: 14px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">
+                        Total Songs</div>
+                    <div style="font-size: 32px; font-weight: bold; margin-top: 5px;">-</div>
+                </div>
+            </div>
+
+            <h2 style="margin-bottom: 20px;">System Health</h2>
+            <div style="background: var(--bg-surface); padding: 30px; border-radius: 12px; border: 1px solid var(--border-color);">
+                <p style="color: #4CAF50; font-weight: bold; display: flex; align-items: center; gap: 10px;">
+                    <span style="display: inline-block; width: 12px; height: 12px; background: #4CAF50; border-radius: 50%;"></span>
+                    All Systems Operational
+                </p>
+                <p style="color: var(--text-muted); margin-top: 15px;">Database connection and storage are functioning
+                    normally.</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

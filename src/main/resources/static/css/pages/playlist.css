@@ -1,0 +1,444 @@
+/* ═══════════════════════════════════════════════════════
+   PLAYLIST — Playlist Page, Detail View, Song List
+   ═══════════════════════════════════════════════════════ */
+
+.playlist-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.playlist-page-header h1 {
+    font-size: 2.2rem;
+    margin: 0;
+}
+
+.playlist-subtitle {
+    color: var(--text-muted);
+    font-size: 1rem;
+    margin-top: 5px;
+}
+
+/* Playlist Cards Grid */
+.playlist-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.playlist-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background-color: var(--bg-surface);
+    border-radius: 8px;
+    transition: background-color 0.2s, transform 0.1s;
+    text-decoration: none;
+    color: var(--text-main);
+}
+
+.playlist-card:hover {
+    background-color: var(--bg-surface-hover);
+    transform: translateX(4px);
+    color: var(--text-main);
+}
+
+.playlist-card-icon {
+    font-size: 32px;
+    min-width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(215, 82, 9, 0.3), rgba(215, 82, 9, 0.1));
+    border-radius: 8px;
+}
+
+.playlist-card-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.playlist-card-name {
+    font-weight: 600;
+    font-size: 16px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.playlist-card-meta {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-top: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.playlist-card-badge {
+    margin-top: 5px;
+}
+
+.playlist-card-arrow {
+    color: var(--text-muted);
+    font-size: 20px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.playlist-card:hover .playlist-card-arrow {
+    opacity: 1;
+}
+
+/* ── Playlist Detail View ─────────────────── */
+
+.playlist-detail-header {
+    display: flex;
+    align-items: flex-end;
+    gap: 24px;
+    padding: 30px 0;
+    margin-bottom: 30px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.playlist-detail-icon {
+    font-size: 80px;
+    width: 160px;
+    height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(215, 82, 9, 0.4), rgba(215, 82, 9, 0.15));
+    border-radius: 8px;
+    flex-shrink: 0;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+.playlist-detail-info {
+    min-width: 0;
+}
+
+.playlist-type-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.playlist-detail-name {
+    font-size: 2.5rem;
+    font-weight: 900;
+    margin: 8px 0;
+    line-height: 1.1;
+}
+
+.playlist-detail-desc {
+    color: var(--text-muted);
+    font-size: 15px;
+    margin: 0 0 10px;
+}
+
+.playlist-detail-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.meta-separator {
+    opacity: 0.5;
+}
+
+/* ── Playlist Song List (Table-style) ─────── */
+
+.playlist-song-list {
+    margin-top: 10px;
+}
+
+.playlist-song-header {
+    display: grid;
+    grid-template-columns: 40px 1fr 200px 60px;
+    gap: 16px;
+    padding: 8px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+}
+
+.playlist-song-row {
+    display: grid;
+    grid-template-columns: 40px 1fr 200px 60px;
+    gap: 16px;
+    padding: 10px 16px;
+    align-items: center;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    cursor: pointer;
+}
+
+.playlist-song-row:hover {
+    background-color: var(--bg-surface-hover);
+}
+
+.col-num {
+    color: var(--text-muted);
+    font-size: 14px;
+    text-align: center;
+}
+
+.col-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.song-row-cover {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.song-row-title {
+    font-size: 15px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.col-artist {
+    color: var(--text-muted);
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.col-artist a {
+    color: var(--text-muted);
+}
+
+.col-artist a:hover {
+    color: var(--text-main);
+    text-decoration: underline;
+}
+
+.col-duration {
+    color: var(--text-muted);
+    font-size: 14px;
+    text-align: right;
+}
+
+/* ═══════════════════════════════════════════════════════
+   DAY 9 — Playlist Tabs & Detail Actions
+   ═══════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════
+   DAY 9 — Playlist Tabs, Buttons, Actions, Modal Items
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Tabs ─────────────────────────────────────── */
+
+.playlist-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 25px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.playlist-tab {
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.playlist-tab:hover {
+    color: var(--text-main);
+}
+
+.playlist-tab--active {
+    color: var(--text-main) !important;
+    border-bottom-color: var(--primary-color) !important;
+}
+
+/* ── Playlist Action Buttons (themed) ─────────── */
+
+.playlist-actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.pl-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+}
+
+.pl-btn--primary {
+    background-color: var(--primary-color);
+    color: #000;
+}
+
+.pl-btn--primary:hover {
+    background-color: var(--primary-hover);
+    transform: scale(1.03);
+}
+
+.pl-btn--secondary {
+    background-color: var(--bg-surface);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+}
+
+.pl-btn--secondary:hover {
+    background-color: var(--bg-surface-hover);
+    border-color: var(--text-muted);
+}
+
+.pl-btn--danger {
+    background-color: transparent;
+    color: var(--error-color);
+    border: 1px solid var(--error-color);
+}
+
+.pl-btn--danger:hover {
+    background-color: var(--error-color);
+    color: #fff;
+}
+
+.pl-btn--following {
+    background-color: var(--bg-surface);
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+}
+
+.pl-btn--following:hover {
+    background-color: transparent;
+    border-color: var(--error-color);
+    color: var(--error-color);
+}
+
+/* ── Delete button on playlist cards ──────────── */
+
+.pl-action-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.2s;
+    opacity: 0;
+}
+
+.playlist-card:hover .pl-action-btn {
+    opacity: 1;
+}
+
+.pl-action-btn:hover {
+    color: var(--error-color);
+    background: rgba(226, 33, 52, 0.1);
+}
+
+/* ── Remove song button in rows ───────────────── */
+
+.pl-remove-song-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    opacity: 0;
+}
+
+.playlist-song-row:hover .pl-remove-song-btn {
+    opacity: 1;
+}
+
+.pl-remove-song-btn:hover {
+    color: var(--error-color);
+    background: rgba(226, 33, 52, 0.1);
+}
+
+/* ── Playlist modal items ─────────────────────── */
+
+.pl-modal-item {
+    padding: 12px 15px;
+    margin-bottom: 6px;
+    background-color: var(--bg-surface);
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.pl-modal-item:hover {
+    background-color: var(--bg-surface-hover);
+    transform: translateX(2px);
+}
+
+.pl-modal-item-name {
+    font-weight: 500;
+    color: var(--text-main);
+}
+
+.pl-modal-item-badge {
+    font-size: 14px;
+}
+
+/* ── Light theme overrides ────────────────────── */
+
+[data-theme="light"] .pl-btn--primary {
+    color: #fff;
+}
+
+[data-theme="light"] .pl-btn--primary:hover {
+    color: #fff;
+}
+
+[data-theme="light"] .pl-btn--danger:hover {
+    color: #fff;
+}
+
+[data-theme="light"] .pl-btn--following {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+[data-theme="light"] .pl-btn--following:hover {
+    color: var(--error-color);
+    border-color: var(--error-color);
+}

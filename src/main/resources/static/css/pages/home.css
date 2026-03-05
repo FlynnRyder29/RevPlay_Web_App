@@ -1,0 +1,104 @@
+/* ═══════════════════════════════════════════════════════
+   HOME — Hero Section, Greeting, Home Sections
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Hero Section (Guest Landing) ────────────────── */
+
+.hero-section {
+    text-align: center;
+    padding: 80px 20px 60px;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-glow {
+    position: absolute;
+    top: -100px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 400px;
+    background: radial-gradient(ellipse,
+    rgba(215, 82, 9, 0.15) 0%,
+    transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: var(--text-main);
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 1;
+    background: linear-gradient(135deg, var(--text-main), var(--primary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero-subtitle {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    margin-bottom: 40px;
+    position: relative;
+    z-index: 1;
+}
+
+.hero-cta {
+    display: inline-block;
+    padding: 16px 48px;
+    background-color: var(--primary-color);
+    color: #000;
+    border-radius: 30px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    transition: transform 0.2s, background-color 0.2s, box-shadow 0.3s;
+    position: relative;
+    z-index: 1;
+}
+
+.hero-cta:hover {
+    background-color: var(--primary-hover);
+    color: #000;
+    transform: scale(1.05);
+    box-shadow: 0 4px 25px rgba(215, 82, 9, 0.4);
+}
+
+.hero-features {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-top: 50px;
+    position: relative;
+    z-index: 1;
+}
+
+.hero-feature {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-muted);
+    font-size: 15px;
+}
+
+.hero-feature-icon {
+    font-size: 24px;
+}
+
+/* ── Home — Greeting & Sections ──────────────────── */
+
+.greeting-section {
+    margin-bottom: 35px;
+}
+
+.greeting-text {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.home-section {
+    margin-bottom: 45px;
+}

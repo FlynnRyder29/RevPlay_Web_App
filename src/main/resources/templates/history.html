@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head('Listening History')}"></head>
+<body>
+<div th:replace="~{layout :: page(~{::#history-content})}">
+
+    <div id="history-content">
+
+        <div class="hero-section"
+             style="background: linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-dark) 100%); border-bottom: 1px solid var(--border-color);">
+            <h1 class="hero-title">Listening History</h1>
+            <p class="hero-subtitle">Your recently played tracks</p>
+        </div>
+
+        <div class="song-grid" style="margin-top: 30px;" th:if="${songs != null and !songs.isEmpty()}">
+            <th:block th:each="song : ${songs}">
+                <div th:replace="~{fragments/song-card :: card(song=${song})}"></div>
+            </th:block>
+        </div>
+
+        <div th:if="${songs == null or songs.isEmpty()}" class="empty-state"
+             style="text-align: center; margin-top: 60px;">
+            <div style="font-size: 48px; margin-bottom: 20px;">🎧</div>
+            <h2>No history yet</h2>
+            <p style="color: var(--text-muted);">Start listening to some music and it will appear here.</p>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

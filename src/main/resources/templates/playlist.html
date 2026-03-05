@@ -1,74 +1,146 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
 <head th:replace="~{layout :: head('Playlists')}"></head>
+
 <body>
 <div th:replace="~{layout :: page(~{::#playlist-content})}">
 
     <div id="playlist-content">
 
-        <!-- ═══════════════════════════════════════════ -->
-        <!--  LIST MODE — Show all user's playlists     -->
-        <!-- ═══════════════════════════════════════════ -->
+        <!-- ═══════════════════════════════════════════════════ -->
+        <!--  LIST MODE — Tabs: My Playlists + Discover Public  -->
+        <!-- ═══════════════════════════════════════════════════ -->
         <div th:if="${viewMode == 'list'}">
 
             <!-- Page Header -->
             <div class="playlist-page-header">
                 <div class="playlist-header-left">
-                    <h1>Your Playlists</h1>
-                    <p class="playlist-subtitle" th:text="${playlists != null ? playlists.size() + ' playlists' : '0 playlists'}"></p>
+                    <h1>Playlists</h1>
+                    <p class="playlist-subtitle">Your music, organized</p>
                 </div>
-                <button class="btn-create-playlist" onclick="document.getElementById('create-modal').style.display='flex'">
+                <button class="btn-create-playlist" id="btn-open-create-modal">
                     + New Playlist
                 </button>
             </div>
 
-            <!-- Playlists Grid -->
-            <div class="playlist-grid" th:if="${playlists != null && !playlists.isEmpty()}">
-                <a th:each="pl : ${playlists}"
-                   th:href="@{/playlists/{id}(id=${pl.id})}"
-                   class="playlist-card">
-                    <div class="playlist-card-icon">📋</div>
-                    <div class="playlist-card-info">
-                        <div class="playlist-card-name" th:text="${pl.name}">My Playlist</div>
-                        <div class="playlist-card-meta">
-                            <span th:text="${pl.description != null ? pl.description : 'No description'}">Description</span>
-                        </div>
-                        <div class="playlist-card-badge">
-                            <span th:if="${pl.public}" class="badge-public">Public</span>
-                            <span th:if="${!pl.public}" class="badge-private">Private</span>
-                        </div>
-                    </div>
-                    <div class="playlist-card-arrow">→</div>
+            <!-- ── Tab Navigation ── -->
+            <div class="playlist-tabs">
+                <a th:href="@{/playlists(tab='mine')}"
+                   class="playlist-tab"
+                   th:classappend="${activeTab == 'mine' || activeTab == null} ? ' playlist-tab--active' : ''">
+                    My Playlists
+                    <span th:if="${playlists != null}" th:text="'(' + ${playlists.size()} + ')'"
+                          style="font-weight: 400; margin-left: 4px;"></span>
+                </a>
+                <a th:href="@{/playlists(tab='discover')}"
+                   class="playlist-tab"
+                   th:classappend="${activeTab == 'discover'} ? ' playlist-tab--active' : ''">
+                    Discover Public
+                    <span th:if="${publicPlaylists != null}" th:text="'(' + ${publicPlaylists.size()} + ')'"
+                          style="font-weight: 400; margin-left: 4px;"></span>
                 </a>
             </div>
 
-            <!-- Empty State -->
-            <div class="empty-state" th:if="${playlists == null || playlists.isEmpty()}">
-                <div class="empty-icon">📋</div>
-                <h2>No playlists yet</h2>
-                <p>Create your first playlist to start organizing your music</p>
-                <button class="btn-primary" style="display: inline-block; width: auto; padding: 12px 30px; margin-top: 15px;"
-                        onclick="document.getElementById('create-modal').style.display='flex'">
-                    Create Playlist
-                </button>
+            <!-- ═══ TAB: MY PLAYLISTS ═══ -->
+            <div th:if="${activeTab == 'mine' || activeTab == null}">
+
+                <div class="playlist-grid" th:if="${playlists != null && !playlists.isEmpty()}">
+                    <div th:each="pl : ${playlists}" class="playlist-card" style="position: relative;">
+                        <a th:href="@{/playlists/{id}(id=${pl.id})}"
+                           style="display: flex; align-items: center; gap: 16px; flex: 1; text-decoration: none; color: var(--text-main);">
+                            <div class="playlist-card-icon">📋</div>
+                            <div class="playlist-card-info">
+                                <div class="playlist-card-name" th:text="${pl.name}">My Playlist</div>
+                                <div class="playlist-card-meta">
+                                    <span th:text="${pl.description != null ? pl.description : 'No description'}">Description</span>
+                                </div>
+                                <div class="playlist-card-badge">
+                                    <span th:if="${pl.public}" class="badge-public">Public</span>
+                                    <span th:if="${!pl.public}" class="badge-private">Private</span>
+                                </div>
+                            </div>
+                        </a>
+                        <button class="pl-action-btn pl-delete-btn" th:data-id="${pl.id}" th:data-name="${pl.name}"
+                                title="Delete playlist">🗑️</button>
+                        <div class="playlist-card-arrow">→</div>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state" th:if="${playlists == null || playlists.isEmpty()}">
+                    <div class="empty-icon">📋</div>
+                    <h2>No playlists yet</h2>
+                    <p>Create your first playlist to start organizing your music</p>
+                    <button class="btn-create-playlist"
+                            style="display: inline-block; width: auto; margin-top: 15px;"
+                            onclick="document.getElementById('create-modal').style.display='flex'">
+                        Create Playlist
+                    </button>
+                </div>
             </div>
 
-            <!-- Create Playlist Modal -->
+            <!-- ═══ TAB: DISCOVER PUBLIC ═══ -->
+            <div th:if="${activeTab == 'discover'}">
+
+                <!-- Search Public Playlists -->
+                <form th:action="@{/playlists}" method="get" class="search-form" style="margin-bottom: 25px;">
+                    <input type="hidden" name="tab" value="discover">
+                    <div class="search-input-wrapper">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" name="search" class="search-input"
+                               placeholder="Search public playlists..."
+                               th:value="${searchQuery}">
+                    </div>
+                    <button type="submit" class="btn-search">Search</button>
+                </form>
+
+                <div class="playlist-grid" th:if="${publicPlaylists != null && !publicPlaylists.isEmpty()}">
+                    <a th:each="pl : ${publicPlaylists}"
+                       th:href="@{/playlists/{id}(id=${pl.id})}"
+                       class="playlist-card">
+                        <div class="playlist-card-icon">🌐</div>
+                        <div class="playlist-card-info">
+                            <div class="playlist-card-name" th:text="${pl.name}">Playlist Name</div>
+                            <div class="playlist-card-meta">
+                                <span th:text="${pl.description != null ? pl.description : 'No description'}">Description</span>
+                            </div>
+                            <div class="playlist-card-badge">
+                                <span class="badge-public">Public</span>
+                            </div>
+                        </div>
+                        <div class="playlist-card-arrow">→</div>
+                    </a>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state" th:if="${publicPlaylists == null || publicPlaylists.isEmpty()}">
+                    <div class="empty-icon">🌐</div>
+                    <h2 th:if="${searchQuery != null}">No playlists found</h2>
+                    <h2 th:if="${searchQuery == null}">No public playlists yet</h2>
+                    <p th:if="${searchQuery != null}">Try a different search term</p>
+                    <p th:if="${searchQuery == null}">Be the first to create a public playlist!</p>
+                </div>
+            </div>
+
+            <!-- ═══ Create Playlist Modal ═══ -->
             <div id="create-modal" class="modal-overlay" style="display:none;">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h2>Create New Playlist</h2>
-                        <button class="modal-close" onclick="document.getElementById('create-modal').style.display='none'">✕</button>
+                        <button class="modal-close"
+                                onclick="document.getElementById('create-modal').style.display='none'">✕</button>
                     </div>
                     <form id="create-playlist-form">
                         <div class="form-group">
                             <label for="playlist-name">Name</label>
-                            <input type="text" id="playlist-name" class="form-control" placeholder="My awesome playlist" required>
+                            <input type="text" id="playlist-name" class="form-control"
+                                   placeholder="My awesome playlist" required>
                         </div>
                         <div class="form-group">
                             <label for="playlist-desc">Description</label>
-                            <textarea id="playlist-desc" class="form-control" rows="3" placeholder="What's this playlist about?"></textarea>
+                            <textarea id="playlist-desc" class="form-control" rows="3"
+                                      placeholder="What's this playlist about?"></textarea>
                         </div>
                         <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
                             <input type="checkbox" id="playlist-public">
@@ -78,11 +150,12 @@
                     </form>
                 </div>
             </div>
+
         </div>
 
-        <!-- ═══════════════════════════════════════════ -->
-        <!--  DETAIL MODE — Show songs in a playlist    -->
-        <!-- ═══════════════════════════════════════════ -->
+        <!-- ═══════════════════════════════════════════════════ -->
+        <!--  DETAIL MODE — Playlist with full controls         -->
+        <!-- ═══════════════════════════════════════════════════ -->
         <div th:if="${viewMode == 'detail'}">
 
             <!-- Playlist Header -->
@@ -90,41 +163,98 @@
                 <div class="playlist-detail-icon">📋</div>
                 <div class="playlist-detail-info">
                     <span class="playlist-type-label">PLAYLIST</span>
-                    <h1 class="playlist-detail-name" th:text="${playlist.name}">Playlist Name</h1>
-                    <p class="playlist-detail-desc" th:if="${playlist.description}" th:text="${playlist.description}">Description</p>
+                    <h1 class="playlist-detail-name" id="pl-detail-name" th:text="${playlist.name}">Playlist Name</h1>
+                    <p class="playlist-detail-desc" id="pl-detail-desc"
+                       th:if="${playlist.description}" th:text="${playlist.description}">Description</p>
                     <div class="playlist-detail-meta">
-                        <span th:if="${playlist.public}" class="badge-public">Public</span>
-                        <span th:if="${!playlist.public}" class="badge-private">Private</span>
+                        <span th:if="${playlist.public}" class="badge-public" id="pl-detail-badge">Public</span>
+                        <span th:if="${!playlist.public}" class="badge-private" id="pl-detail-badge">Private</span>
                         <span class="meta-separator">•</span>
-                        <span th:text="${songs != null ? songs.size() + ' songs' : '0 songs'}">0 songs</span>
+                        <span id="pl-song-count" th:text="${songs != null ? songs.size() + ' songs' : '0 songs'}">0 songs</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Song List -->
-            <div class="playlist-song-list" th:if="${songs != null && !songs.isEmpty()}">
+            <!-- ── Playback + Owner Actions ── -->
+            <div class="playlist-actions">
+                <button th:if="${songs != null && !songs.isEmpty()}"
+                        class="pl-btn pl-btn--primary" id="btn-play-all">
+                    ▶ Play All
+                </button>
+                <button th:if="${songs != null && !songs.isEmpty()}"
+                        class="pl-btn pl-btn--secondary" id="btn-shuffle-play">
+                    🔀 Shuffle
+                </button>
+
+                <!-- Owner actions -->
+                <th:block th:if="${isOwner}">
+                    <button class="pl-btn pl-btn--secondary" id="btn-edit-playlist"
+                            th:data-id="${playlist.id}"
+                            th:data-name="${playlist.name}"
+                            th:data-desc="${playlist.description}"
+                            th:data-public="${playlist.public}">
+                        ✏️ Edit
+                    </button>
+                    <button class="pl-btn pl-btn--danger" id="btn-delete-playlist"
+                            th:data-id="${playlist.id}">
+                        🗑️ Delete
+                    </button>
+                </th:block>
+
+                <!-- Visitor: Follow/Unfollow -->
+                <th:block th:if="${!isOwner && playlist.public}">
+                    <button class="pl-btn" id="btn-follow-playlist"
+                            th:data-id="${playlist.id}"
+                            th:data-following="${isFollowing}"
+                            th:classappend="${isFollowing} ? ' pl-btn--following' : ' pl-btn--secondary'">
+                        <span th:text="${isFollowing ? '✓ Following' : '+ Follow'}">+ Follow</span>
+                    </button>
+                </th:block>
+            </div>
+
+            <!-- ── Song List ── -->
+            <div class="playlist-song-list" id="playlist-song-list"
+                 th:if="${songs != null && !songs.isEmpty()}"
+                 th:data-playlist-id="${playlist.id}"
+                 th:data-is-owner="${isOwner}">
+
                 <div class="playlist-song-header">
-                    <span class="col-num">#</span>
-                    <span class="col-title">TITLE</span>
-                    <span class="col-artist">ARTIST</span>
-                    <span class="col-duration">⏱</span>
+                    <span>#</span>
+                    <span>TITLE</span>
+                    <span>ARTIST</span>
+                    <span style="text-align: right;" th:text="${isOwner} ? 'ACTIONS' : 'DURATION'">DURATION</span>
                 </div>
+
                 <div th:each="song, iter : ${songs}"
                      class="playlist-song-row"
                      th:data-id="${song.id}"
+                     th:data-song-id="${song.id}"
                      th:data-url="${song.audioUrl}"
                      th:data-title="${song.title}"
-                     th:data-artist="${song.artistName}">
+                     th:data-artist="${song.artistName}"
+                     th:data-cover="${song.coverImageUrl}">
+
                     <span class="col-num" th:text="${iter.index + 1}">1</span>
+
                     <div class="col-title">
                         <img th:src="${song.coverImageUrl != null ? song.coverImageUrl : 'https://www.shutterstock.com/shutterstock/photos/2626947211/display_1500/stock-vector-jazz-music-poster-design-template-2626947211.jpg'}"
                              alt="Cover" class="song-row-cover">
                         <span class="song-row-title" th:text="${song.title}">Song Title</span>
                     </div>
+
                     <span class="col-artist">
-                        <a th:href="@{/artist/{id}(id=${song.artistId})}" th:text="${song.artistName}">Artist</a>
+                        <a th:href="@{/artist/{id}(id=${song.artistId})}"
+                           th:text="${song.artistName}">Artist</a>
                     </span>
-                    <span class="col-duration" th:text="${song.duration != null ? (song.duration / 60) + ':' + String.format('%02d', song.duration % 60) : '--:--'}">3:45</span>
+
+                    <span th:if="${isOwner}" style="text-align: right;">
+                        <button class="pl-remove-song-btn"
+                                th:data-song-id="${song.id}"
+                                title="Remove from playlist">✕</button>
+                    </span>
+
+                    <span th:if="${!isOwner}" class="col-duration"
+                          th:text="${song.duration != null ? T(String).format('%d:%02d', song.duration / 60, song.duration % 60) : '—'}">3:45</span>
                 </div>
             </div>
 
@@ -132,8 +262,10 @@
             <div class="empty-state" th:if="${songs == null || songs.isEmpty()}" style="padding: 60px 20px;">
                 <div class="empty-icon">🎵</div>
                 <h2>This playlist is empty</h2>
-                <p>Add songs from the library to build your playlist</p>
-                <a th:href="@{/library}" class="btn-primary" style="display: inline-block; width: auto; padding: 12px 30px; margin-top: 15px;">
+                <p th:if="${isOwner}">Add songs from the library using the <strong>+</strong> button on any song card</p>
+                <p th:if="${!isOwner}">The owner hasn't added any songs yet</p>
+                <a th:if="${isOwner}" th:href="@{/library}" class="pl-btn pl-btn--primary"
+                   style="display: inline-block; margin-top: 15px; text-decoration: none;">
                     Browse Library
                 </a>
             </div>
@@ -142,33 +274,400 @@
             <div style="margin-top: 30px;">
                 <a th:href="@{/playlists}" class="back-link">← Back to Playlists</a>
             </div>
+
+            <!-- ═══ Edit Playlist Modal ═══ -->
+            <div th:if="${isOwner}" id="edit-modal" class="modal-overlay" style="display:none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Edit Playlist</h2>
+                        <button class="modal-close" onclick="document.getElementById('edit-modal').style.display='none'">✕</button>
+                    </div>
+                    <form id="edit-playlist-form">
+                        <input type="hidden" id="edit-playlist-id" th:value="${playlist.id}">
+                        <div class="form-group">
+                            <label for="edit-name">Name</label>
+                            <input type="text" id="edit-name" class="form-control"
+                                   th:value="${playlist.name}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-desc">Description</label>
+                            <textarea id="edit-desc" class="form-control" rows="3"
+                                      th:text="${playlist.description}"></textarea>
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" id="edit-public" th:checked="${playlist.public}">
+                            <label for="edit-public" style="margin-bottom: 0; cursor: pointer;">Make it public</label>
+                        </div>
+                        <button type="submit" class="btn-primary">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+
         </div>
 
-    </div>
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!--  PLAYLIST PAGE JAVASCRIPT                                      -->
+        <!--  MUST be inside #playlist-content so PJAX executeScripts()     -->
+        <!--  re-runs it after every content swap.                          -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <script>
+            (function () {
+                'use strict';
+
+                var csrfToken = (document.querySelector('meta[name="_csrf"]') || {}).content || '';
+
+                // ══════════════════════════════════════════════════════════
+                // HELPER: Invalidate PJAX cache for playlist pages
+                // ══════════════════════════════════════════════════════════
+
+                function invalidatePlaylistCache() {
+                    if (window.PjaxRouter && window.PjaxRouter.invalidateCache) {
+                        window.PjaxRouter.invalidateCache('/playlists');
+                    }
+                }
+
+                // ══════════════════════════════════════════════════════════
+                // CREATE PLAYLIST
+                // ══════════════════════════════════════════════════════════
+
+                var createForm = document.getElementById('create-playlist-form');
+                var createModal = document.getElementById('create-modal');
+                var openCreateBtn = document.getElementById('btn-open-create-modal');
+
+                if (openCreateBtn && createModal) {
+                    openCreateBtn.addEventListener('click', function () {
+                        createModal.style.display = 'flex';
+                    });
+                }
+
+                if (createForm) {
+                    createForm.addEventListener('submit', function (e) {
+                        e.preventDefault();
+                        var name = document.getElementById('playlist-name').value;
+                        var desc = document.getElementById('playlist-desc').value;
+                        var isPublic = document.getElementById('playlist-public').checked;
+
+                        fetch('/api/playlists', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                            body: JSON.stringify({ name: name, description: desc, isPublic: isPublic })
+                        })
+                            .then(function (res) {
+                                if (!res.ok) throw new Error('Failed');
+                                invalidatePlaylistCache();
+                                if (window.PjaxRouter && window.PjaxRouter.reload) {
+                                    window.PjaxRouter.reload();
+                                } else {
+                                    window.location.reload();
+                                }
+                            })
+                            .catch(function () { alert('Failed to create playlist'); });
+                    });
+                }
+
+                // ══════════════════════════════════════════════════════════
+                // DELETE PLAYLIST (from list page)
+                // ══════════════════════════════════════════════════════════
+
+                document.querySelectorAll('.pl-delete-btn').forEach(function (btn) {
+                    btn.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        var id = this.getAttribute('data-id');
+                        var name = this.getAttribute('data-name');
+                        if (!confirm('Delete playlist "' + name + '"? This cannot be undone.')) return;
+
+                        fetch('/api/playlists/' + id, {
+                            method: 'DELETE',
+                            headers: { 'X-CSRF-TOKEN': csrfToken }
+                        })
+                            .then(function (res) {
+                                if (!(res.status >= 200 && res.status < 300)) throw new Error('Failed');
+                                invalidatePlaylistCache();
+                                if (window.PjaxRouter && window.PjaxRouter.reload) {
+                                    window.PjaxRouter.reload();
+                                } else {
+                                    window.location.reload();
+                                }
+                            })
+                            .catch(function () { alert('Failed to delete playlist'); });
+                    });
+                });
+
+                // ══════════════════════════════════════════════════════════
+                // DELETE PLAYLIST (from detail page)
+                // ══════════════════════════════════════════════════════════
+
+                var deleteDetailBtn = document.getElementById('btn-delete-playlist');
+                if (deleteDetailBtn) {
+                    deleteDetailBtn.addEventListener('click', function () {
+                        var id = this.getAttribute('data-id');
+                        if (!confirm('Delete this playlist? This cannot be undone.')) return;
+
+                        fetch('/api/playlists/' + id, {
+                            method: 'DELETE',
+                            headers: { 'X-CSRF-TOKEN': csrfToken }
+                        })
+                            .then(function (res) {
+                                if (!(res.status >= 200 && res.status < 300)) throw new Error('Failed');
+                                invalidatePlaylistCache();
+                                if (window.PjaxRouter && window.PjaxRouter.navigate) {
+                                    window.PjaxRouter.navigate('/playlists');
+                                } else {
+                                    window.location.href = '/playlists';
+                                }
+                            })
+                            .catch(function () { alert('Failed to delete playlist'); });
+                    });
+                }
+
+                // ══════════════════════════════════════════════════════════
+                // EDIT PLAYLIST
+                // ══════════════════════════════════════════════════════════
+
+                var editBtn = document.getElementById('btn-edit-playlist');
+                var editModal = document.getElementById('edit-modal');
+                var editForm = document.getElementById('edit-playlist-form');
+
+                if (editBtn && editModal) {
+                    editBtn.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        editModal.style.display = 'flex';
+                    });
+                }
+
+                if (editForm) {
+                    editForm.addEventListener('submit', function (e) {
+                        e.preventDefault();
+                        var id = document.getElementById('edit-playlist-id').value;
+                        var name = document.getElementById('edit-name').value;
+                        var desc = document.getElementById('edit-desc').value;
+                        var isPublic = document.getElementById('edit-public').checked;
+
+                        var submitBtn = editForm.querySelector('button[type="submit"]');
+                        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Saving...'; }
+
+                        fetch('/api/playlists/' + id, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                            body: JSON.stringify({ name: name, description: desc, isPublic: isPublic })
+                        })
+                            .then(function (res) {
+                                if (!res.ok) throw new Error('Failed');
+                                return res.json();
+                            })
+                            .then(function () {
+                                var nameEl = document.getElementById('pl-detail-name');
+                                var descEl = document.getElementById('pl-detail-desc');
+                                var badgeEl = document.getElementById('pl-detail-badge');
+
+                                if (nameEl) nameEl.textContent = name;
+                                if (descEl) {
+                                    descEl.textContent = desc || '';
+                                    descEl.style.display = desc ? '' : 'none';
+                                } else if (desc && nameEl) {
+                                    var newDesc = document.createElement('p');
+                                    newDesc.className = 'playlist-detail-desc';
+                                    newDesc.id = 'pl-detail-desc';
+                                    newDesc.textContent = desc;
+                                    nameEl.parentNode.insertBefore(newDesc, nameEl.nextElementSibling);
+                                }
+                                if (badgeEl) {
+                                    badgeEl.textContent = isPublic ? 'Public' : 'Private';
+                                    badgeEl.className = isPublic ? 'badge-public' : 'badge-private';
+                                }
+                                editModal.style.display = 'none';
+                                invalidatePlaylistCache();
+                            })
+                            .catch(function () { alert('Failed to update playlist'); })
+                            .finally(function () {
+                                if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Save Changes'; }
+                            });
+                    });
+                }
+
+                // ══════════════════════════════════════════════════════════
+                // REMOVE SONG FROM PLAYLIST
+                // ══════════════════════════════════════════════════════════
+
+                document.querySelectorAll('.pl-remove-song-btn').forEach(function (btn) {
+                    btn.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        var songId = this.getAttribute('data-song-id');
+                        var row = this.closest('.playlist-song-row');
+                        var songList = document.getElementById('playlist-song-list');
+                        var playlistId = songList ? songList.getAttribute('data-playlist-id') : null;
+
+                        if (!playlistId || !confirm('Remove this song from the playlist?')) return;
+
+                        fetch('/api/playlists/' + playlistId + '/songs/' + songId, {
+                            method: 'DELETE',
+                            headers: { 'X-CSRF-TOKEN': csrfToken }
+                        })
+                            .then(function (res) {
+                                if (!(res.status >= 200 && res.status < 300)) throw new Error('Failed');
+
+                                row.style.transition = 'opacity 0.3s, transform 0.3s';
+                                row.style.opacity = '0';
+                                row.style.transform = 'translateX(20px)';
+
+                                setTimeout(function () {
+                                    row.remove();
+                                    var countEl = document.getElementById('pl-song-count');
+                                    var remaining = document.querySelectorAll('.playlist-song-row').length;
+                                    if (countEl) countEl.textContent = remaining + ' songs';
+
+                                    document.querySelectorAll('.playlist-song-row .col-num').forEach(function (num, i) {
+                                        num.textContent = i + 1;
+                                    });
+
+                                    if (remaining === 0) {
+                                        var playAllBtn = document.getElementById('btn-play-all');
+                                        var shufflePlayBtn = document.getElementById('btn-shuffle-play');
+                                        if (playAllBtn) playAllBtn.style.display = 'none';
+                                        if (shufflePlayBtn) shufflePlayBtn.style.display = 'none';
+
+                                        var header = songList.querySelector('.playlist-song-header');
+                                        if (header) header.remove();
+                                        songList.innerHTML =
+                                            '<div class="empty-state" style="padding: 60px 20px;">' +
+                                            '<div class="empty-icon">🎵</div>' +
+                                            '<h2>This playlist is empty</h2>' +
+                                            '<p>Add songs from the library using the <strong>+</strong> button on any song card</p></div>';
+                                    }
+
+                                    if (window.RevPlay && window.RevPlay.rescan) {
+                                        window.RevPlay.rescan();
+                                    }
+                                    invalidatePlaylistCache();
+                                }, 300);
+                            })
+                            .catch(function () { alert('Error removing song'); });
+                    });
+                });
+
+                // ══════════════════════════════════════════════════════════
+                // FOLLOW / UNFOLLOW
+                // ══════════════════════════════════════════════════════════
+
+                var followBtn = document.getElementById('btn-follow-playlist');
+                if (followBtn) {
+                    followBtn.addEventListener('click', function () {
+                        var id = this.getAttribute('data-id');
+                        var isFollowing = this.getAttribute('data-following') === 'true';
+                        var btn = this;
+                        var method = isFollowing ? 'DELETE' : 'POST';
+
+                        var newState = !isFollowing;
+                        updateFollowUI(btn, newState);
+
+                        fetch('/api/playlists/' + id + '/follow', {
+                            method: method,
+                            headers: { 'X-CSRF-TOKEN': csrfToken }
+                        })
+                            .then(function (res) {
+                                if (res.status >= 200 && res.status < 300) {
+                                    btn.setAttribute('data-following', String(newState));
+                                    invalidatePlaylistCache();
+                                } else {
+                                    updateFollowUI(btn, isFollowing);
+                                    alert('Failed to ' + (isFollowing ? 'unfollow' : 'follow') + ' playlist');
+                                }
+                            })
+                            .catch(function () {
+                                updateFollowUI(btn, isFollowing);
+                                alert('Error toggling follow');
+                            });
+                    });
+                }
+
+                function updateFollowUI(btn, isFollowing) {
+                    var span = btn.querySelector('span');
+                    if (!span) span = btn;
+                    span.textContent = isFollowing ? '✓ Following' : '+ Follow';
+                    btn.className = 'pl-btn ' + (isFollowing ? 'pl-btn--following' : 'pl-btn--secondary');
+                }
+
+                // ══════════════════════════════════════════════════════════
+                // PLAY ALL / SHUFFLE PLAY / ROW CLICK
+                // ══════════════════════════════════════════════════════════
+
+                var playAllBtn = document.getElementById('btn-play-all');
+                var shufflePlayBtn = document.getElementById('btn-shuffle-play');
+
+                function getPlaylistSongs() {
+                    var rows = document.querySelectorAll('.playlist-song-row');
+                    var songs = [];
+                    rows.forEach(function (row) {
+                        var coverImg = row.querySelector('.song-row-cover');
+                        songs.push({
+                            id:     row.getAttribute('data-id') || row.getAttribute('data-song-id') || '',
+                            url:    row.getAttribute('data-url') || '',
+                            title:  row.getAttribute('data-title') || 'Unknown Title',
+                            artist: row.getAttribute('data-artist') || 'Unknown Artist',
+                            cover:  coverImg ? coverImg.src : (row.getAttribute('data-cover') || '')
+                        });
+                    });
+                    return songs;
+                }
+
+                if (playAllBtn) {
+                    playAllBtn.addEventListener('click', function () {
+                        var songs = getPlaylistSongs();
+                        if (songs.length === 0) return;
+                        if (window.RevPlay && window.RevPlay.playQueue) {
+                            window.RevPlay.playQueue(songs, 0);
+                        }
+                    });
+                }
+
+                if (shufflePlayBtn) {
+                    shufflePlayBtn.addEventListener('click', function () {
+                        var songs = getPlaylistSongs();
+                        if (songs.length === 0) return;
+                        if (window.RevPlay && window.RevPlay.shuffleQueue) {
+                            window.RevPlay.shuffleQueue(songs);
+                        }
+                    });
+                }
+
+                // Row click — play from that position (capturing phase)
+                document.querySelectorAll('.playlist-song-row').forEach(function (row, index) {
+                    row.addEventListener('click', function (e) {
+                        if (e.target.closest('button') || e.target.closest('a')) return;
+
+                        var songs = getPlaylistSongs();
+                        if (songs.length === 0) return;
+
+                        if (window.RevPlay && window.RevPlay.playQueue) {
+                            window.RevPlay.playQueue(songs, index);
+                        }
+
+                        document.querySelectorAll('.playlist-song-row').forEach(function (r) {
+                            r.classList.remove('playlist-row--active');
+                        });
+                        this.classList.add('playlist-row--active');
+
+                        e.stopPropagation();
+                    }, true);
+                });
+
+                // ══════════════════════════════════════════════════════════
+                // CLOSE MODALS ON OVERLAY CLICK
+                // ══════════════════════════════════════════════════════════
+
+                document.querySelectorAll('.modal-overlay').forEach(function (m) {
+                    m.addEventListener('click', function (e) {
+                        if (e.target === m) m.style.display = 'none';
+                    });
+                });
+
+            })();
+        </script>
+
+    </div><!-- end #playlist-content -->
 </div>
-
-<!-- Create playlist via API -->
-<script>
-    document.getElementById('create-playlist-form')?.addEventListener('submit', function(e) {
-        e.preventDefault();
-        var name = document.getElementById('playlist-name').value;
-        var desc = document.getElementById('playlist-desc').value;
-        var isPublic = document.getElementById('playlist-public').checked;
-
-        fetch('/api/playlists', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]')?.content || ''
-            },
-            body: JSON.stringify({ name: name, description: desc, isPublic: isPublic })
-        })
-            .then(function(res) {
-                if (res.ok) { window.location.reload(); }
-                else { alert('Failed to create playlist'); }
-            })
-            .catch(function() { alert('Error creating playlist'); });
-    });
-</script>
 </body>
+
 </html>
