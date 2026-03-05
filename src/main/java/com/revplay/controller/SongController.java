@@ -12,6 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,7 +43,7 @@ public class SongController {
 
         String safeSortBy = ALLOWED_SORT_FIELDS.contains(sortBy) ? sortBy : "createdAt";
 
-        log.info("GET /api/songs - page={}, size={}, sortBy={}", page, size, safeSortBy);
+        log.info("GET /api/songs - page={}, size={}, sortBy={}, sortDir={}", page, size, safeSortBy, sortDir);
 
         Sort sort = sortDir.equalsIgnoreCase("asc")
                 ? Sort.by(safeSortBy).ascending()
@@ -71,14 +72,40 @@ public class SongController {
             throw new BadRequestException("Search keyword cannot be blank");
         }
 
-        log.info("GET /api/songs/search - keyword='{}'", keyword);
+        log.info("GET /api/songs/search - keyword='{}'", keyword.trim());
 
         Pageable pageable = PageRequest.of(page, size);
 
         return ResponseEntity.ok(songService.searchSongs(keyword.trim(), pageable));
     }
 
+    // GET /api/songs/filter
+    @GetMapping("/filter")
+    public ResponseEntity<Page<SongDTO>> filterSongs(
+            @RequestParam(required = false) String genre,
+            @RequestParam(required = false) String artist,
+            @RequestParam(required = false) String album,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+
+        String safeSortBy = ALLOWED_SORT_FIELDS.contains(sortBy) ? sortBy : "createdAt";
+
+        log.info("GET /api/songs/filter - genre={}, artist={}, album={}, year={}", genre, artist, album, year);
+
+        Sort sort = sortDir.equalsIgnoreCase("asc")
+                ? Sort.by(safeSortBy).ascending()
+                : Sort.by(safeSortBy).descending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        return ResponseEntity.ok(songService.filterSongs(genre, artist, album, year, pageable));
+    }
+
     // PATCH /api/songs/{id}/visibility
+    @PreAuthorize("hasAnyRole('ARTIST', 'ADMIN')")
     @PatchMapping("/{id}/visibility")
     public ResponseEntity<SongDTO> updateVisibility(
             @PathVariable Long id,
@@ -93,40 +120,11 @@ public class SongController {
         } catch (IllegalArgumentException e) {
             throw new BadRequestException(
                     "Invalid visibility value: " + visibility +
-                            ". Allowed values: PUBLIC, UNLISTED, PRIVATE");
+                    ". Allowed values: PUBLIC, UNLISTED, PRIVATE");
         }
 
-        log.info("PATCH /api/songs/{}/visibility -> {}", id, visibility);
+        log.info("PATCH /api/songs/{}/visibility -> {}", id, visibility.toUpperCase());
 
-        return ResponseEntity.ok(
-                songService.updateVisibility(id, visibility.toUpperCase()));
-    }
-
-    // 🟡 FIX: Added @Min/@Max validation on page size to match other endpoints
-    // Without this, a client can request ?size=100000 and dump the full table
-    @GetMapping("/filter")
-    public ResponseEntity<Page<SongDTO>> filterSongs(
-            @RequestParam(required = false) String genre,
-            @RequestParam(required = false) String artist,
-            @RequestParam(required = false) String album,
-            @RequestParam(required = false) Integer year,
-            @RequestParam(defaultValue = "0") @Min(0) int page,
-            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
-            @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "desc") String sortDir) {
-
-        String safeSortBy = ALLOWED_SORT_FIELDS.contains(sortBy) ? sortBy : "createdAt";
-
-        log.info("GET /api/songs/filter - genre={}, artist={}, album={}, year={}",
-                genre, artist, album, year);
-
-        Sort sort = sortDir.equalsIgnoreCase("asc")
-                ? Sort.by(safeSortBy).ascending()
-                : Sort.by(safeSortBy).descending();
-
-        Pageable pageable = PageRequest.of(page, size, sort);
-
-        return ResponseEntity.ok(
-                songService.filterSongs(genre, artist, album, year, pageable));
+        return ResponseEntity.ok(songService.updateVisibility(id, visibility.toUpperCase()));
     }
 }
