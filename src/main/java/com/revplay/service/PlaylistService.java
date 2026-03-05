@@ -1,6 +1,7 @@
 package com.revplay.service;
 
 import com.revplay.dto.PlaylistDTO;
+import com.revplay.dto.SongDTO;
 import com.revplay.exception.BadRequestException;
 import com.revplay.exception.ResourceNotFoundException;
 import com.revplay.exception.UnauthorizedAccessException;
@@ -371,6 +372,36 @@ public class PlaylistService {
         dto.setUserId(playlist.getUser().getId());
         dto.setCreatedAt(playlist.getCreatedAt());
         dto.setUpdatedAt(playlist.getUpdatedAt());
+
+        List<SongDTO> songs = playlistSongRepository
+                .findByPlaylist_IdOrderByPosition(playlist.getId())
+                .stream()
+                .map(ps -> {
+                    Song s = ps.getSong();
+                    return SongDTO.builder()
+                            .id(s.getId())
+                            .title(s.getTitle())
+                            .genre(s.getGenre())
+                            .duration(s.getDuration())
+                            .audioUrl(s.getAudioUrl())
+                            .coverImageUrl(s.getCoverImageUrl())
+                            .releaseDate(s.getReleaseDate())
+                            .playCount(s.getPlayCount())
+                            .visibility(s.getVisibility() != null
+                                    ? s.getVisibility().name() : null)
+                            .artistId(s.getArtist() != null
+                                    ? s.getArtist().getId() : null)
+                            .artistName(s.getArtist() != null
+                                    ? s.getArtist().getArtistName() : null)
+                            .albumId(s.getAlbum() != null
+                                    ? s.getAlbum().getId() : null)
+                            .albumName(s.getAlbum() != null
+                                    ? s.getAlbum().getName() : null)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        dto.setSongs(songs);
 
         return dto;
     }
