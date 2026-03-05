@@ -259,15 +259,8 @@ public class PageController {
     @GetMapping("/admin")
     public String showAdminPanel(Model model) {
         log.info("GET /admin");
-
-        long totalUsers = userRepository.count();
-        long totalArtists = artistRepository.count();
-        long totalPlaylists = playlistService.getPublicPlaylists("").size();
-
-        model.addAttribute("totalUsers", totalUsers);
-        model.addAttribute("totalArtists", totalArtists);
-        model.addAttribute("totalPlaylists", totalPlaylists);
-
+        // Stats loaded via AJAX from /api/admin/stats
+        // Just render the template
         return "admin";
     }
 
@@ -294,7 +287,12 @@ public class PageController {
     public String showHistoryPage(Model model) {
         log.info("GET /history");
 
-        List<SongDTO> songs = historyService.getAllHistory().stream()
+        // Pass HistoryDTOs directly — keeps playedAt timestamps
+        List<com.revplay.dto.HistoryDTO> historyEntries = historyService.getAllHistory();
+        model.addAttribute("historyEntries", historyEntries);
+
+        // Also pass as SongDTOs for the song-card fragment (used in grid view)
+        List<SongDTO> songs = historyEntries.stream()
                 .map(h -> SongDTO.builder()
                         .id(h.getSongId())
                         .title(h.getSongTitle())
@@ -303,8 +301,8 @@ public class PageController {
                         .coverImageUrl(h.getCoverImageUrl())
                         .build())
                 .collect(Collectors.toList());
-
         model.addAttribute("songs", songs);
+
         return "history";
     }
 }

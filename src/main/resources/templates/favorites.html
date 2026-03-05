@@ -30,6 +30,21 @@
                style="margin-top: 20px; display: inline-block;">Discover Music</a>
         </div>
 
+        <!-- Favorites page: ensure all hearts are pre-marked as favorited -->
+        <script>
+            (function () {
+                'use strict';
+                // On the favorites page, ALL displayed songs are favorites.
+                // Mark them immediately without waiting for the /api/favorites/ids call.
+                var btns = document.querySelectorAll('.song-card-fav-btn');
+                btns.forEach(function (btn) {
+                    btn.classList.add('favorited');
+                    btn.innerHTML = '♥';
+                    btn.title = 'Remove from Favorites';
+                });
+            })();
+        </script>
+
     </div>
 </div>
 </body>

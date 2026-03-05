@@ -4,9 +4,7 @@
  * Day 5: play/pause, seek, volume, prev/next, song-card click, now-playing.
  * Day 7: playlist row click, history recording, favorites toggle,
  *         keyboard shortcuts, queue display, drag-seek progress bar.
- * Day 9: Exposed RevPlay public API for cross-script playlist playback.
- *         Fixed buildQueueFromPlaylistRows to read data-id || data-song-id.
- *         Fixed highlightActiveRow for same fallback.
+ * Day 9: RevPlay public API, PJAX support, favorites.js integration.
  */
 (function () {
     'use strict';
@@ -37,7 +35,6 @@
     var isPlaying = false;
     var isShuffle = false;
     var repeatMode = 0;
-    var isFavorited = false;
 
     var csrfToken = '';
     var csrfMeta = document.querySelector('meta[name="_csrf"]');
@@ -140,38 +137,6 @@
         });
     }
 
-    function toggleFavorite() {
-        if (currentIndex < 0 || currentIndex >= queue.length) return;
-        var songId = queue[currentIndex].id;
-        if (!songId) return;
-
-        var method = isFavorited ? 'DELETE' : 'POST';
-        fetch('/api/favorites/' + songId, {
-            method: method,
-            headers: { 'X-CSRF-TOKEN': csrfToken }
-        })
-            .then(function (res) {
-                if (res.ok) {
-                    isFavorited = !isFavorited;
-                    updateFavoriteUI();
-                }
-            })
-            .catch(function (err) {
-                console.warn('Favorite toggle failed:', err.message);
-            });
-    }
-
-    function updateFavoriteUI() {
-        if (!playerFav) return;
-        if (isFavorited) {
-            playerFav.classList.add('favorited');
-            playerFav.title = 'Remove from Favorites';
-        } else {
-            playerFav.classList.remove('favorited');
-            playerFav.title = 'Add to Favorites';
-        }
-    }
-
     // ========================= CORE PLAYBACK =========================
 
     function playSongAtIndex(index) {
@@ -203,8 +168,10 @@
         }
         if (playerFav) playerFav.style.display = 'inline-block';
 
-        isFavorited = false;
-        updateFavoriteUI();
+        // Sync player bar heart with favorites.js state
+        if (window.syncFavoritesForSong) {
+            window.syncFavoritesForSong(song.id);
+        }
 
         updatePlayerPage(song);
         highlightActiveCard(song.id);
@@ -360,16 +327,15 @@
         });
     }
 
-    if (playerFav) {
-        playerFav.addEventListener('click', toggleFavorite);
-    }
+    // NOTE: Player bar heart click is now handled by favorites.js
+    // via document-level delegation on #player-favorite.
+    // No listener needed here — removed to prevent double-handling.
 
     // ========================= SONG CARD CLICKS =========================
 
     function attachCardListeners() {
         var cards = document.querySelectorAll('.song-card');
         cards.forEach(function (card, index) {
-            // Prevent double-binding: mark cards we've already attached to
             if (card.dataset.playerBound) return;
             card.dataset.playerBound = 'true';
 
@@ -393,23 +359,13 @@
         });
     }
 
-    // ========================= PLAYLIST ROW CLICKS (Day 7) =========================
+    // ========================= PLAYLIST ROW CLICKS =========================
 
-    /**
-     * Fallback row click handler for pages that DON'T have their own
-     * playlist inline JS (e.g., player page showing a queue, or any
-     * page with .playlist-song-row that isn't playlist.html).
-     *
-     * On the playlist detail page, playlist.html's inline script uses
-     * capturing-phase listeners + stopPropagation(), so these
-     * bubble-phase listeners won't fire — no double-handling.
-     */
     function attachPlaylistRowListeners() {
         var rows = document.querySelectorAll('.playlist-song-row');
         if (rows.length === 0) return;
 
         rows.forEach(function (row, index) {
-            // Prevent double-binding
             if (row.dataset.playerBound) return;
             row.dataset.playerBound = 'true';
 
@@ -434,7 +390,7 @@
         });
     }
 
-    // ========================= KEYBOARD SHORTCUTS (Day 7) =========================
+    // ========================= KEYBOARD SHORTCUTS =========================
 
     document.addEventListener('keydown', function (e) {
         var tag = e.target.tagName.toLowerCase();
@@ -495,7 +451,7 @@
         if (pageVolFill) pageVolFill.style.width = pct;
     }
 
-    // ========================= QUEUE DISPLAY (Day 7) =========================
+    // ========================= QUEUE DISPLAY =========================
 
     function updateQueueDisplay() {
         var queueList = document.getElementById('queue-list');
@@ -602,7 +558,7 @@
     attachCardListeners();
     attachPlaylistRowListeners();
 
-    // ========================= PUBLIC API (Day 9) =========================
+    // ========================= PUBLIC API =========================
 
     function shuffleArray(arr) {
         var shuffled = arr.slice();
@@ -617,11 +573,6 @@
 
     window.RevPlay = {
 
-        /**
-         * Replace the entire queue and start playing from a given index.
-         * @param {Array} songs  — Array of { id, url, title, artist, cover }
-         * @param {number} [startIndex=0] — Which song to play first
-         */
         playQueue: function (songs, startIndex) {
             if (!songs || songs.length === 0) return;
             queue = songs.slice();
@@ -630,10 +581,6 @@
             updateQueueDisplay();
         },
 
-        /**
-         * Replace the queue with a shuffled copy and play from position 0.
-         * @param {Array} songs — Array of { id, url, title, artist, cover }
-         */
         shuffleQueue: function (songs) {
             if (!songs || songs.length === 0) return;
             queue = shuffleArray(songs);
@@ -642,10 +589,6 @@
             updateQueueDisplay();
         },
 
-        /**
-         * Play a single song immediately (queue becomes just that one song).
-         * @param {Object} song — { id, url, title, artist, cover }
-         */
         playSong: function (song) {
             if (!song || !song.url) return;
             queue = [song];
@@ -654,19 +597,12 @@
             updateQueueDisplay();
         },
 
-        /**
-         * Add songs to the end of the current queue without interrupting playback.
-         * @param {Array} songs — Array of { id, url, title, artist, cover }
-         */
         addToQueue: function (songs) {
             if (!songs || songs.length === 0) return;
             songs.forEach(function (s) { queue.push(s); });
             updateQueueDisplay();
         },
 
-        /**
-         * Get current state (for debugging or UI sync).
-         */
         getState: function () {
             return {
                 isPlaying: isPlaying,
@@ -680,14 +616,7 @@
             };
         },
 
-        /**
-         * Re-scan DOM for song cards / playlist rows and rebuild queue.
-         * Called by navigation.js after every PJAX content swap.
-         * Clears playerBound flags so listeners reattach to new DOM elements.
-         */
         rescan: function () {
-            // Clear binding flags on all current elements
-            // (new elements from PJAX won't have these flags)
             document.querySelectorAll('.song-card[data-player-bound]').forEach(function (el) {
                 delete el.dataset.playerBound;
             });

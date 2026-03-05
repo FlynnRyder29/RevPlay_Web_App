@@ -73,8 +73,9 @@ public class SecurityConfig {
                                                 .requestMatchers("/api/artists/albums/**")
                                                 .hasRole("ARTIST")
 
-                                                // ✅ Admin
-                                                .requestMatchers("/admin/**").hasRole("ADMIN")
+                                        // ✅ Admin pages and API
+                                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
                                                 // ✅ Everything else
                                                 .anyRequest().authenticated())

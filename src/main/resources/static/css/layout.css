@@ -49,7 +49,43 @@
     white-space: nowrap;
 }
 
-/* ── Navbar Search ───────────────────────────────────── */
+/* ── Hamburger Button (hidden on desktop) ── */
+
+.nav-hamburger {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    background: none;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    z-index: 70;
+}
+
+.hamburger-line {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background-color: var(--text-main, #fff);
+    border-radius: 2px;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Hamburger → X animation when sidebar is open */
+.nav-hamburger.active .hamburger-line:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.nav-hamburger.active .hamburger-line:nth-child(2) {
+    opacity: 0;
+}
+
+.nav-hamburger.active .hamburger-line:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+}
+
+/* ── Navbar Search ── */
 
 .nav-search {
     flex: 1;
@@ -95,7 +131,7 @@
     font-size: 13px;
 }
 
-/* ── Navbar Right ────────────────────────────────────── */
+/* ── Navbar Right ── */
 
 .nav-right {
     display: flex;
@@ -137,7 +173,7 @@
     box-shadow: 0 2px 10px rgba(255, 255, 255, 0.2);
 }
 
-/* ── Profile Avatar ──────────────────────────────────── */
+/* ── Profile Avatar ── */
 
 .nav-profile-link {
     display: flex;
@@ -168,9 +204,8 @@
 
 
 /* ═══════════════════════════════════════════════════════
-   SIDEBAR — Collapsible drawer navigation
-   Collapsed: 72px (icons only)
-   Expanded:  240px on hover (icons + labels)
+   SIDEBAR — Desktop: collapsible drawer (72px → 240px)
+   Mobile: slide-out drawer from left
    ═══════════════════════════════════════════════════════ */
 
 .sidebar {
@@ -201,18 +236,17 @@
     overflow-x: hidden;
 }
 
-/* Hide scrollbar but keep scrollable */
 .sidebar-nav::-webkit-scrollbar {
     width: 0;
 }
 
-/* ── Sidebar Sections ────────────────────────────── */
+/* ── Sidebar Sections ── */
 
 .sidebar-section {
     padding: 8px 12px;
 }
 
-.sidebar-section+.sidebar-section {
+.sidebar-section + .sidebar-section {
     border-top: 1px solid rgba(255, 255, 255, 0.06);
     margin-top: 4px;
     padding-top: 12px;
@@ -234,7 +268,7 @@
     opacity: 1;
 }
 
-/* ── Sidebar Items ───────────────────────────────── */
+/* ── Sidebar Items ── */
 
 .sidebar-item {
     display: flex;
@@ -262,7 +296,6 @@
     transform: scale(0.97);
 }
 
-/* Active page indicator */
 .sidebar-item--active {
     color: var(--text-main);
     background-color: var(--bg-surface);
@@ -280,7 +313,7 @@
     border-radius: 0 3px 3px 0;
 }
 
-/* ── Sidebar Icon ────────────────────────────────── */
+/* ── Sidebar Icon ── */
 
 .sidebar-icon {
     min-width: 24px;
@@ -297,7 +330,7 @@
     transform: scale(1.15);
 }
 
-/* ── Sidebar Label ───────────────────────────────── */
+/* ── Sidebar Label ── */
 
 .sidebar-label {
     font-size: 14px;
@@ -313,20 +346,20 @@
     transform: translateX(0);
 }
 
-/* ── Sidebar Spacer ──────────────────────────────── */
+/* ── Sidebar Spacer ── */
 
 .sidebar-spacer {
     flex: 1;
 }
 
-/* ── Sidebar Bottom Section ──────────────────────── */
+/* ── Sidebar Bottom ── */
 
 .sidebar-bottom {
     border-top: 1px solid rgba(255, 255, 255, 0.06);
     margin-top: auto;
 }
 
-/* ── Sidebar CTA (Sign Up highlight) ─────────────── */
+/* ── Sidebar CTA ── */
 
 .sidebar-cta {
     color: var(--primary-color) !important;
@@ -338,7 +371,7 @@
     color: var(--primary-hover) !important;
 }
 
-/* ── Sidebar Logout Button ───────────────────────── */
+/* ── Sidebar Logout ── */
 
 .sidebar-logout-form {
     margin: 0;
@@ -357,6 +390,26 @@
 .sidebar-logout-btn:hover {
     color: var(--error-color) !important;
     background-color: rgba(226, 33, 52, 0.1) !important;
+}
+
+/* ── Sidebar Overlay (mobile backdrop) ── */
+
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 99;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.active {
+    display: block;
+    opacity: 1;
 }
 
 

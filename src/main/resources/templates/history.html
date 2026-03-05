@@ -7,24 +7,261 @@
 
     <div id="history-content">
 
+        <!-- Hero Section -->
         <div class="hero-section"
              style="background: linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-dark) 100%); border-bottom: 1px solid var(--border-color);">
             <h1 class="hero-title">Listening History</h1>
-            <p class="hero-subtitle">Your recently played tracks</p>
+            <p class="hero-subtitle"
+               th:text="${historyEntries != null ? historyEntries.size() + ' plays' : '0 plays'}">0 plays</p>
         </div>
 
-        <div class="song-grid" style="margin-top: 30px;" th:if="${songs != null and !songs.isEmpty()}">
-            <th:block th:each="song : ${songs}">
-                <div th:replace="~{fragments/song-card :: card(song=${song})}"></div>
-            </th:block>
+        <!-- Action Buttons -->
+        <div th:if="${historyEntries != null and !historyEntries.isEmpty()}"
+             class="history-actions" style="display: flex; gap: 12px; margin: 20px 0;">
+            <button class="pl-btn pl-btn--primary" id="btn-play-history">
+                ▶ Play All
+            </button>
+            <button class="pl-btn pl-btn--secondary" id="btn-shuffle-history">
+                🔀 Shuffle
+            </button>
+            <button class="pl-btn pl-btn--danger" id="btn-clear-history">
+                🗑️ Clear History
+            </button>
         </div>
 
-        <div th:if="${songs == null or songs.isEmpty()}" class="empty-state"
+        <!-- Timeline View -->
+        <div class="history-timeline" id="history-timeline"
+             th:if="${historyEntries != null and !historyEntries.isEmpty()}">
+
+            <div th:each="entry, iter : ${historyEntries}"
+                 class="history-entry"
+                 th:data-id="${entry.songId}"
+                 th:data-url="${entry.audioUrl}"
+                 th:data-title="${entry.songTitle}"
+                 th:data-artist="${entry.artistName}"
+                 th:data-cover="${entry.coverImageUrl}">
+
+                <div class="history-entry-time">
+                    <span class="history-timestamp"
+                          th:data-time="${entry.playedAt}"
+                          th:text="${#temporals.format(entry.playedAt, 'h:mm a')}">2:30 PM</span>
+                    <span class="history-date"
+                          th:text="${#temporals.format(entry.playedAt, 'MMM d')}">Mar 5</span>
+                </div>
+
+                <div class="history-entry-content">
+                    <img class="history-entry-cover"
+                         th:src="${entry.coverImageUrl != null ? entry.coverImageUrl : 'https://www.shutterstock.com/shutterstock/photos/2626947211/display_1500/stock-vector-jazz-music-poster-design-template-2626947211.jpg'}"
+                         alt="Cover">
+                    <div class="history-entry-info">
+                        <div class="history-entry-title" th:text="${entry.songTitle}">Song Title</div>
+                        <div class="history-entry-artist" th:text="${entry.artistName}">Artist Name</div>
+                    </div>
+                </div>
+
+                <div class="history-entry-actions">
+                    <button class="song-card-fav-btn"
+                            th:data-song-id="${entry.songId}"
+                            title="Add to Favorites"
+                            type="button">♡</button>
+                    <button class="song-card-add-playlist-btn"
+                            th:data-song-id="${entry.songId}"
+                            title="Add to Playlist"
+                            type="button">+</button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Empty State -->
+        <div th:if="${historyEntries == null or historyEntries.isEmpty()}" class="empty-state"
              style="text-align: center; margin-top: 60px;">
             <div style="font-size: 48px; margin-bottom: 20px;">🎧</div>
             <h2>No history yet</h2>
             <p style="color: var(--text-muted);">Start listening to some music and it will appear here.</p>
+            <a th:href="@{/library}" class="pl-btn pl-btn--primary"
+               style="display: inline-block; margin-top: 15px; text-decoration: none;">
+                Browse Library
+            </a>
         </div>
+
+        <!-- History Page JavaScript (inside content for PJAX) -->
+        <script>
+            (function () {
+                'use strict';
+
+                var csrfToken = (document.querySelector('meta[name="_csrf"]') || {}).content || '';
+
+                // ══════════════════════════════════════════════════════════
+                // READ HISTORY ENTRIES FROM DOM
+                // ══════════════════════════════════════════════════════════
+
+                function getHistorySongs() {
+                    var entries = document.querySelectorAll('.history-entry');
+                    var songs = [];
+                    var seenUrls = {};
+
+                    entries.forEach(function (entry) {
+                        var url = entry.getAttribute('data-url') || '';
+                        // Deduplicate by URL for playback queue
+                        if (url && !seenUrls[url]) {
+                            seenUrls[url] = true;
+                            songs.push({
+                                id:     entry.getAttribute('data-id') || '',
+                                url:    url,
+                                title:  entry.getAttribute('data-title') || 'Unknown Title',
+                                artist: entry.getAttribute('data-artist') || 'Unknown Artist',
+                                cover:  entry.getAttribute('data-cover') || ''
+                            });
+                        }
+                    });
+                    return songs;
+                }
+
+                // ══════════════════════════════════════════════════════════
+                // PLAY ALL
+                // ══════════════════════════════════════════════════════════
+
+                var playAllBtn = document.getElementById('btn-play-history');
+                if (playAllBtn) {
+                    playAllBtn.addEventListener('click', function () {
+                        var songs = getHistorySongs();
+                        if (songs.length > 0 && window.RevPlay && window.RevPlay.playQueue) {
+                            window.RevPlay.playQueue(songs, 0);
+                        }
+                    });
+                }
+
+                // ══════════════════════════════════════════════════════════
+                // SHUFFLE PLAY
+                // ══════════════════════════════════════════════════════════
+
+                var shuffleBtn = document.getElementById('btn-shuffle-history');
+                if (shuffleBtn) {
+                    shuffleBtn.addEventListener('click', function () {
+                        var songs = getHistorySongs();
+                        if (songs.length > 0 && window.RevPlay && window.RevPlay.shuffleQueue) {
+                            window.RevPlay.shuffleQueue(songs);
+                        }
+                    });
+                }
+
+                // ══════════════════════════════════════════════════════════
+                // CLEAR HISTORY
+                // ══════════════════════════════════════════════════════════
+
+                var clearBtn = document.getElementById('btn-clear-history');
+                if (clearBtn) {
+                    clearBtn.addEventListener('click', function () {
+                        if (!confirm('Clear your entire listening history? This cannot be undone.')) return;
+
+                        clearBtn.disabled = true;
+                        clearBtn.textContent = 'Clearing...';
+
+                        fetch('/api/history', {
+                            method: 'DELETE',
+                            headers: { 'X-CSRF-TOKEN': csrfToken }
+                        })
+                            .then(function (res) {
+                                if (!(res.status >= 200 && res.status < 300)) throw new Error('Failed');
+
+                                // Invalidate PJAX cache
+                                if (window.PjaxRouter && window.PjaxRouter.invalidateCache) {
+                                    window.PjaxRouter.invalidateCache('/history');
+                                }
+
+                                // Reload page to show empty state
+                                if (window.PjaxRouter && window.PjaxRouter.reload) {
+                                    window.PjaxRouter.reload();
+                                } else {
+                                    window.location.reload();
+                                }
+                            })
+                            .catch(function () {
+                                alert('Failed to clear history');
+                                clearBtn.disabled = false;
+                                clearBtn.textContent = '🗑️ Clear History';
+                            });
+                    });
+                }
+
+                // ══════════════════════════════════════════════════════════
+                // CLICK ROW TO PLAY
+                // ══════════════════════════════════════════════════════════
+
+                document.querySelectorAll('.history-entry').forEach(function (entry, index) {
+                    entry.addEventListener('click', function (e) {
+                        if (e.target.closest('button') || e.target.closest('a')) return;
+
+                        var songs = getHistorySongs();
+                        if (songs.length === 0) return;
+
+                        // Find this song's position in the deduplicated queue
+                        var url = this.getAttribute('data-url');
+                        var startIndex = 0;
+                        for (var i = 0; i < songs.length; i++) {
+                            if (songs[i].url === url) {
+                                startIndex = i;
+                                break;
+                            }
+                        }
+
+                        if (window.RevPlay && window.RevPlay.playQueue) {
+                            window.RevPlay.playQueue(songs, startIndex);
+                        }
+
+                        // Highlight active
+                        document.querySelectorAll('.history-entry').forEach(function (e) {
+                            e.classList.remove('history-entry--active');
+                        });
+                        this.classList.add('history-entry--active');
+
+                        e.stopPropagation();
+                    }, true);
+                });
+
+                // ══════════════════════════════════════════════════════════
+                // RELATIVE TIMESTAMPS
+                // ══════════════════════════════════════════════════════════
+
+                function updateRelativeTimestamps() {
+                    var timestamps = document.querySelectorAll('.history-timestamp[data-time]');
+                    var now = new Date();
+
+                    timestamps.forEach(function (el) {
+                        var timeStr = el.getAttribute('data-time');
+                        if (!timeStr) return;
+
+                        var playedAt = new Date(timeStr);
+                        var diffMs = now - playedAt;
+                        var diffMins = Math.floor(diffMs / 60000);
+                        var diffHours = Math.floor(diffMs / 3600000);
+                        var diffDays = Math.floor(diffMs / 86400000);
+
+                        var relative;
+                        if (diffMins < 1) {
+                            relative = 'Just now';
+                        } else if (diffMins < 60) {
+                            relative = diffMins + 'm ago';
+                        } else if (diffHours < 24) {
+                            relative = diffHours + 'h ago';
+                        } else if (diffDays === 1) {
+                            relative = 'Yesterday';
+                        } else if (diffDays < 7) {
+                            relative = diffDays + 'd ago';
+                        } else {
+                            // Keep the original formatted time for older entries
+                            return;
+                        }
+
+                        el.textContent = relative;
+                    });
+                }
+
+                updateRelativeTimestamps();
+
+            })();
+        </script>
 
     </div>
 </div>
