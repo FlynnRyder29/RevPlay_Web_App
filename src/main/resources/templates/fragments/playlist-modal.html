@@ -2,36 +2,41 @@
 <html xmlns:th="http://www.thymeleaf.org">
 
 <body>
-    <div th:fragment="playlistModal" id="add-to-playlist-modal" class="modal-overlay"
-        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center;">
-        <div class="modal-content auth-container" style="width: 100%; max-width: 400px; margin: 0; position: relative;">
-            <button class="modal-close" id="btn-close-playlist-modal"
-                style="position: absolute; top: 15px; right: 20px; background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;">&times;</button>
+<div th:fragment="playlistModal" id="add-to-playlist-modal" class="pl-modal-overlay" style="display:none;">
+    <div class="pl-modal" style="max-width:420px;" onclick="event.stopPropagation()">
+        <button class="pl-modal-close" id="btn-close-playlist-modal">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
 
-            <h2 class="auth-title" style="margin-bottom: 20px; text-align: left; font-size: 1.5rem;">Add to Playlist
-            </h2>
-
-            <input type="hidden" id="playlist-modal-song-id" value="">
-
-            <div id="playlist-list-container" style="max-height: 300px; overflow-y: auto; margin-bottom: 15px;">
-                <!-- Playlists injected here by JS -->
-                <div style="text-align: center; color: var(--text-muted); padding: 20px;">Loading playlists...</div>
-            </div>
-
-            <!-- Create New Playlist Form inside Modal -->
-            <div style="border-top: 1px solid var(--border-color); padding-top: 15px; margin-top: 15px;">
-                <h4 style="margin-bottom: 10px; font-size: 0.9rem; color: var(--text-muted);">OR CREATE NEW</h4>
-                <div style="display: flex; gap: 8px;">
-                    <input type="text" id="new-playlist-name" class="form-input" placeholder="Playlist Name"
-                        style="flex: 1; margin: 0; padding: 8px;">
-                    <button class="btn-primary" id="btn-create-and-add" style="padding: 8px 15px;">Create</button>
-                </div>
-            </div>
-
-            <div id="playlist-modal-status"
-                style="margin-top: 15px; text-align: center; font-size: 14px; min-height: 20px;"></div>
+        <div class="pl-modal-header">
+            <h2>Add to Playlist</h2>
+            <p class="pl-modal-sub">Choose a playlist or create a new one</p>
         </div>
+
+        <input type="hidden" id="playlist-modal-song-id" value="">
+
+        <div id="playlist-list-container" class="pl-modal-list">
+            <div class="pl-modal-loading">
+                <svg class="pl-spin" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+                Loading playlists...
+            </div>
+        </div>
+
+        <div class="pl-modal-divider">
+            <span>OR CREATE NEW</span>
+        </div>
+
+        <div class="pl-modal-create-row">
+            <input type="text" id="new-playlist-name" class="pl-form-input" placeholder="Playlist name" style="flex:1;">
+            <button class="pl-modal-create-btn" id="btn-create-and-add">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Create
+            </button>
+        </div>
+
+        <div id="playlist-modal-status" class="pl-modal-status"></div>
     </div>
+</div>
 </body>
 
 </html>

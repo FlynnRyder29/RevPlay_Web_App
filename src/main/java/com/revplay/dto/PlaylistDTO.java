@@ -1,5 +1,6 @@
 package com.revplay.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -22,12 +23,17 @@ public class PlaylistDTO {
     @Size(max = 500, message = "Description cannot exceed 500 characters")
     private String description;
 
-    private boolean isPublic;
+    // FIX: Rename field from "isPublic" to "publicPlaylist" to avoid Lombok/Jackson
+    // is-prefix collision. @JsonProperty ensures JSON key stays "isPublic" for
+    // backward compatibility with all frontend code.
+    @JsonProperty("isPublic")
+    private boolean publicPlaylist;
 
-    // This is set from backend, not from client
     private Long userId;
 
-    // Backend controlled fields
+    private int songCount;
+    private String ownerName;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

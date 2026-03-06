@@ -94,7 +94,7 @@
         }
 
         function fetchPlaylists(songId) {
-            container.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:20px;">Loading...</div>';
+            container.innerHTML = '<div class="pl-modal-loading"><svg class="pl-spin" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg> Loading...</div>';
 
             fetch('/api/playlists/me')
                 .then(function (res) {
@@ -103,7 +103,7 @@
                 })
                 .then(function (playlists) {
                     if (playlists.length === 0) {
-                        container.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:20px;">No playlists yet. Create one below!</div>';
+                        container.innerHTML = '<div class="pl-modal-empty">No playlists yet — create one below!</div>';
                         return;
                     }
 
@@ -112,8 +112,13 @@
                         var item = document.createElement('div');
                         item.className = 'pl-modal-item';
                         item.innerHTML =
+                            '<div class="pl-modal-item-left">' +
+                            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>' +
                             '<span class="pl-modal-item-name">' + escapeHtml(pl.name) + '</span>' +
-                            '<span class="pl-modal-item-badge">' + (pl.public ? '🌐' : '🔒') + '</span>';
+                            '</div>' +
+                            '<span class="pl-modal-item-meta">' +
+                            (pl.songCount !== undefined ? pl.songCount + ' songs' : '') +
+                            '</span>';
 
                         item.addEventListener('click', function () {
                             addSongToPlaylist(pl.id, songId);
@@ -122,7 +127,7 @@
                     });
                 })
                 .catch(function () {
-                    container.innerHTML = '<div style="color:var(--error-color, #f44336); padding:20px; text-align:center;">Error loading playlists.</div>';
+                    container.innerHTML = '<div class="pl-modal-empty" style="color:var(--error-color)">Error loading playlists</div>';
                 });
         }
 
