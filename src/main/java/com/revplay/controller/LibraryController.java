@@ -30,18 +30,18 @@ public class LibraryController {
     /**
      * GET / — Home page with recently added songs.
      */
-    @GetMapping("/")
-    public String showHome(Model model) {
-        log.info("GET / — Home page");
-
-        // Fetch the 6 most recently added songs for the "Recently Added" section
-        Pageable pageable = PageRequest.of(0, 6, Sort.by("createdAt").descending());
-        Page<SongDTO> recentSongs = songService.getAllSongs(pageable);
-
-        model.addAttribute("recentSongs", recentSongs.getContent());
-
-        return "index";
-    }
+//    @GetMapping("/")
+//    public String showHome(Model model) {
+//        log.info("GET / — Home page");
+//
+//        // Fetch the 6 most recently added songs for the "Recently Added" section
+//        Pageable pageable = PageRequest.of(0, 6, Sort.by("createdAt").descending());
+//        Page<SongDTO> recentSongs = songService.getAllSongs(pageable);
+//
+//        model.addAttribute("recentSongs", recentSongs.getContent());
+//
+//        return "index";
+//    }
 
     /**
      * GET /library — Song browsing page with search, genre filter, and pagination.

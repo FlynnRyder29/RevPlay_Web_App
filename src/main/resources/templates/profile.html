@@ -4,145 +4,173 @@
 <head th:replace="~{layout :: head('Profile')}"></head>
 
 <body>
-    <div th:replace="~{layout :: page(~{::#profile-content})}">
+<div th:replace="~{layout :: page(~{::#profile-content})}">
 
-        <div id="profile-content">
+    <div id="profile-content">
 
-            <!-- ============ Profile Header ============ -->
-            <div class="profile-header">
-                <div class="profile-pic">
-                    <!-- Show profile picture if available, otherwise initial -->
-                    <img th:if="${user.profilePictureUrl != null}" th:src="${user.profilePictureUrl}"
-                        alt="Profile Picture" class="profile-avatar-img">
-                    <span th:if="${user.profilePictureUrl == null}"
-                        th:text="${#strings.substring(user.displayName, 0, 1).toUpperCase()}">U</span>
+        <!-- ════════════════════════════════════════
+             PROFILE HERO BANNER
+             ════════════════════════════════════════ -->
+        <div class="profile-hero">
+            <div class="profile-hero-glow"></div>
+            <div class="profile-hero-content">
+                <div class="profile-hero-avatar">
+                    <img th:if="${user.profilePictureUrl != null}"
+                         th:src="${user.profilePictureUrl}"
+                         alt="Profile Picture"
+                         class="profile-hero-img">
+                    <div th:if="${user.profilePictureUrl == null}" class="profile-hero-fallback">
+                        <span th:text="${#strings.substring(user.displayName, 0, 1).toUpperCase()}">U</span>
+                    </div>
+                    <!-- Camera overlay for upload -->
+                    <label for="profilePicInput" class="profile-hero-camera" title="Change picture">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                            <circle cx="12" cy="13" r="4"/>
+                        </svg>
+                    </label>
                 </div>
-                <div class="profile-info">
-                    <span style="text-transform: uppercase; font-size: 12px; font-weight: bold;"
-                        th:text="${user.role}">LISTENER</span>
-                    <h1 th:text="${user.displayName}">Display Name</h1>
-                    <p style="color: var(--text-muted);">
-                        <span th:text="${user.username}">@username</span> •
+                <div class="profile-hero-info">
+                    <span class="profile-hero-role" th:text="${user.role}">LISTENER</span>
+                    <h1 class="profile-hero-name" th:text="${user.displayName}">Display Name</h1>
+                    <p class="profile-hero-meta">
+                        <span th:text="'@' + ${user.username}">@username</span>
+                        <span class="profile-hero-dot">•</span>
                         Joined <span th:text="${joinedDate}">Jan 2026</span>
                     </p>
+                    <p class="profile-hero-bio" th:if="${user.bio != null && !user.bio.isEmpty()}"
+                       th:text="${user.bio}">Bio text here</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden file input for picture upload -->
+        <form th:action="@{/user/profile/picture}" method="post" enctype="multipart/form-data"
+              id="profilePicForm" style="display:none;">
+            <input type="file" name="profilePicture" id="profilePicInput" accept="image/*">
+        </form>
+
+        <div class="profile-body">
+
+            <!-- ════════════════════════════════════════
+                 STATS CARDS
+                 ════════════════════════════════════════ -->
+            <div class="profile-stats-grid">
+                <div class="profile-stat-card">
+                    <div class="profile-stat-card-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                             stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round">
+                            <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
+                        </svg>
+                    </div>
+                    <div class="profile-stat-card-value" th:text="${playlistCount}">0</div>
+                    <div class="profile-stat-card-label">Playlists</div>
+                </div>
+                <div class="profile-stat-card">
+                    <div class="profile-stat-card-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                             stroke="#ff4d4d" stroke-width="2" stroke-linecap="round">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                        </svg>
+                    </div>
+                    <div class="profile-stat-card-value" th:text="${favCount}">0</div>
+                    <div class="profile-stat-card-label">Favorites</div>
                 </div>
             </div>
 
-            <div class="profile-container">
-
-                <!-- ============ User Stats (Day 8) ============ -->
-                <div class="profile-stats">
-                    <div class="profile-stat">
-                        <div class="profile-stat-value" th:text="${playlistCount}">0</div>
-                        <div class="profile-stat-label">Playlists</div>
-                    </div>
-                    <div class="profile-stat">
-                        <div class="profile-stat-value" th:text="${favCount}">0</div>
-                        <div class="profile-stat-label">Favorites</div>
-                    </div>
-                </div>
-
-                <!-- ============ Profile Picture Upload (Day 8) ============ -->
-                <div class="profile-upload-section">
-                    <h3>📷 Profile Picture</h3>
-                    <form th:action="@{/user/profile/picture}" method="post" enctype="multipart/form-data"
-                        id="profilePicForm">
-                        <div class="upload-area">
-                            <!-- Preview -->
-                            <img th:if="${user.profilePictureUrl != null}" th:src="${user.profilePictureUrl}"
-                                alt="Current picture" class="upload-preview" id="uploadPreview">
-                            <div th:if="${user.profilePictureUrl == null}" class="upload-preview-placeholder"
-                                id="uploadPreviewPlaceholder">
-                                <span th:text="${#strings.substring(user.displayName, 0, 1).toUpperCase()}">U</span>
-                            </div>
-
-                            <!-- File Input -->
-                            <div class="file-input-wrapper">
-                                <input type="file" name="profilePicture" id="profilePicInput" accept="image/*">
-                                <label for="profilePicInput" class="file-input-label">Choose Image</label>
-                            </div>
-
-                            <!-- Upload Button -->
-                            <button type="submit" class="btn-upload">Upload</button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- ============ Edit Profile ============ -->
-                <h2 style="margin-top: 30px;">Edit Profile</h2>
+            <!-- ════════════════════════════════════════
+                 EDIT PROFILE SECTION
+                 ════════════════════════════════════════ -->
+            <div class="profile-edit-section">
+                <h2 class="profile-section-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                         style="vertical-align: -3px; margin-right: 8px;">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    Edit Profile
+                </h2>
 
                 <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
                 <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
 
-                <form th:action="@{/user/profile}" method="post"
-                    style="max-width: 500px; background: var(--bg-surface); padding: 30px; border-radius: 8px;">
+                <form th:action="@{/user/profile}" method="post" class="profile-form">
 
-                    <div class="form-group">
-                        <label>Email (Cannot be changed)</label>
-                        <input type="text" class="form-control" th:value="${user.email}" disabled
-                            style="opacity: 0.6;" />
+                    <div class="profile-form-row">
+                        <div class="form-group">
+                            <label class="profile-form-label">Email</label>
+                            <input type="text" class="profile-form-input" th:value="${user.email}" disabled>
+                            <span class="profile-form-hint">Cannot be changed</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="profile-form-label" for="displayName">Display Name</label>
+                            <input type="text" id="displayName" name="displayName"
+                                   class="profile-form-input"
+                                   th:value="${user.displayName}" required>
+                        </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="displayName">Display Name</label>
-                        <input type="text" id="displayName" name="displayName" class="form-control"
-                            th:value="${user.displayName}" required />
+                        <label class="profile-form-label" for="bio">Bio</label>
+                        <textarea id="bio" name="bio" class="profile-form-input profile-form-textarea"
+                                  rows="4" th:text="${user.bio}"
+                                  placeholder="Tell us about yourself..."></textarea>
                     </div>
 
-                    <div class="form-group">
-                        <label for="bio">Bio</label>
-                        <textarea id="bio" name="bio" class="form-control" rows="4" th:text="${user.bio}"
-                            placeholder="Tell us about yourself..."></textarea>
-                    </div>
-
-                    <button type="submit" class="btn-primary"
-                        style="margin-top: 10px; width: auto; padding: 10px 30px;">Save Profile</button>
+                    <button type="submit" class="profile-save-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                            <polyline points="17 21 17 13 7 13 7 21"/>
+                            <polyline points="7 3 7 8 15 8"/>
+                        </svg>
+                        Save Profile
+                    </button>
                 </form>
-
-                <!-- Artist Upgrade Button (If listener) -->
-                <div th:if="${user.role.name() == 'LISTENER'}"
-                    style="margin-top: 40px; padding: 20px; border: 1px dashed var(--border-color); border-radius: 8px;">
-                    <h3>Are you a musician?</h3>
-                    <p>Upload your own music, track analytics, and build your fanbase on RevPlay.</p>
-                    <a href="#" class="btn-primary"
-                        style="display: inline-block; width: auto; background: white; color: black; padding: 10px 20px;">
-                        Upgrade to Artist</a>
-                </div>
             </div>
 
-            <!-- ============ Live Preview Script ============ -->
-            <script>
-                (function () {
-                    var fileInput = document.getElementById('profilePicInput');
-                    if (!fileInput) return;
+            <!-- ════════════════════════════════════════
+                 ARTIST UPGRADE CTA
+                 ════════════════════════════════════════ -->
+            <div th:if="${user.role.name() == 'LISTENER'}" class="profile-upgrade-card">
+                <div class="profile-upgrade-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
+                         stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                        <line x1="12" y1="19" x2="12" y2="23"/>
+                        <line x1="8" y1="23" x2="16" y2="23"/>
+                    </svg>
+                </div>
+                <div class="profile-upgrade-text">
+                    <h3>Are you a musician?</h3>
+                    <p>Upload your own music, track analytics, and build your fanbase on RevPlay.</p>
+                </div>
+                <a href="#" class="profile-upgrade-btn">Upgrade to Artist</a>
+            </div>
 
-                    fileInput.addEventListener('change', function (e) {
-                        var file = e.target.files[0];
-                        if (!file || !file.type.startsWith('image/')) return;
-
-                        var reader = new FileReader();
-                        reader.onload = function (ev) {
-                            // Replace placeholder or update existing preview
-                            var preview = document.getElementById('uploadPreview');
-                            var placeholder = document.getElementById('uploadPreviewPlaceholder');
-
-                            if (preview) {
-                                preview.src = ev.target.result;
-                            } else if (placeholder) {
-                                var img = document.createElement('img');
-                                img.src = ev.target.result;
-                                img.className = 'upload-preview';
-                                img.id = 'uploadPreview';
-                                img.alt = 'Preview';
-                                placeholder.parentNode.replaceChild(img, placeholder);
-                            }
-                        };
-                        reader.readAsDataURL(file);
-                    });
-                })();
-            </script>
         </div>
+
+        <!-- ════════════════════════════════════════
+             SCRIPTS
+             ════════════════════════════════════════ -->
+        <script>
+            (function () {
+                var fileInput = document.getElementById('profilePicInput');
+                if (!fileInput) return;
+
+                fileInput.addEventListener('change', function (e) {
+                    var file = e.target.files[0];
+                    if (!file || !file.type.startsWith('image/')) return;
+                    // Auto-submit on file selection
+                    document.getElementById('profilePicForm').submit();
+                });
+            })();
+        </script>
     </div>
+</div>
 </body>
 
 </html>

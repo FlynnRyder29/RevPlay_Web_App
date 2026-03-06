@@ -80,7 +80,14 @@
         <div sec:authorize="isAuthenticated()" class="nav-links">
             <a th:href="@{/user/profile}" class="nav-profile-link" title="Profile">
                 <span class="nav-profile-avatar">
-                    <span sec:authentication="principal.username"
+                    <!-- Show profile image if available -->
+                    <img th:if="${currentUserPicUrl != null}"
+                         th:src="${currentUserPicUrl}"
+                         alt="Profile"
+                         class="nav-avatar-img">
+                    <!-- Fallback: first letter -->
+                    <span th:if="${currentUserPicUrl == null}"
+                          sec:authentication="principal.username"
                           class="nav-avatar-letter"
                           th:text="${#strings.substring(#authentication.principal.username, 0, 1).toUpperCase()}">U</span>
                 </span>

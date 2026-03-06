@@ -24,8 +24,18 @@
                 </div>
             </div>
             <div class="dashboard-actions">
-                <a href="/artist/songs" class="btn-secondary">🎵 My Songs</a>
-                <a href="/artist/albums" class="btn-secondary">💿 My Albums</a>
+                <a href="/artist/songs" class="btn-secondary dash-action-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+                    </svg>
+                    My Songs
+                </a>
+                <a href="/artist/albums" class="btn-secondary dash-action-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    My Albums
+                </a>
             </div>
         </div>
 
@@ -44,22 +54,38 @@
             <!-- Stats Cards -->
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-icon">🎵</div>
+                    <div class="stat-icon-svg">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round">
+                            <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+                        </svg>
+                    </div>
                     <div class="stat-value" th:text="${totalSongs != null ? totalSongs : 0}">0</div>
                     <div class="stat-label">Total Songs</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon">💿</div>
+                    <div class="stat-icon-svg">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round">
+                            <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </div>
                     <div class="stat-value" th:text="${totalAlbums != null ? totalAlbums : 0}">0</div>
                     <div class="stat-label">Albums</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon">▶️</div>
+                    <div class="stat-icon-svg">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round">
+                            <polygon points="5 3 19 12 5 21 5 3"/>
+                        </svg>
+                    </div>
                     <div class="stat-value" th:text="${totalPlays != null ? totalPlays : 0}">0</div>
                     <div class="stat-label">Total Plays</div>
                 </div>
                 <div class="stat-card stat-card-accent">
-                    <div class="stat-icon">❤️</div>
+                    <div class="stat-icon-svg">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                        </svg>
+                    </div>
                     <div class="stat-value" id="total-favorites">—</div>
                     <div class="stat-label">Total Favorites</div>
                 </div>
@@ -105,7 +131,11 @@
                 </div>
 
                 <div class="empty-state" th:if="${allSongs == null || allSongs.isEmpty()}">
-                    <div class="empty-icon">🎵</div>
+                    <div class="empty-icon">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" opacity="0.5">
+                            <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+                        </svg>
+                    </div>
                     <h2>No songs uploaded yet</h2>
                     <p>Start by <a href="/artist/songs">uploading your music</a></p>
                 </div>
@@ -129,11 +159,10 @@
         </div>
 
         <!-- ═══════════════════════════════════════════
-             TAB 2: ANALYTICS
+             TAB 2: ANALYTICS  (unchanged — keeping your JS)
              ═══════════════════════════════════════════ -->
         <div class="dash-tab-content" id="tab-analytics">
 
-            <!-- Per-Song Performance -->
             <section class="dashboard-section">
                 <div class="section-header">
                     <h2 class="section-title">Song Performance</h2>
@@ -143,7 +172,6 @@
                 </div>
             </section>
 
-            <!-- Listening Trends -->
             <section class="dashboard-section">
                 <div class="section-header">
                     <h2 class="section-title">Listening Trends</h2>
@@ -158,7 +186,6 @@
                 </div>
             </section>
 
-            <!-- Top Listeners -->
             <section class="dashboard-section">
                 <div class="section-header">
                     <h2 class="section-title">Top Listeners</h2>
@@ -168,7 +195,6 @@
                 </div>
             </section>
 
-            <!-- Fans -->
             <section class="dashboard-section">
                 <div class="section-header">
                     <h2 class="section-title">Your Fans</h2>
@@ -180,17 +206,29 @@
         </div>
 
         <!-- ═══════════════════════════════════════════
-             TAB 3: PROFILE SETTINGS
-             ═══════════════════════════════════════════ -->
+     TAB 3: PROFILE SETTINGS (continued)
+     ═══════════════════════════════════════════ -->
         <div class="dash-tab-content" id="tab-settings">
 
             <section class="dashboard-section">
-                <h2 class="section-title">Edit Profile</h2>
+                <h2 class="section-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-3px;margin-right:8px;">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                    Edit Profile
+                </h2>
 
                 <div class="settings-grid">
                     <!-- Profile Picture -->
                     <div class="settings-card">
-                        <h3>Profile Picture</h3>
+                        <h3>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:6px;">
+                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                                <circle cx="12" cy="13" r="4"/>
+                            </svg>
+                            Profile Picture
+                        </h3>
                         <div class="picture-upload-area">
                             <img th:if="${profile.profilePictureUrl != null}"
                                  th:src="${profile.profilePictureUrl}"
@@ -200,7 +238,12 @@
                                 <span th:text="${profile.artistName != null ? profile.artistName.substring(0,1).toUpperCase() : '?'}">A</span>
                             </div>
                             <input type="file" id="picture-file" accept="image/*" style="display:none">
-                            <button class="btn-secondary" onclick="document.getElementById('picture-file').click()">
+                            <button class="btn-secondary dash-action-btn" onclick="document.getElementById('picture-file').click()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="17 8 12 3 7 8"/>
+                                    <line x1="12" y1="3" x2="12" y2="15"/>
+                                </svg>
                                 Change Picture
                             </button>
                         </div>
@@ -208,15 +251,34 @@
 
                     <!-- Banner Image -->
                     <div class="settings-card">
-                        <h3>Banner Image</h3>
+                        <h3>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:6px;">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                <circle cx="8.5" cy="8.5" r="1.5"/>
+                                <polyline points="21 15 16 10 5 21"/>
+                            </svg>
+                            Banner Image
+                        </h3>
                         <div class="banner-upload-area">
                             <div class="banner-preview"
                                  th:style="${profile.bannerImageUrl != null ? 'background-image: url(' + profile.bannerImageUrl + ')' : ''}"
                                  id="banner-preview">
-                                <span th:if="${profile.bannerImageUrl == null}">No banner set</span>
+                                <span th:if="${profile.bannerImageUrl == null}" class="banner-placeholder-text">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                                        <polyline points="21 15 16 10 5 21"/>
+                                    </svg>
+                                    No banner set
+                                </span>
                             </div>
                             <input type="file" id="banner-file" accept="image/*" style="display:none">
-                            <button class="btn-secondary" onclick="document.getElementById('banner-file').click()">
+                            <button class="btn-secondary dash-action-btn" onclick="document.getElementById('banner-file').click()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="17 8 12 3 7 8"/>
+                                    <line x1="12" y1="3" x2="12" y2="15"/>
+                                </svg>
                                 Change Banner
                             </button>
                         </div>
@@ -225,7 +287,13 @@
 
                 <!-- Profile Info Form -->
                 <div class="settings-card settings-card-wide">
-                    <h3>Profile Information</h3>
+                    <h3>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:6px;">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        Profile Information
+                    </h3>
                     <form id="profile-form" class="settings-form">
                         <div class="form-row">
                             <div class="form-group">
@@ -245,38 +313,81 @@
                                       th:text="${profile.bio}" placeholder="Tell fans about yourself..."></textarea>
                         </div>
 
-                        <h3 style="margin-top: 30px;">Social Links</h3>
+                        <h3 style="margin-top: 30px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:6px;">
+                                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+                            </svg>
+                            Social Links
+                        </h3>
                         <div class="form-row">
                             <div class="form-group">
-                                <label class="form-label">Instagram</label>
+                                <label class="form-label">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:4px;">
+                                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                                    </svg>
+                                    Instagram
+                                </label>
                                 <input class="form-input" type="text" id="set-instagram"
                                        th:value="${profile.instagram}" placeholder="https://instagram.com/...">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Twitter / X</label>
+                                <label class="form-label">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:4px;">
+                                        <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/>
+                                    </svg>
+                                    Twitter / X
+                                </label>
                                 <input class="form-input" type="text" id="set-twitter"
                                        th:value="${profile.twitter}" placeholder="https://twitter.com/...">
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label class="form-label">YouTube</label>
+                                <label class="form-label">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:4px;">
+                                        <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19.1c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/>
+                                        <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/>
+                                    </svg>
+                                    YouTube
+                                </label>
                                 <input class="form-input" type="text" id="set-youtube"
                                        th:value="${profile.youtube}" placeholder="https://youtube.com/...">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Spotify</label>
+                                <label class="form-label">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:4px;">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <path d="M8 12a4 4 0 0 1 8 0"/>
+                                        <circle cx="12" cy="12" r="2"/>
+                                    </svg>
+                                    Spotify
+                                </label>
                                 <input class="form-input" type="text" id="set-spotify"
                                        th:value="${profile.spotify}" placeholder="https://open.spotify.com/...">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Website</label>
+                            <label class="form-label">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:4px;">
+                                    <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+                                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                                </svg>
+                                Website
+                            </label>
                             <input class="form-input" type="text" id="set-website"
                                    th:value="${profile.website}" placeholder="https://yoursite.com">
                         </div>
 
-                        <button type="submit" class="btn-primary" id="btn-save-profile">Save Changes</button>
+                        <button type="submit" class="btn-primary" id="btn-save-profile" style="width:auto;padding:12px 40px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:6px;">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                                <polyline points="17 21 17 13 7 13 7 21"/>
+                                <polyline points="7 3 7 8 15 8"/>
+                            </svg>
+                            Save Changes
+                        </button>
                         <span id="profile-save-status" class="save-status"></span>
                     </form>
                 </div>
@@ -289,7 +400,7 @@
                 var csrf = document.querySelector('meta[name="_csrf"]');
                 var csrfToken = csrf ? csrf.getAttribute('content') : '';
 
-                // ── Tab Switching ────────────────────────────────────────────────
+                // ── Tab Switching ──
                 document.querySelectorAll('.dash-tab').forEach(function(tab) {
                     tab.addEventListener('click', function() {
                         document.querySelectorAll('.dash-tab').forEach(function(t) { t.classList.remove('active'); });
@@ -298,7 +409,6 @@
                         var target = document.getElementById('tab-' + tab.dataset.tab);
                         if (target) target.classList.add('active');
 
-                        // Lazy-load analytics on first click
                         if (tab.dataset.tab === 'analytics' && !window._analyticsLoaded) {
                             window._analyticsLoaded = true;
                             loadAnalytics();
@@ -306,7 +416,7 @@
                     });
                 });
 
-                // ── ANALYTICS LOADERS ────────────────────────────────────────────
+                // ── ANALYTICS LOADERS ──
 
                 function loadAnalytics() {
                     loadOverviewFavorites();
@@ -357,7 +467,6 @@
                 function loadTrends(period) {
                     var container = document.getElementById('trends-chart-container');
                     container.innerHTML = '<div class="loading-spinner">Loading...</div>';
-
                     fetch('/api/artists/analytics/trends?period=' + period)
                         .then(function(r) { return r.json(); })
                         .then(function(data) {
@@ -383,13 +492,12 @@
 
                 function formatPeriod(p) {
                     if (!p) return '';
-                    if (p.length === 10) return p.substring(5); // "2025-03-04" → "03-04"
-                    if (p.indexOf('W') !== -1) return p.substring(5); // "2025-W10" → "W10"
-                    if (p.length === 7) return p.substring(5); // "2025-03" → "03"
+                    if (p.length === 10) return p.substring(5);
+                    if (p.indexOf('W') !== -1) return p.substring(5);
+                    if (p.length === 7) return p.substring(5);
                     return p;
                 }
 
-                // Trend period toggle
                 document.querySelectorAll('.trend-btn').forEach(function(btn) {
                     btn.addEventListener('click', function() {
                         document.querySelectorAll('.trend-btn').forEach(function(b) { b.classList.remove('active'); });
@@ -440,10 +548,11 @@
                                 var avatar = f.profilePictureUrl
                                     ? '<img src="' + f.profilePictureUrl + '" class="fan-avatar">'
                                     : '<div class="fan-avatar fan-avatar-fallback">' + (f.displayName || f.username).charAt(0).toUpperCase() + '</div>';
-                                html += '<div class="fan-card">' +
-                                    avatar +
+                                html += '<div class="fan-card">' + avatar +
                                     '<div class="fan-name">' + (f.displayName || f.username) + '</div>' +
-                                    '<div class="fan-count">♥ ' + f.favoriteCount + ' songs</div>' +
+                                    '<div class="fan-count">' +
+                                    '<svg width="12" height="12" viewBox="0 0 24 24" fill="#ef4444" stroke="none" style="vertical-align:-1px;margin-right:3px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>' +
+                                    f.favoriteCount + ' songs</div>' +
                                     '</div>';
                             });
                             html += '</div>';
@@ -452,9 +561,8 @@
                         .catch(function() { container.innerHTML = '<p class="text-muted">Failed to load</p>'; });
                 }
 
-                // ── PROFILE SETTINGS ─────────────────────────────────────────────
+                // ── PROFILE SETTINGS ──
 
-                // Picture upload
                 var pictureFile = document.getElementById('picture-file');
                 if (pictureFile) {
                     pictureFile.addEventListener('change', function() {
@@ -486,7 +594,6 @@
                     });
                 }
 
-                // Banner upload
                 var bannerFile = document.getElementById('banner-file');
                 if (bannerFile) {
                     bannerFile.addEventListener('change', function() {
@@ -510,7 +617,6 @@
                     });
                 }
 
-                // Profile form save
                 var profileForm = document.getElementById('profile-form');
                 if (profileForm) {
                     profileForm.addEventListener('submit', function(e) {
@@ -551,12 +657,11 @@
                             status.className = 'save-status save-error';
                         }).finally(function() {
                             btn.disabled = false;
-                            btn.textContent = 'Save Changes';
+                            btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:6px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Changes';
                         });
                     });
                 }
 
-                // Auto-load favorites count on page load
                 loadOverviewFavorites();
             })();
         </script>

@@ -202,6 +202,22 @@
     color: #000;
 }
 
+/* ── Navbar Avatar Image ── */
+
+.nav-avatar-img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+}
+
+.nav-profile-avatar:has(.nav-avatar-img) {
+    background: none;
+    padding: 0;
+    overflow: hidden;
+}
+
 
 /* ═══════════════════════════════════════════════════════
    SIDEBAR — Desktop: collapsible drawer (72px → 240px)

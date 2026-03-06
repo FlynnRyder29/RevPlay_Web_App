@@ -22,6 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -29,6 +30,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -51,12 +53,59 @@ public class PageController {
     private final SecurityUtils securityUtils;
 
     // ═══════════════════════════════════════════
+    // HOME PAGE
+    // ═══════════════════════════════════════════
+
+    @GetMapping("/")
+    public String showHomePage(Model model) {
+        log.info("GET /");
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAuthenticated = auth != null && auth.isAuthenticated()
+                && !"anonymousUser".equals(auth.getPrincipal());
+
+        if (isAuthenticated) {
+            // Recently added songs (latest 10)
+            Pageable recentPageable = PageRequest.of(0, 10, Sort.by("createdAt").descending());
+            Page<SongDTO> recentPage = songService.getAllSongs(recentPageable);
+            model.addAttribute("recentSongs", recentPage.getContent());
+
+            // Trending songs (top 10 by play count)
+            List<SongDTO> trendingSongs = songService.getTrendingSongs(10);
+            model.addAttribute("trendingSongs", trendingSongs);
+
+            // User's playlists (up to 6)
+            try {
+                List<PlaylistDTO> myPlaylists = playlistService.getMyPlaylists();
+                model.addAttribute("myPlaylists",
+                        myPlaylists.size() > 6 ? myPlaylists.subList(0, 6) : myPlaylists);
+            } catch (Exception e) {
+                log.debug("Could not load playlists for home: {}", e.getMessage());
+                model.addAttribute("myPlaylists", Collections.emptyList());
+            }
+
+            // Public playlists (up to 6)
+            try {
+                List<PlaylistDTO> publicPlaylists = playlistService.getPublicPlaylists(null);
+                model.addAttribute("publicPlaylists",
+                        publicPlaylists.size() > 6 ? publicPlaylists.subList(0, 6) : publicPlaylists);
+            } catch (Exception e) {
+                log.debug("Could not load public playlists: {}", e.getMessage());
+                model.addAttribute("publicPlaylists", Collections.emptyList());
+            }
+
+            // Featured artists (up to 8)
+            List<ArtistDTO> featuredArtists = artistCatalogService.getFeaturedArtists(8);
+            model.addAttribute("featuredArtists", featuredArtists);
+        }
+
+        return "index";
+    }
+
+    // ═══════════════════════════════════════════
     // PLAYLISTS PAGE
     // ═══════════════════════════════════════════
 
-    /**
-     * GET /playlists — Show user's playlists + public playlists tab
-     */
     @GetMapping("/playlists")
     public String showPlaylists(
             @RequestParam(defaultValue = "mine") String tab,
@@ -64,11 +113,9 @@ public class PageController {
             Model model) {
         log.info("GET /playlists tab={} search={}", tab, search);
 
-        // Always load my playlists for the "My Playlists" tab
         List<PlaylistDTO> myPlaylists = playlistService.getMyPlaylists();
         model.addAttribute("playlists", myPlaylists);
 
-        // Load public playlists for the "Discover" tab
         List<PlaylistDTO> publicPlaylists = playlistService.getPublicPlaylists(search);
         model.addAttribute("publicPlaylists", publicPlaylists);
 
@@ -79,20 +126,15 @@ public class PageController {
         return "playlist";
     }
 
-    /**
-     * GET /playlists/{id} — Show a specific playlist with its songs
-     */
     @GetMapping("/playlists/{id}")
     public String showPlaylistDetail(@PathVariable Long id, Model model) {
         log.info("GET /playlists/{}", id);
 
         PlaylistDTO playlist = playlistService.getPlaylistById(id);
 
-        // Fetch songs in this playlist ordered by position
         List<PlaylistSong> playlistSongs = playlistSongRepository
                 .findByPlaylist_IdOrderByPosition(id);
 
-        // Map to SongDTOs for the template
         List<SongDTO> songs = playlistSongs.stream()
                 .map(ps -> SongDTO.builder()
                         .id(ps.getSong().getId())
@@ -111,11 +153,9 @@ public class PageController {
                         .build())
                 .collect(Collectors.toList());
 
-        // Check ownership
         Long currentUserId = securityUtils.getCurrentUser().getId();
         boolean isOwner = playlist.getUserId().equals(currentUserId);
 
-        // Check follow status (only relevant for non-owners)
         boolean isFollowing = false;
         if (!isOwner) {
             try {
@@ -175,8 +215,8 @@ public class PageController {
     }
 
     // ═══════════════════════════════════════════
-// ARTIST DASHBOARD & PAGES (ROLE_ARTIST only)
-// ═══════════════════════════════════════════
+    // ARTIST DASHBOARD & PAGES (ROLE_ARTIST only)
+    // ═══════════════════════════════════════════
 
     @GetMapping("/artist/dashboard")
     public String showArtistDashboard(Model model) {
@@ -196,12 +236,10 @@ public class PageController {
                 model.addAttribute("songs", artistDetail.getSongs());
                 model.addAttribute("albums", artistDetail.getAlbums());
 
-                // Also pass ALL songs including non-public for artist's own view
                 List<SongDTO> allSongs = songService.getArtistAllSongs(artist.getId());
                 model.addAttribute("allSongs", allSongs);
 
                 long totalPlays = 0;
-                long totalFavorites = 0;
                 if (allSongs != null) {
                     totalPlays = allSongs.stream()
                             .mapToLong(s -> s.getPlayCount() != null ? s.getPlayCount() : 0)
@@ -229,11 +267,9 @@ public class PageController {
         if (user != null) {
             var artist = artistRepository.findByUserId(user.getId()).orElse(null);
             if (artist != null) {
-                // ALL songs — including UNLISTED and PRIVATE (artist's own view)
                 List<SongDTO> allSongs = songService.getArtistAllSongs(artist.getId());
                 model.addAttribute("songs", allSongs);
 
-                // Albums list — needed for upload form album dropdown
                 ArtistDTO artistDetail = artistCatalogService.getArtistById(artist.getId());
                 model.addAttribute("albums", artistDetail.getAlbums());
             }
@@ -256,7 +292,6 @@ public class PageController {
                 ArtistDTO artistDetail = artistCatalogService.getArtistById(artist.getId());
                 model.addAttribute("albums", artistDetail.getAlbums());
 
-                // Also pass all songs (for "Add Song to Album" modal)
                 List<SongDTO> allSongs = songService.getArtistAllSongs(artist.getId());
                 model.addAttribute("allSongs", allSongs);
             }
@@ -272,8 +307,6 @@ public class PageController {
     @GetMapping("/admin")
     public String showAdminPanel(Model model) {
         log.info("GET /admin");
-        // Stats loaded via AJAX from /api/admin/stats
-        // Just render the template
         return "admin";
     }
 
@@ -300,11 +333,9 @@ public class PageController {
     public String showHistoryPage(Model model) {
         log.info("GET /history");
 
-        // Pass HistoryDTOs directly — keeps playedAt timestamps
         List<com.revplay.dto.HistoryDTO> historyEntries = historyService.getAllHistory();
         model.addAttribute("historyEntries", historyEntries);
 
-        // Also pass as SongDTOs for the song-card fragment (used in grid view)
         List<SongDTO> songs = historyEntries.stream()
                 .map(h -> SongDTO.builder()
                         .id(h.getSongId())
