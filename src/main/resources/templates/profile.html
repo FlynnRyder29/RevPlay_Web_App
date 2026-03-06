@@ -1,8 +1,7 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{layout :: head('Profile')}"></head>
-
 <body>
 <div th:replace="~{layout :: page(~{::#profile-content})}">
 
@@ -22,7 +21,6 @@
                     <div th:if="${user.profilePictureUrl == null}" class="profile-hero-fallback">
                         <span th:text="${#strings.substring(user.displayName, 0, 1).toUpperCase()}">U</span>
                     </div>
-                    <!-- Camera overlay for upload -->
                     <label for="profilePicInput" class="profile-hero-camera" title="Change picture">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
                              stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -97,7 +95,6 @@
                 <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
 
                 <form th:action="@{/user/profile}" method="post" class="profile-form">
-
                     <div class="profile-form-row">
                         <div class="form-group">
                             <label class="profile-form-label">Email</label>
@@ -132,25 +129,147 @@
             </div>
 
             <!-- ════════════════════════════════════════
-                 ARTIST UPGRADE CTA
+                 ARTIST UPGRADE CTA — Dynamic States
                  ════════════════════════════════════════ -->
-            <div th:if="${user.role.name() == 'LISTENER'}" class="profile-upgrade-card">
-                <div class="profile-upgrade-icon">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
-                         stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round">
-                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                        <line x1="12" y1="19" x2="12" y2="23"/>
-                        <line x1="8" y1="23" x2="16" y2="23"/>
-                    </svg>
-                </div>
-                <div class="profile-upgrade-text">
-                    <h3>Are you a musician?</h3>
-                    <p>Upload your own music, track analytics, and build your fanbase on RevPlay.</p>
-                </div>
-                <a href="#" class="profile-upgrade-btn">Upgrade to Artist</a>
-            </div>
+            <th:block th:if="${user.role.name() == 'LISTENER'}">
 
+                <!-- STATE: No request yet -->
+                <div th:if="${artistRequest == null}" class="profile-upgrade-card" id="upgrade-card-none">
+                    <div class="profile-upgrade-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
+                             stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                            <line x1="12" y1="19" x2="12" y2="23"/>
+                            <line x1="8" y1="23" x2="16" y2="23"/>
+                        </svg>
+                    </div>
+                    <div class="profile-upgrade-text">
+                        <h3>Are you a musician?</h3>
+                        <p>Upload your own music, track analytics, and build your fanbase on RevPlay.</p>
+                    </div>
+                    <button class="profile-upgrade-btn" id="btn-open-artist-modal">
+                        Upgrade to Artist
+                    </button>
+                </div>
+
+                <!-- STATE: Pending -->
+                <div th:if="${artistRequest != null && artistRequest.status.name() == 'PENDING'}"
+                     class="profile-upgrade-card profile-upgrade-card--pending">
+                    <div class="profile-upgrade-icon profile-upgrade-icon--pending">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
+                             stroke="#FFB74D" stroke-width="2" stroke-linecap="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                    </div>
+                    <div class="profile-upgrade-text">
+                        <h3>Upgrade Request Pending</h3>
+                        <p>Your artist upgrade request is being reviewed by an admin. You'll be notified once it's processed.</p>
+                        <span class="profile-request-meta">
+                            Requested as: <strong th:text="${artistRequest.artistName}">Artist Name</strong>
+                            <span th:if="${artistRequest.genre}"> · <span th:text="${artistRequest.genre}">Genre</span></span>
+                        </span>
+                    </div>
+                    <span class="profile-request-badge profile-request-badge--pending">Pending Review</span>
+                </div>
+
+                <!-- STATE: Rejected (can re-apply) -->
+                <div th:if="${artistRequest != null && artistRequest.status.name() == 'REJECTED'}"
+                     class="profile-upgrade-card profile-upgrade-card--rejected">
+                    <div class="profile-upgrade-icon profile-upgrade-icon--rejected">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
+                             stroke="#F44336" stroke-width="2" stroke-linecap="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="15" y1="9" x2="9" y2="15"/>
+                            <line x1="9" y1="9" x2="15" y2="15"/>
+                        </svg>
+                    </div>
+                    <div class="profile-upgrade-text">
+                        <h3>Upgrade Request Declined</h3>
+                        <p th:if="${artistRequest.adminNote}" th:text="'Reason: ' + ${artistRequest.adminNote}">Admin note</p>
+                        <p th:if="${artistRequest.adminNote == null}">Your previous request was declined. You can submit a new request.</p>
+                    </div>
+                    <button class="profile-upgrade-btn" id="btn-open-artist-modal">
+                        Try Again
+                    </button>
+                </div>
+
+            </th:block>
+
+        </div>
+
+        <!-- ════════════════════════════════════════
+             ARTIST UPGRADE REQUEST MODAL
+             ════════════════════════════════════════ -->
+        <div id="artist-request-modal" class="modal-overlay" style="display:none;">
+            <div class="modal-content" style="max-width: 480px;">
+                <div class="modal-header">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                             stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round"
+                             style="vertical-align: -3px; margin-right: 6px;">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                            <line x1="12" y1="19" x2="12" y2="23"/>
+                            <line x1="8" y1="23" x2="16" y2="23"/>
+                        </svg>
+                        Become an Artist
+                    </h2>
+                    <button class="modal-close" id="btn-close-artist-modal">✕</button>
+                </div>
+                <div style="padding: 20px;">
+                    <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 14px;">
+                        Tell us about yourself as an artist. An admin will review your request.
+                    </p>
+
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label class="profile-form-label" for="req-artist-name">Artist / Stage Name *</label>
+                        <input type="text" id="req-artist-name" class="profile-form-input"
+                               th:value="${user.displayName}" required
+                               placeholder="Your artist name">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label class="profile-form-label" for="req-genre">Primary Genre</label>
+                        <select id="req-genre" class="profile-form-input">
+                            <option value="">Select a genre...</option>
+                            <option value="Pop">Pop</option>
+                            <option value="Rock">Rock</option>
+                            <option value="Hip-Hop">Hip-Hop</option>
+                            <option value="R&B">R&B</option>
+                            <option value="Electronic">Electronic</option>
+                            <option value="Jazz">Jazz</option>
+                            <option value="Classical">Classical</option>
+                            <option value="Country">Country</option>
+                            <option value="Folk">Folk</option>
+                            <option value="Metal">Metal</option>
+                            <option value="Indie">Indie</option>
+                            <option value="Latin">Latin</option>
+                            <option value="Blues">Blues</option>
+                            <option value="Reggae">Reggae</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label class="profile-form-label" for="req-reason">Why do you want to be an artist on RevPlay?</label>
+                        <textarea id="req-reason" class="profile-form-input profile-form-textarea"
+                                  rows="3" placeholder="Tell us about your music, experience, goals..."></textarea>
+                    </div>
+
+                    <div id="artist-request-error" class="alert alert-error" style="display:none;"></div>
+
+                    <button class="profile-save-btn" id="btn-submit-artist-request" style="width: 100%; justify-content: center;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                            <line x1="22" y1="2" x2="11" y2="13"/>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                        </svg>
+                        Submit Request
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- ════════════════════════════════════════
@@ -158,19 +277,142 @@
              ════════════════════════════════════════ -->
         <script>
             (function () {
+                // Profile picture auto-submit
                 var fileInput = document.getElementById('profilePicInput');
-                if (!fileInput) return;
+                if (fileInput) {
+                    fileInput.addEventListener('change', function (e) {
+                        var file = e.target.files[0];
+                        if (!file || !file.type.startsWith('image/')) return;
+                        document.getElementById('profilePicForm').submit();
+                    });
+                }
 
-                fileInput.addEventListener('change', function (e) {
-                    var file = e.target.files[0];
-                    if (!file || !file.type.startsWith('image/')) return;
-                    // Auto-submit on file selection
-                    document.getElementById('profilePicForm').submit();
-                });
+                // ── Artist Request Modal ──
+
+                var modal = document.getElementById('artist-request-modal');
+                var openBtn = document.getElementById('btn-open-artist-modal');
+                var closeBtn = document.getElementById('btn-close-artist-modal');
+                var submitBtn = document.getElementById('btn-submit-artist-request');
+                var errorDiv = document.getElementById('artist-request-error');
+
+                if (openBtn) {
+                    openBtn.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        if (modal) modal.style.display = 'flex';
+                    });
+                }
+
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', function () {
+                        if (modal) modal.style.display = 'none';
+                    });
+                }
+
+                if (modal) {
+                    modal.addEventListener('click', function (e) {
+                        if (e.target === modal) modal.style.display = 'none';
+                    });
+                }
+
+                if (submitBtn) {
+                    submitBtn.addEventListener('click', function () {
+                        var artistName = document.getElementById('req-artist-name').value.trim();
+                        var genre = document.getElementById('req-genre').value;
+                        var reason = document.getElementById('req-reason').value.trim();
+
+                        if (!artistName) {
+                            showError('Artist name is required');
+                            return;
+                        }
+
+                        submitBtn.disabled = true;
+                        submitBtn.textContent = 'Submitting...';
+                        hideError();
+
+                        var csrfToken = (document.querySelector('meta[name="_csrf"]') || {}).content || '';
+
+                        fetch('/user/api/artist-request', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken
+                            },
+                            body: JSON.stringify({
+                                artistName: artistName,
+                                genre: genre,
+                                reason: reason
+                            })
+                        })
+                            .then(function (res) {
+                                if (res.status >= 200 && res.status < 300) {
+                                    return res.json();
+                                }
+                                return res.json().then(function (d) { throw new Error(d.error || 'Request failed'); });
+                            })
+                            .then(function (data) {
+                                // Success — replace the upgrade card with pending state
+                                if (modal) modal.style.display = 'none';
+                                replaceWithPendingState(data.artistName, data.genre);
+                            })
+                            .catch(function (err) {
+                                showError(err.message);
+                            })
+                            .finally(function () {
+                                submitBtn.disabled = false;
+                                submitBtn.innerHTML =
+                                    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">' +
+                                    '<line x1="22" y1="2" x2="11" y2="13"/>' +
+                                    '<polygon points="22 2 15 22 11 13 2 9 22 2"/>' +
+                                    '</svg> Submit Request';
+                            });
+                    });
+                }
+
+                function showError(msg) {
+                    if (errorDiv) {
+                        errorDiv.textContent = msg;
+                        errorDiv.style.display = 'block';
+                    }
+                }
+
+                function hideError() {
+                    if (errorDiv) errorDiv.style.display = 'none';
+                }
+
+                function replaceWithPendingState(artistName, genre) {
+                    var noneCard = document.getElementById('upgrade-card-none');
+                    var rejectedCard = document.querySelector('.profile-upgrade-card--rejected');
+                    var target = noneCard || rejectedCard;
+
+                    if (target) {
+                        var genreText = genre ? ' · ' + genre : '';
+                        target.outerHTML =
+                            '<div class="profile-upgrade-card profile-upgrade-card--pending">' +
+                            '  <div class="profile-upgrade-icon profile-upgrade-icon--pending">' +
+                            '    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FFB74D" stroke-width="2" stroke-linecap="round">' +
+                            '      <circle cx="12" cy="12" r="10"/>' +
+                            '      <polyline points="12 6 12 12 16 14"/>' +
+                            '    </svg>' +
+                            '  </div>' +
+                            '  <div class="profile-upgrade-text">' +
+                            '    <h3>Upgrade Request Pending</h3>' +
+                            '    <p>Your artist upgrade request is being reviewed by an admin. You\'ll be notified once it\'s processed.</p>' +
+                            '    <span class="profile-request-meta">Requested as: <strong>' + escapeHtml(artistName) + '</strong>' + genreText + '</span>' +
+                            '  </div>' +
+                            '  <span class="profile-request-badge profile-request-badge--pending">Pending Review</span>' +
+                            '</div>';
+                    }
+                }
+
+                function escapeHtml(text) {
+                    if (!text) return '';
+                    var div = document.createElement('div');
+                    div.textContent = text;
+                    return div.innerHTML;
+                }
             })();
         </script>
     </div>
 </div>
 </body>
-
 </html>

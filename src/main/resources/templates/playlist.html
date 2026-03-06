@@ -48,7 +48,6 @@
 
                 <div class="pl-grid" th:if="${playlists != null && !playlists.isEmpty()}">
                     <div th:each="pl, iter : ${playlists}" class="pl-card" th:data-id="${pl.id}">
-                        <!-- Cover -->
                         <a th:href="@{/playlists/{id}(id=${pl.id})}" class="pl-card-cover"
                            th:style="'background: linear-gradient(135deg, hsl(' + ${(pl.id * 47) % 360} + ', 45%, 28%), hsl(' + ${(pl.id * 137) % 360} + ', 55%, 18%))'">
                             <svg class="pl-card-watermark" viewBox="0 0 24 24" fill="currentColor"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
@@ -60,7 +59,6 @@
                                 <svg th:if="${!pl.publicPlaylist}" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4" fill="none" stroke="currentColor" stroke-width="2"/></svg>
                             </span>
                         </a>
-                        <!-- Body -->
                         <div class="pl-card-body">
                             <a th:href="@{/playlists/{id}(id=${pl.id})}" class="pl-card-title" th:text="${pl.name}">Playlist</a>
                             <p class="pl-card-desc" th:if="${pl.description != null && !pl.description.isEmpty()}" th:text="${pl.description}">Description</p>
@@ -68,7 +66,6 @@
                                 <span class="pl-card-songs" th:text="${pl.songCount + ' songs'}">0 songs</span>
                             </div>
                         </div>
-                        <!-- Delete -->
                         <button class="pl-card-delete pl-delete-btn" th:data-id="${pl.id}" th:data-name="${pl.name}" title="Delete">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
                         </button>
@@ -334,11 +331,12 @@
                             })
                         }).then(function (res) {
                             if (!res.ok) throw new Error('Failed');
+                            RevPlay.toast({ type: 'success', message: 'Playlist created!' });
                             invalidatePlaylistCache();
                             if (window.PjaxRouter && window.PjaxRouter.reload) window.PjaxRouter.reload();
                             else window.location.reload();
                         }).catch(function () {
-                            alert('Failed to create playlist');
+                            RevPlay.toast({ type: 'error', message: 'Failed to create playlist' });
                             if (btn) { btn.disabled = false; btn.textContent = 'Create Playlist'; }
                         });
                     });
@@ -350,16 +348,26 @@
                         e.preventDefault(); e.stopPropagation();
                         var id = this.getAttribute('data-id');
                         var name = this.getAttribute('data-name');
-                        if (!confirm('Delete "' + name + '"? This cannot be undone.')) return;
+                        var card = btn.closest('.pl-card');
 
-                        fetch('/api/playlists/' + id, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrfToken } })
-                            .then(function (res) {
-                                if (!(res.status >= 200 && res.status < 300)) throw new Error('Failed');
-                                var card = btn.closest('.pl-card');
-                                if (card) { card.style.transition = 'opacity .3s,transform .3s'; card.style.opacity = '0'; card.style.transform = 'scale(0.95)'; }
-                                invalidatePlaylistCache();
-                                setTimeout(function () { if (window.PjaxRouter && window.PjaxRouter.reload) window.PjaxRouter.reload(); else window.location.reload(); }, 350);
-                            }).catch(function () { alert('Failed to delete'); });
+                        RevPlay.confirm({
+                            title: 'Delete Playlist',
+                            message: 'Delete "' + name + '"? This cannot be undone.',
+                            type: 'danger',
+                            confirmText: 'Delete',
+                            cancelText: 'Keep'
+                        }).then(function (confirmed) {
+                            if (!confirmed) return;
+
+                            fetch('/api/playlists/' + id, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrfToken } })
+                                .then(function (res) {
+                                    if (!(res.status >= 200 && res.status < 300)) throw new Error('Failed');
+                                    if (card) { card.style.transition = 'opacity .3s,transform .3s'; card.style.opacity = '0'; card.style.transform = 'scale(0.95)'; }
+                                    RevPlay.toast({ type: 'success', message: '"' + name + '" deleted' });
+                                    invalidatePlaylistCache();
+                                    setTimeout(function () { if (window.PjaxRouter && window.PjaxRouter.reload) window.PjaxRouter.reload(); else window.location.reload(); }, 350);
+                                }).catch(function () { RevPlay.toast({ type: 'error', message: 'Failed to delete playlist' }); });
+                        });
                     });
                 });
 
@@ -368,14 +376,24 @@
                 if (deleteDetailBtn) {
                     deleteDetailBtn.addEventListener('click', function () {
                         var id = this.getAttribute('data-id');
-                        if (!confirm('Delete this playlist?')) return;
-                        fetch('/api/playlists/' + id, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrfToken } })
-                            .then(function (res) {
-                                if (!(res.status >= 200 && res.status < 300)) throw new Error('Failed');
-                                invalidatePlaylistCache();
-                                if (window.PjaxRouter && window.PjaxRouter.navigate) window.PjaxRouter.navigate('/playlists');
-                                else window.location.href = '/playlists';
-                            }).catch(function () { alert('Failed'); });
+
+                        RevPlay.confirm({
+                            title: 'Delete Playlist',
+                            message: 'Delete this playlist? All songs will be removed from it.',
+                            type: 'danger',
+                            confirmText: 'Delete',
+                            cancelText: 'Cancel'
+                        }).then(function (confirmed) {
+                            if (!confirmed) return;
+                            fetch('/api/playlists/' + id, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrfToken } })
+                                .then(function (res) {
+                                    if (!(res.status >= 200 && res.status < 300)) throw new Error('Failed');
+                                    RevPlay.toast({ type: 'success', message: 'Playlist deleted' });
+                                    invalidatePlaylistCache();
+                                    if (window.PjaxRouter && window.PjaxRouter.navigate) window.PjaxRouter.navigate('/playlists');
+                                    else window.location.href = '/playlists';
+                                }).catch(function () { RevPlay.toast({ type: 'error', message: 'Failed to delete playlist' }); });
+                        });
                     });
                 }
 
@@ -426,8 +444,9 @@
                                     : '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-1px;margin-right:3px;"><rect x="3" y="11" width="18" height="11" rx="2"/></svg>Private';
                             }
                             editModal.style.display = 'none';
+                            RevPlay.toast({ type: 'success', message: 'Playlist updated' });
                             invalidatePlaylistCache();
-                        }).catch(function () { alert('Failed to update'); })
+                        }).catch(function () { RevPlay.toast({ type: 'error', message: 'Failed to update playlist' }); })
                             .finally(function () { if (btn) { btn.disabled = false; btn.textContent = 'Save Changes'; } });
                     });
                 }
@@ -438,36 +457,48 @@
                         e.stopPropagation();
                         var songId = this.getAttribute('data-song-id');
                         var row = this.closest('.playlist-song-row');
+                        var songTitle = row ? row.getAttribute('data-title') : 'this song';
                         var songList = document.getElementById('playlist-song-list');
                         var playlistId = songList ? songList.getAttribute('data-playlist-id') : null;
-                        if (!playlistId || !confirm('Remove this song?')) return;
+                        if (!playlistId) return;
 
-                        fetch('/api/playlists/' + playlistId + '/songs/' + songId, {
-                            method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrfToken }
-                        }).then(function (res) {
-                            if (!(res.status >= 200 && res.status < 300)) throw new Error('Failed');
-                            row.style.transition = 'opacity .3s, transform .3s';
-                            row.style.opacity = '0';
-                            row.style.transform = 'translateX(20px)';
-                            setTimeout(function () {
-                                row.remove();
-                                var countEl = document.getElementById('pl-song-count');
-                                var remaining = document.querySelectorAll('.playlist-song-row').length;
-                                if (countEl) countEl.textContent = remaining + ' songs';
-                                document.querySelectorAll('.playlist-song-row .col-num').forEach(function (n, i) { n.textContent = i + 1; });
-                                if (remaining === 0) {
-                                    var h = songList.querySelector('.playlist-song-header');
-                                    if (h) h.remove();
-                                    songList.innerHTML = '<div class="pl-empty" style="padding:60px 20px;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" opacity="0.3"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><h2>This playlist is empty</h2><p>Add songs from the library</p></div>';
-                                    var pa = document.getElementById('btn-play-all');
-                                    var sp = document.getElementById('btn-shuffle-play');
-                                    if (pa) pa.style.display = 'none';
-                                    if (sp) sp.style.display = 'none';
-                                }
-                                if (window.RevPlay && window.RevPlay.rescan) window.RevPlay.rescan();
-                                invalidatePlaylistCache();
-                            }, 300);
-                        }).catch(function () { alert('Error removing song'); });
+                        RevPlay.confirm({
+                            title: 'Remove Song',
+                            message: 'Remove "' + songTitle + '" from this playlist?',
+                            type: 'warning',
+                            confirmText: 'Remove',
+                            cancelText: 'Cancel'
+                        }).then(function (confirmed) {
+                            if (!confirmed) return;
+
+                            fetch('/api/playlists/' + playlistId + '/songs/' + songId, {
+                                method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrfToken }
+                            }).then(function (res) {
+                                if (!(res.status >= 200 && res.status < 300)) throw new Error('Failed');
+                                row.style.transition = 'opacity .3s, transform .3s';
+                                row.style.opacity = '0';
+                                row.style.transform = 'translateX(20px)';
+                                setTimeout(function () {
+                                    row.remove();
+                                    var countEl = document.getElementById('pl-song-count');
+                                    var remaining = document.querySelectorAll('.playlist-song-row').length;
+                                    if (countEl) countEl.textContent = remaining + ' songs';
+                                    document.querySelectorAll('.playlist-song-row .col-num').forEach(function (n, i) { n.textContent = i + 1; });
+                                    if (remaining === 0) {
+                                        var h = songList.querySelector('.playlist-song-header');
+                                        if (h) h.remove();
+                                        songList.innerHTML = '<div class="pl-empty" style="padding:60px 20px;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" opacity="0.3"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><h2>This playlist is empty</h2><p>Add songs from the library</p></div>';
+                                        var pa = document.getElementById('btn-play-all');
+                                        var sp = document.getElementById('btn-shuffle-play');
+                                        if (pa) pa.style.display = 'none';
+                                        if (sp) sp.style.display = 'none';
+                                    }
+                                    if (window.RevPlay && window.RevPlay.rescan) window.RevPlay.rescan();
+                                    invalidatePlaylistCache();
+                                }, 300);
+                                RevPlay.toast({ type: 'success', message: 'Song removed' });
+                            }).catch(function () { RevPlay.toast({ type: 'error', message: 'Failed to remove song' }); });
+                        });
                     });
                 });
 
@@ -487,8 +518,12 @@
                         }).then(function (res) {
                             if (res.status >= 200 && res.status < 300) {
                                 b.setAttribute('data-following', String(newState));
+                                RevPlay.toast({ type: 'success', message: newState ? 'Following playlist' : 'Unfollowed playlist' });
                                 invalidatePlaylistCache();
-                            } else { setFollowUI(b, isFollowing); alert('Failed'); }
+                            } else {
+                                setFollowUI(b, isFollowing);
+                                RevPlay.toast({ type: 'error', message: 'Action failed' });
+                            }
                         }).catch(function () { setFollowUI(b, isFollowing); });
                     });
                 }

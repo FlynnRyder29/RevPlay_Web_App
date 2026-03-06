@@ -571,65 +571,68 @@
         return shuffled;
     }
 
-    window.RevPlay = {
+    // ========================= PUBLIC API =========================
+    // IMPORTANT: Merge into existing window.RevPlay instead of overwriting.
+    // confirm-toast.js may have already added .confirm() and .toast() to it.
 
-        playQueue: function (songs, startIndex) {
-            if (!songs || songs.length === 0) return;
-            queue = songs.slice();
-            currentIndex = -1;
-            playSongAtIndex(typeof startIndex === 'number' ? startIndex : 0);
-            updateQueueDisplay();
-        },
+    window.RevPlay = window.RevPlay || {};
 
-        shuffleQueue: function (songs) {
-            if (!songs || songs.length === 0) return;
-            queue = shuffleArray(songs);
-            currentIndex = -1;
-            playSongAtIndex(0);
-            updateQueueDisplay();
-        },
+    window.RevPlay.playQueue = function (songs, startIndex) {
+        if (!songs || songs.length === 0) return;
+        queue = songs.slice();
+        currentIndex = -1;
+        playSongAtIndex(typeof startIndex === 'number' ? startIndex : 0);
+        updateQueueDisplay();
+    };
 
-        playSong: function (song) {
-            if (!song || !song.url) return;
-            queue = [song];
-            currentIndex = -1;
-            playSongAtIndex(0);
-            updateQueueDisplay();
-        },
+    window.RevPlay.shuffleQueue = function (songs) {
+        if (!songs || songs.length === 0) return;
+        queue = shuffleArray(songs);
+        currentIndex = -1;
+        playSongAtIndex(0);
+        updateQueueDisplay();
+    };
 
-        addToQueue: function (songs) {
-            if (!songs || songs.length === 0) return;
-            songs.forEach(function (s) { queue.push(s); });
-            updateQueueDisplay();
-        },
+    window.RevPlay.playSong = function (song) {
+        if (!song || !song.url) return;
+        queue = [song];
+        currentIndex = -1;
+        playSongAtIndex(0);
+        updateQueueDisplay();
+    };
 
-        getState: function () {
-            return {
-                isPlaying: isPlaying,
-                isShuffle: isShuffle,
-                repeatMode: repeatMode,
-                queueLength: queue.length,
-                currentIndex: currentIndex,
-                currentSong: currentIndex >= 0 && currentIndex < queue.length
-                    ? queue[currentIndex]
-                    : null
-            };
-        },
+    window.RevPlay.addToQueue = function (songs) {
+        if (!songs || songs.length === 0) return;
+        songs.forEach(function (s) { queue.push(s); });
+        updateQueueDisplay();
+    };
 
-        rescan: function () {
-            document.querySelectorAll('.song-card[data-player-bound]').forEach(function (el) {
-                delete el.dataset.playerBound;
-            });
-            document.querySelectorAll('.playlist-song-row[data-player-bound]').forEach(function (el) {
-                delete el.dataset.playerBound;
-            });
+    window.RevPlay.getState = function () {
+        return {
+            isPlaying: isPlaying,
+            isShuffle: isShuffle,
+            repeatMode: repeatMode,
+            queueLength: queue.length,
+            currentIndex: currentIndex,
+            currentSong: currentIndex >= 0 && currentIndex < queue.length
+                ? queue[currentIndex]
+                : null
+        };
+    };
 
-            buildQueueFromCards();
-            attachCardListeners();
-            buildQueueFromPlaylistRows();
-            attachPlaylistRowListeners();
-            updateQueueDisplay();
-        }
+    window.RevPlay.rescan = function () {
+        document.querySelectorAll('.song-card[data-player-bound]').forEach(function (el) {
+            delete el.dataset.playerBound;
+        });
+        document.querySelectorAll('.playlist-song-row[data-player-bound]').forEach(function (el) {
+            delete el.dataset.playerBound;
+        });
+
+        buildQueueFromCards();
+        attachCardListeners();
+        buildQueueFromPlaylistRows();
+        attachPlaylistRowListeners();
+        updateQueueDisplay();
     };
 
 })();

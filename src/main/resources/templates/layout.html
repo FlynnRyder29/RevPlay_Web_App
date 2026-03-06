@@ -13,6 +13,16 @@
             var t = localStorage.getItem('revplay-theme');
             if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
         })();
+
+        window.RevPlay = window.RevPlay || {};
+        if (!window.RevPlay.confirm) {
+            window.RevPlay.confirm = function(opts) {
+                return Promise.resolve(confirm(opts && opts.message ? opts.message : 'Are you sure?'));
+            };
+        }
+        if (!window.RevPlay.toast) {
+            window.RevPlay.toast = function(opts) {};
+        }
     </script>
 
     <!-- CSS Modules (order matters) -->
@@ -32,8 +42,10 @@
     <link rel="stylesheet" th:href="@{/css/responsive.css}">
     <link rel="stylesheet" th:href="@{/css/pages/history.css}">
     <link rel="stylesheet" th:href="@{/css/pages/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/about.css}">
 
     <!-- JS -->
+    <script th:src="@{/js/confirm-toast.js}"></script>
     <script th:src="@{/js/theme.js}" defer></script>
     <script th:src="@{/js/player.js}" defer></script>
     <script th:src="@{/js/favorites.js}" defer></script>

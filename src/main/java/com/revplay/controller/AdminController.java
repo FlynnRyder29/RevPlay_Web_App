@@ -68,6 +68,58 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getUserById(id));
     }
 
+    // ── Artist Requests ── (add to existing AdminController)
+
+    @GetMapping("/artist-requests/stats")
+    public ResponseEntity<?> getArtistRequestStats() {
+        log.info("GET /api/admin/artist-requests/stats");
+        return ResponseEntity.ok(adminService.getArtistRequestStats());
+    }
+
+    @GetMapping("/artist-requests")
+    public ResponseEntity<?> getArtistRequests(
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        log.info("GET /api/admin/artist-requests status={} page={}", status, page);
+        return ResponseEntity.ok(adminService.getArtistRequests(status, page, size));
+    }
+
+    @PutMapping("/artist-requests/{id}/approve")
+    public ResponseEntity<?> approveArtistRequest(
+            @PathVariable Long id,
+            @RequestBody(required = false) Map<String, String> body) {
+
+        Long adminId = securityUtils.getCurrentUser().getId();
+        String note = (body != null) ? body.get("note") : null;
+
+        log.info("PUT /api/admin/artist-requests/{}/approve by admin {}", id, adminId);
+
+        try {
+            return ResponseEntity.ok(adminService.approveArtistRequest(id, adminId, note));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/artist-requests/{id}/reject")
+    public ResponseEntity<?> rejectArtistRequest(
+            @PathVariable Long id,
+            @RequestBody(required = false) Map<String, String> body) {
+
+        Long adminId = securityUtils.getCurrentUser().getId();
+        String note = (body != null) ? body.get("note") : null;
+
+        log.info("PUT /api/admin/artist-requests/{}/reject by admin {}", id, adminId);
+
+        try {
+            return ResponseEntity.ok(adminService.rejectArtistRequest(id, adminId, note));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @PutMapping("/users/{id}/role")
     public ResponseEntity<?> changeUserRole(
             @PathVariable Long id,

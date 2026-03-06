@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head('About')}"></head>
+<body>
+<div th:replace="~{layout :: page(~{::#about-content})}">
+
+    <div id="about-content">
+
+        <!-- ════════════════════════════════════════════════
+             HERO CAROUSEL
+             ════════════════════════════════════════════════ -->
+        <div class="about-carousel" id="about-carousel">
+            <div class="about-carousel-track" id="carousel-track">
+
+                <!-- Slide 1: Branding -->
+                <div class="about-slide about-slide--1">
+                    <div class="about-slide-overlay"></div>
+                    <div class="about-slide-content">
+                        <div class="about-slide-icon">
+                            <svg width="56" height="56" viewBox="0 0 24 24" fill="none"
+                                 stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                                <path d="M9 18V5l12-2v13"/>
+                                <circle cx="6" cy="18" r="3"/>
+                                <circle cx="18" cy="16" r="3"/>
+                            </svg>
+                        </div>
+                        <h1 class="about-slide-title">RevPlay</h1>
+                        <p class="about-slide-subtitle">A Full-Stack Music Streaming Platform</p>
+                        <p class="about-slide-desc">Built with passion by a team of 5 developers using Java, Spring Boot & Thymeleaf</p>
+                    </div>
+                    <div class="about-slide-particles">
+                        <span class="particle particle--1">♪</span>
+                        <span class="particle particle--2">♫</span>
+                        <span class="particle particle--3">♬</span>
+                        <span class="particle particle--4">♩</span>
+                        <span class="particle particle--5">♪</span>
+                    </div>
+                </div>
+
+                <!-- Slide 2: Features -->
+                <div class="about-slide about-slide--2">
+                    <div class="about-slide-overlay"></div>
+                    <div class="about-slide-content">
+                        <h2 class="about-slide-title" style="font-size: 2.2rem;">Stream. Create. Discover.</h2>
+                        <div class="about-slide-features">
+                            <div class="about-slide-feature">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                                     stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round">
+                                    <polygon points="5 3 19 12 5 21 5 3"/>
+                                </svg>
+                                <span>Stream Music</span>
+                            </div>
+                            <div class="about-slide-feature">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                                     stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round">
+                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                                </svg>
+                                <span>Upload Tracks</span>
+                            </div>
+                            <div class="about-slide-feature">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                                     stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round">
+                                    <circle cx="11" cy="11" r="8"/>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                                </svg>
+                                <span>Discover Artists</span>
+                            </div>
+                            <div class="about-slide-feature">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                                     stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                </svg>
+                                <span>Curate Playlists</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide 3: Tech -->
+                <div class="about-slide about-slide--3">
+                    <div class="about-slide-overlay"></div>
+                    <div class="about-slide-content">
+                        <h2 class="about-slide-title" style="font-size: 2.2rem;">Built With Modern Tech</h2>
+                        <p class="about-slide-desc">Enterprise-grade architecture with Spring ecosystem</p>
+                        <div class="about-slide-tech-row">
+                            <span class="about-slide-tech-badge">Java 21</span>
+                            <span class="about-slide-tech-badge">Spring Boot 3</span>
+                            <span class="about-slide-tech-badge">Thymeleaf</span>
+                            <span class="about-slide-tech-badge">MySQL</span>
+                            <span class="about-slide-tech-badge">Spring Security</span>
+                            <span class="about-slide-tech-badge">Flyway</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Carousel Controls -->
+            <button class="about-carousel-btn about-carousel-btn--prev" id="carousel-prev">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <polyline points="15 18 9 12 15 6"/>
+                </svg>
+            </button>
+            <button class="about-carousel-btn about-carousel-btn--next" id="carousel-next">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <polyline points="9 18 15 12 9 6"/>
+                </svg>
+            </button>
+            <div class="about-carousel-dots" id="carousel-dots">
+                <button class="about-dot about-dot--active" data-slide="0"></button>
+                <button class="about-dot" data-slide="1"></button>
+                <button class="about-dot" data-slide="2"></button>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════════
+             PROJECT STATS
+             ════════════════════════════════════════════════ -->
+        <section class="about-stats reveal-up">
+            <div class="about-stat">
+                <div class="about-stat-value" data-count="5">0</div>
+                <div class="about-stat-label">Team Members</div>
+            </div>
+            <div class="about-stat">
+                <div class="about-stat-value" data-count="118">0</div>
+                <div class="about-stat-label">Project Files</div>
+            </div>
+            <div class="about-stat">
+                <div class="about-stat-value" data-count="10">0</div>
+                <div class="about-stat-label">Day Sprint</div>
+            </div>
+            <div class="about-stat">
+                <div class="about-stat-value" data-count="14">0</div>
+                <div class="about-stat-label">API Controllers</div>
+            </div>
+        </section>
+
+        <!-- ════════════════════════════════════════════════
+             MEET THE TEAM
+             ════════════════════════════════════════════════ -->
+        <section class="about-team">
+            <h2 class="about-section-title reveal-up">Meet the Team</h2>
+            <p class="about-section-subtitle reveal-up">The developers who brought RevPlay to life</p>
+
+            <!-- ── Developer 1: Tech Lead (Image LEFT, Info RIGHT) ── -->
+            <div class="about-dev about-dev--left">
+                <div class="about-dev-visual reveal-left">
+                    <div class="about-dev-image-wrap">
+                        <div class="about-dev-glow about-dev-glow--1"></div>
+                        <img th:src="@{/images/team/member1.jpeg}"
+                             alt="Tech Lead"
+                             class="about-dev-photo"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="about-dev-fallback" style="display:none;">
+                            <span>M1</span>
+                        </div>
+                    </div>
+                    <div class="about-dev-number">01</div>
+                </div>
+                <div class="about-dev-info reveal-right">
+                    <span class="about-dev-role about-dev-role--lead">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                             style="vertical-align: -2px; margin-right: 4px;">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                        Tech Lead &amp; Frontend
+                    </span>
+                    <!-- ⬇ REPLACE with real name -->
+                    <h3 class="about-dev-name">Piyush Singh</h3>
+                    <p class="about-dev-desc">
+                        Led the entire project architecture, built all Thymeleaf templates with responsive design,
+                        implemented Spring Security with role-based access control, and created the integrated
+                        music player with keyboard shortcuts, queue management, shuffle & repeat modes.
+                        Reviewed every PR and ensured seamless integration across all modules.
+                    </p>
+                    <div class="about-dev-responsibilities">
+                        <span class="about-dev-resp">Full Frontend (11 Pages)</span>
+                        <span class="about-dev-resp">Authentication & Security</span>
+                        <span class="about-dev-resp">Music Player UI/JS</span>
+                        <span class="about-dev-resp">PR Review & Integration</span>
+                        <span class="about-dev-resp">CSS Design System (4200+ Lines)</span>
+                    </div>
+                    <div class="about-dev-tags">
+                        <span class="about-dev-tag">Thymeleaf</span>
+                        <span class="about-dev-tag">Spring Security</span>
+                        <span class="about-dev-tag">JavaScript</span>
+                        <span class="about-dev-tag">HTML5 Audio API</span>
+                        <span class="about-dev-tag">CSS3</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Developer 2: Music Catalog (Info LEFT, Image RIGHT) ── -->
+            <div class="about-dev about-dev--right">
+                <div class="about-dev-info reveal-left">
+                    <span class="about-dev-role about-dev-role--backend">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                             style="vertical-align: -2px; margin-right: 4px;">
+                            <path d="M9 18V5l12-2v13"/>
+                            <circle cx="6" cy="18" r="3"/>
+                            <circle cx="18" cy="16" r="3"/>
+                        </svg>
+                        Music Catalog &amp; Search
+                    </span>
+                    <!-- ⬇ REPLACE with real name -->
+                    <h3 class="about-dev-name">Sanjeev Singh Aswaal</h3>
+                    <p class="about-dev-desc">
+                        Built the complete music catalog system — browsing songs, albums, and artists with
+                        advanced search and dynamic filtering using JPA Specifications. Implemented paginated
+                        APIs, genre categorization, and the public artist/album catalog services.
+                    </p>
+                    <div class="about-dev-responsibilities">
+                        <span class="about-dev-resp">Song/Album/Artist CRUD</span>
+                        <span class="about-dev-resp">Search & Filter APIs</span>
+                        <span class="about-dev-resp">JPA Specifications</span>
+                        <span class="about-dev-resp">Genre Categorization</span>
+                    </div>
+                    <div class="about-dev-tags">
+                        <span class="about-dev-tag">Spring Data JPA</span>
+                        <span class="about-dev-tag">REST APIs</span>
+                        <span class="about-dev-tag">Pagination</span>
+                        <span class="about-dev-tag">Specifications</span>
+                    </div>
+                </div>
+                <div class="about-dev-visual reveal-right">
+                    <div class="about-dev-image-wrap">
+                        <div class="about-dev-glow about-dev-glow--2"></div>
+                        <img th:src="@{/images/team/member3.jpeg}"
+                             alt="Music Catalog Developer"
+                             class="about-dev-photo"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="about-dev-fallback" style="display:none;">
+                            <span>M3</span>
+                        </div>
+                    </div>
+                    <div class="about-dev-number">02</div>
+                </div>
+            </div>
+
+            <!-- ── Developer 3: Playlists & Social (Image LEFT, Info RIGHT) ── -->
+            <div class="about-dev about-dev--left">
+                <div class="about-dev-visual reveal-left">
+                    <div class="about-dev-image-wrap">
+                        <div class="about-dev-glow about-dev-glow--3"></div>
+                        <img th:src="@{/images/team/member4.jpeg}"
+                             alt="Playlists Developer"
+                             class="about-dev-photo"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="about-dev-fallback" style="display:none;">
+                            <span>M4</span>
+                        </div>
+                    </div>
+                    <div class="about-dev-number">03</div>
+                </div>
+                <div class="about-dev-info reveal-right">
+                    <span class="about-dev-role about-dev-role--backend">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                             style="vertical-align: -2px; margin-right: 4px;">
+                            <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
+                        </svg>
+                        Playlists, Favorites &amp; History
+                    </span>
+                    <!-- ⬇ REPLACE with real name -->
+                    <h3 class="about-dev-name">Vijay S</h3>
+                    <p class="about-dev-desc">
+                        Developed the complete playlist ecosystem — creating, editing, reordering songs,
+                        public/private toggles, and playlist following. Built the favorites system with
+                        real-time toggle and listening history tracking with timeline view.
+                    </p>
+                    <div class="about-dev-responsibilities">
+                        <span class="about-dev-resp">Playlist CRUD & Reorder</span>
+                        <span class="about-dev-resp">Favorites Toggle</span>
+                        <span class="about-dev-resp">Listening History</span>
+                        <span class="about-dev-resp">Follow/Unfollow</span>
+                    </div>
+                    <div class="about-dev-tags">
+                        <span class="about-dev-tag">Spring Boot</span>
+                        <span class="about-dev-tag">REST APIs</span>
+                        <span class="about-dev-tag">Transactions</span>
+                        <span class="about-dev-tag">JPA Relations</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Developer 4: Artist Features (Info LEFT, Image RIGHT) ── -->
+            <div class="about-dev about-dev--right">
+                <div class="about-dev-info reveal-left">
+                    <span class="about-dev-role about-dev-role--backend">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                             style="vertical-align: -2px; margin-right: 4px;">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                        </svg>
+                        Artist Features &amp; Analytics
+                    </span>
+                    <!-- ⬇ REPLACE with real name -->
+                    <h3 class="about-dev-name">Ibrahim Sheikh</h3>
+                    <p class="about-dev-desc">
+                        Built the artist management suite — profile creation, song & album uploads with
+                        file storage, visibility controls, and a comprehensive analytics dashboard showing
+                        play trends, top listeners, fan tracking, and per-song performance metrics.
+                    </p>
+                    <div class="about-dev-responsibilities">
+                        <span class="about-dev-resp">Artist Profile Management</span>
+                        <span class="about-dev-resp">Song/Album Upload</span>
+                        <span class="about-dev-resp">File Storage Service</span>
+                        <span class="about-dev-resp">Analytics Dashboard APIs</span>
+                    </div>
+                    <div class="about-dev-tags">
+                        <span class="about-dev-tag">File Upload</span>
+                        <span class="about-dev-tag">Analytics</span>
+                        <span class="about-dev-tag">Spring MVC</span>
+                        <span class="about-dev-tag">Multipart</span>
+                    </div>
+                </div>
+                <div class="about-dev-visual reveal-right">
+                    <div class="about-dev-image-wrap">
+                        <div class="about-dev-glow about-dev-glow--4"></div>
+                        <img th:src="@{/images/team/member5.jpeg}"
+                             alt="Artist Features Developer"
+                             class="about-dev-photo"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="about-dev-fallback" style="display:none;">
+                            <span>M5</span>
+                        </div>
+                    </div>
+                    <div class="about-dev-number">04</div>
+                </div>
+            </div>
+
+            <!-- ── Developer 5: Database & DevOps (Image LEFT, Info RIGHT) ── -->
+            <div class="about-dev about-dev--left">
+                <div class="about-dev-visual reveal-left">
+                    <div class="about-dev-image-wrap">
+                        <div class="about-dev-glow about-dev-glow--5"></div>
+                        <img th:src="@{/images/team/member6.jpeg}"
+                             alt="Database & DevOps Developer"
+                             class="about-dev-photo"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="about-dev-fallback" style="display:none;">
+                            <span>M6</span>
+                        </div>
+                    </div>
+                    <div class="about-dev-number">05</div>
+                </div>
+                <div class="about-dev-info reveal-right">
+                    <span class="about-dev-role about-dev-role--devops">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                             style="vertical-align: -2px; margin-right: 4px;">
+                            <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+                            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                        </svg>
+                        Database, Testing &amp; DevOps
+                    </span>
+                    <!-- ⬇ REPLACE with real name -->
+                    <h3 class="about-dev-name">Joshua Nath</h3>
+                    <p class="about-dev-desc">
+                        Designed the complete database schema with ERD, wrote Flyway migrations with
+                        seed data, set up JUnit + Mockito test infrastructure achieving 70%+ coverage,
+                        configured SLF4J logging standards, global exception handling, and managed
+                        the Maven build pipeline.
+                    </p>
+                    <div class="about-dev-responsibilities">
+                        <span class="about-dev-resp">ERD & Schema Design</span>
+                        <span class="about-dev-resp">Flyway Migrations</span>
+                        <span class="about-dev-resp">JUnit/Mockito Tests</span>
+                        <span class="about-dev-resp">Logging & CI Pipeline</span>
+                    </div>
+                    <div class="about-dev-tags">
+                        <span class="about-dev-tag">MySQL</span>
+                        <span class="about-dev-tag">Flyway</span>
+                        <span class="about-dev-tag">JUnit</span>
+                        <span class="about-dev-tag">Mockito</span>
+                        <span class="about-dev-tag">JaCoCo</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ════════════════════════════════════════════════
+             TECH STACK
+             ════════════════════════════════════════════════ -->
+        <section class="about-tech">
+            <h2 class="about-section-title reveal-up">Tech Stack</h2>
+            <p class="about-section-subtitle reveal-up">Enterprise-grade tools powering RevPlay</p>
+            <div class="about-tech-grid">
+                <div class="about-tech-item reveal-scale" style="--delay: 0s;">
+                    <div class="about-tech-icon">☕</div>
+                    <div class="about-tech-name">Java 21</div>
+                    <div class="about-tech-cat">Language</div>
+                </div>
+                <div class="about-tech-item reveal-scale" style="--delay: 0.05s;">
+                    <div class="about-tech-icon">🍃</div>
+                    <div class="about-tech-name">Spring Boot 3</div>
+                    <div class="about-tech-cat">Framework</div>
+                </div>
+                <div class="about-tech-item reveal-scale" style="--delay: 0.1s;">
+                    <div class="about-tech-icon">🌿</div>
+                    <div class="about-tech-name">Thymeleaf</div>
+                    <div class="about-tech-cat">Templating</div>
+                </div>
+                <div class="about-tech-item reveal-scale" style="--delay: 0.15s;">
+                    <div class="about-tech-icon">🐬</div>
+                    <div class="about-tech-name">MySQL 8</div>
+                    <div class="about-tech-cat">Database</div>
+                </div>
+                <div class="about-tech-item reveal-scale" style="--delay: 0.2s;">
+                    <div class="about-tech-icon">🔐</div>
+                    <div class="about-tech-name">Spring Security</div>
+                    <div class="about-tech-cat">Auth</div>
+                </div>
+                <div class="about-tech-item reveal-scale" style="--delay: 0.25s;">
+                    <div class="about-tech-icon">🗄️</div>
+                    <div class="about-tech-name">Hibernate</div>
+                    <div class="about-tech-cat">ORM</div>
+                </div>
+                <div class="about-tech-item reveal-scale" style="--delay: 0.3s;">
+                    <div class="about-tech-icon">✈️</div>
+                    <div class="about-tech-name">Flyway</div>
+                    <div class="about-tech-cat">Migrations</div>
+                </div>
+                <div class="about-tech-item reveal-scale" style="--delay: 0.35s;">
+                    <div class="about-tech-icon">🧪</div>
+                    <div class="about-tech-name">JUnit + Mockito</div>
+                    <div class="about-tech-cat">Testing</div>
+                </div>
+                <div class="about-tech-item reveal-scale" style="--delay: 0.4s;">
+                    <div class="about-tech-icon">📦</div>
+                    <div class="about-tech-name">Maven</div>
+                    <div class="about-tech-cat">Build</div>
+                </div>
+                <div class="about-tech-item reveal-scale" style="--delay: 0.45s;">
+                    <div class="about-tech-icon">📝</div>
+                    <div class="about-tech-name">Swagger</div>
+                    <div class="about-tech-cat">API Docs</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ════════════════════════════════════════════════
+             CLOSING CTA
+             ════════════════════════════════════════════════ -->
+        <section class="about-cta reveal-up">
+            <div class="about-cta-glow"></div>
+            <h2>Ready to explore?</h2>
+            <p>Stream your favorite music, create playlists, and discover new artists on RevPlay.</p>
+            <a th:href="@{/}" class="about-cta-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                Start Listening
+            </a>
+        </section>
+
+        <!-- ════════════════════════════════════════════════
+             SCRIPTS (inside content for PJAX)
+             ════════════════════════════════════════════════ -->
+        <script>
+            (function () {
+                'use strict';
+
+                // ══════════════════════════════════════
+                // CAROUSEL
+                // ══════════════════════════════════════
+
+                var track = document.getElementById('carousel-track');
+                var dots = document.querySelectorAll('#carousel-dots .about-dot');
+                var prevBtn = document.getElementById('carousel-prev');
+                var nextBtn = document.getElementById('carousel-next');
+                var currentSlide = 0;
+                var totalSlides = 3;
+                var autoplayInterval = null;
+
+                function goToSlide(index) {
+                    if (index < 0) index = totalSlides - 1;
+                    if (index >= totalSlides) index = 0;
+                    currentSlide = index;
+
+                    if (track) {
+                        track.style.transform = 'translateX(-' + (currentSlide * 100) + '%)';
+                    }
+
+                    dots.forEach(function (dot, i) {
+                        dot.classList.toggle('about-dot--active', i === currentSlide);
+                    });
+                }
+
+                function nextSlide() { goToSlide(currentSlide + 1); }
+                function prevSlide() { goToSlide(currentSlide - 1); }
+
+                if (prevBtn) prevBtn.addEventListener('click', function () { prevSlide(); resetAutoplay(); });
+                if (nextBtn) nextBtn.addEventListener('click', function () { nextSlide(); resetAutoplay(); });
+
+                dots.forEach(function (dot) {
+                    dot.addEventListener('click', function () {
+                        goToSlide(parseInt(this.getAttribute('data-slide')));
+                        resetAutoplay();
+                    });
+                });
+
+                function startAutoplay() {
+                    autoplayInterval = setInterval(nextSlide, 5000);
+                }
+
+                function resetAutoplay() {
+                    clearInterval(autoplayInterval);
+                    startAutoplay();
+                }
+
+                startAutoplay();
+
+                // Pause on hover
+                var carousel = document.getElementById('about-carousel');
+                if (carousel) {
+                    carousel.addEventListener('mouseenter', function () { clearInterval(autoplayInterval); });
+                    carousel.addEventListener('mouseleave', function () { startAutoplay(); });
+                }
+
+                // Touch swipe support
+                var touchStartX = 0;
+                if (carousel) {
+                    carousel.addEventListener('touchstart', function (e) {
+                        touchStartX = e.changedTouches[0].screenX;
+                    }, { passive: true });
+                    carousel.addEventListener('touchend', function (e) {
+                        var diff = touchStartX - e.changedTouches[0].screenX;
+                        if (Math.abs(diff) > 50) {
+                            if (diff > 0) nextSlide(); else prevSlide();
+                            resetAutoplay();
+                        }
+                    }, { passive: true });
+                }
+
+                // ══════════════════════════════════════
+                // SCROLL REVEAL (Intersection Observer)
+                // ══════════════════════════════════════
+
+                var revealElements = document.querySelectorAll('.reveal-left, .reveal-right, .reveal-up, .reveal-scale');
+
+                if ('IntersectionObserver' in window) {
+                    var observer = new IntersectionObserver(function (entries) {
+                        entries.forEach(function (entry) {
+                            if (entry.isIntersecting) {
+                                var delay = getComputedStyle(entry.target).getPropertyValue('--delay') || '0s';
+                                entry.target.style.transitionDelay = delay;
+                                entry.target.classList.add('revealed');
+                                observer.unobserve(entry.target);
+                            }
+                        });
+                    }, {
+                        threshold: 0.15,
+                        rootMargin: '0px 0px -60px 0px'
+                    });
+
+                    revealElements.forEach(function (el) {
+                        observer.observe(el);
+                    });
+                } else {
+                    // Fallback: show everything
+                    revealElements.forEach(function (el) { el.classList.add('revealed'); });
+                }
+
+                // ══════════════════════════════════════
+                // COUNTER ANIMATION
+                // ══════════════════════════════════════
+
+                var counters = document.querySelectorAll('.about-stat-value[data-count]');
+
+                if ('IntersectionObserver' in window && counters.length > 0) {
+                    var counterObserver = new IntersectionObserver(function (entries) {
+                        entries.forEach(function (entry) {
+                            if (entry.isIntersecting) {
+                                animateCounter(entry.target);
+                                counterObserver.unobserve(entry.target);
+                            }
+                        });
+                    }, { threshold: 0.5 });
+
+                    counters.forEach(function (c) { counterObserver.observe(c); });
+                }
+
+                function animateCounter(el) {
+                    var target = parseInt(el.getAttribute('data-count'));
+                    var duration = 1500;
+                    var startTime = null;
+
+                    function step(timestamp) {
+                        if (!startTime) startTime = timestamp;
+                        var progress = Math.min((timestamp - startTime) / duration, 1);
+                        var eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+                        el.textContent = Math.floor(eased * target);
+                        if (progress < 1) {
+                            requestAnimationFrame(step);
+                        } else {
+                            el.textContent = target;
+                        }
+                    }
+
+                    requestAnimationFrame(step);
+                }
+
+            })();
+        </script>
+    </div>
+</div>
+</body>
+</html>

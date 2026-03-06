@@ -329,6 +329,16 @@ public class PageController {
         return "favorites";
     }
 
+    // ═══════════════════════════════════════════
+    // ABOUT PAGE (PUBLIC)
+    // ═══════════════════════════════════════════
+
+    @GetMapping("/about")
+    public String showAboutPage() {
+        log.info("GET /about");
+        return "about";
+    }
+
     @GetMapping("/history")
     public String showHistoryPage(Model model) {
         log.info("GET /history");

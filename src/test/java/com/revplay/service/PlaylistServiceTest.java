@@ -83,7 +83,7 @@ class PlaylistServiceTest {
         ownedPlaylist.setId(1L);
         ownedPlaylist.setName("My Playlist");
         ownedPlaylist.setDescription("My description");
-        ownedPlaylist.setPublic(true);
+        ownedPlaylist.setPublicPlaylist(true);
         ownedPlaylist.setUser(currentUser);
         ownedPlaylist.setCreatedAt(LocalDateTime.of(2024, 6, 10, 10, 0));
         ownedPlaylist.setUpdatedAt(LocalDateTime.of(2024, 6, 10, 10, 0));
@@ -91,7 +91,7 @@ class PlaylistServiceTest {
         otherPublicPlaylist = new Playlist();
         otherPublicPlaylist.setId(2L);
         otherPublicPlaylist.setName("Bob's Public");
-        otherPublicPlaylist.setPublic(true);
+        otherPublicPlaylist.setPublicPlaylist(true);
         otherPublicPlaylist.setUser(otherUser);
         otherPublicPlaylist.setCreatedAt(LocalDateTime.of(2024, 6, 15, 10, 0));
         otherPublicPlaylist.setUpdatedAt(LocalDateTime.of(2024, 6, 15, 10, 0));
@@ -99,7 +99,7 @@ class PlaylistServiceTest {
         otherPrivatePlaylist = new Playlist();
         otherPrivatePlaylist.setId(3L);
         otherPrivatePlaylist.setName("Bob's Private");
-        otherPrivatePlaylist.setPublic(false);
+        otherPrivatePlaylist.setPublicPlaylist(false);
         otherPrivatePlaylist.setUser(otherUser);
         otherPrivatePlaylist.setCreatedAt(LocalDateTime.of(2024, 6, 15, 10, 0));
         otherPrivatePlaylist.setUpdatedAt(LocalDateTime.of(2024, 6, 15, 10, 0));
@@ -126,7 +126,7 @@ class PlaylistServiceTest {
             PlaylistDTO dto = new PlaylistDTO();
             dto.setName("Road Trip");
             dto.setDescription("Highway tunes");
-            dto.setPublic(true);
+            dto.setPublicPlaylist(true);
 
             when(playlistRepository.save(any(Playlist.class)))
                     .thenAnswer(invocation -> {
@@ -145,7 +145,7 @@ class PlaylistServiceTest {
             verify(playlistRepository).save(argThat(p ->
                     p.getUser().getId().equals(1L)
                             && p.getName().equals("Road Trip")
-                            && p.isPublic()
+                            && p.isPublicPlaylist()
             ));
         }
 
@@ -154,7 +154,7 @@ class PlaylistServiceTest {
         void createPlaylist_privatePlaylist_isPublicFalse() {
             PlaylistDTO dto = new PlaylistDTO();
             dto.setName("Secret Jams");
-            dto.setPublic(false);
+            dto.setPublicPlaylist(false);
 
             when(playlistRepository.save(any(Playlist.class)))
                     .thenAnswer(invocation -> {
@@ -167,7 +167,7 @@ class PlaylistServiceTest {
 
             playlistService.createPlaylist(dto);
 
-            verify(playlistRepository).save(argThat(p -> !p.isPublic()));
+            verify(playlistRepository).save(argThat(p -> !p.isPublicPlaylist()));
         }
 
         @Test
@@ -249,7 +249,7 @@ class PlaylistServiceTest {
         @Test
         @DisplayName("no search term — empty result when none exist")
         void getPublicPlaylists_noneExist_returnsEmpty() {
-            when(playlistRepository.findByIsPublicTrueOrderByCreatedAtDesc())
+            when(playlistRepository.findByPublicPlaylistTrueOrderByCreatedAtDesc())
                     .thenReturn(List.of());
 
             List<PlaylistDTO> result = playlistService.getPublicPlaylists(null);
@@ -260,13 +260,13 @@ class PlaylistServiceTest {
         @Test
         @DisplayName("no search term — uses sorted query (newest first)")
         void getPublicPlaylists_noSearch_usesSortedQuery() {
-            when(playlistRepository.findByIsPublicTrueOrderByCreatedAtDesc())
+            when(playlistRepository.findByPublicPlaylistTrueOrderByCreatedAtDesc())
                     .thenReturn(List.of(otherPublicPlaylist, ownedPlaylist));
 
             List<PlaylistDTO> result = playlistService.getPublicPlaylists(null);
 
             assertEquals(2, result.size());
-            verify(playlistRepository).findByIsPublicTrueOrderByCreatedAtDesc();
+            verify(playlistRepository).findByPublicPlaylistTrueOrderByCreatedAtDesc();
             verify(playlistRepository, never()).searchPublicByName(any());
         }
 
@@ -280,18 +280,18 @@ class PlaylistServiceTest {
 
             assertEquals(1, result.size());
             verify(playlistRepository).searchPublicByName("chill");
-            verify(playlistRepository, never()).findByIsPublicTrueOrderByCreatedAtDesc();
+            verify(playlistRepository, never()).findByPublicPlaylistTrueOrderByCreatedAtDesc();
         }
 
         @Test
         @DisplayName("blank search term — treated as no search, uses sorted query")
         void getPublicPlaylists_blankSearch_usesDefaultQuery() {
-            when(playlistRepository.findByIsPublicTrueOrderByCreatedAtDesc())
+            when(playlistRepository.findByPublicPlaylistTrueOrderByCreatedAtDesc())
                     .thenReturn(List.of());
 
             playlistService.getPublicPlaylists("   ");
 
-            verify(playlistRepository).findByIsPublicTrueOrderByCreatedAtDesc();
+            verify(playlistRepository).findByPublicPlaylistTrueOrderByCreatedAtDesc();
             verify(playlistRepository, never()).searchPublicByName(any());
         }
 
@@ -379,7 +379,7 @@ class PlaylistServiceTest {
             PlaylistDTO dto = new PlaylistDTO();
             dto.setName("Updated Name");
             dto.setDescription("Updated Desc");
-            dto.setPublic(false);
+            dto.setPublicPlaylist(false);
 
             PlaylistDTO result = playlistService.updatePlaylist(1L, dto);
 
@@ -387,7 +387,7 @@ class PlaylistServiceTest {
             verify(playlistRepository).save(argThat(p ->
                     p.getName().equals("Updated Name")
                             && p.getDescription().equals("Updated Desc")
-                            && !p.isPublic()
+                            && !p.isPublicPlaylist()
             ));
         }
 

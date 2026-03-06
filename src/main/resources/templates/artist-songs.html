@@ -70,6 +70,7 @@
                                 </svg>
                             </button>
                             <button class="action-btn delete-btn" th:data-id="${song.id}"
+                                    th:data-title="${song.title}"
                                     onclick="deleteSong(this)" title="Delete">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                                     <polyline points="3 6 5 6 21 6"/>
@@ -285,15 +286,13 @@
                         body: fd
                     }).then(function(r) {
                         if (r.status >= 200 && r.status < 300) {
-                            status.style.color = '#4CAF50';
-                            status.textContent = 'Upload successful! Refreshing...';
+                            RevPlay.toast({ type: 'success', message: 'Song uploaded successfully!' });
                             setTimeout(function() { window.location.reload(); }, 1000);
                         } else {
                             return r.json().then(function(d) { throw new Error(d.message || 'Upload failed'); });
                         }
                     }).catch(function(err) {
-                        status.style.color = '#e74c3c';
-                        status.textContent = err.message;
+                        RevPlay.toast({ type: 'error', message: err.message });
                         btn.disabled = false;
                         btn.textContent = 'Upload Song';
                     });
@@ -310,7 +309,6 @@
                 document.getElementById('edit-song-form').addEventListener('submit', function(e) {
                     e.preventDefault();
                     var id = document.getElementById('editSongId').value;
-                    var status = document.getElementById('edit-status');
                     var btn = document.getElementById('btn-submit-edit');
                     btn.disabled = true;
                     btn.textContent = 'Saving...';
@@ -324,13 +322,11 @@
                         })
                     }).then(function(r) {
                         if (r.ok) {
-                            status.style.color = '#4CAF50';
-                            status.textContent = 'Saved! Refreshing...';
+                            RevPlay.toast({ type: 'success', message: 'Song updated!' });
                             setTimeout(function() { window.location.reload(); }, 800);
                         } else { throw new Error('Save failed'); }
                     }).catch(function(err) {
-                        status.style.color = '#e74c3c';
-                        status.textContent = err.message;
+                        RevPlay.toast({ type: 'error', message: err.message });
                         btn.disabled = false;
                         btn.textContent = 'Save Changes';
                     });
@@ -339,16 +335,42 @@
                 window.changeVisibility = function(select) {
                     fetch('/api/artists/songs/' + select.dataset.id + '/visibility?visibility=' + select.value, {
                         method: 'PUT', headers: { 'X-CSRF-TOKEN': csrfToken }
-                    }).then(function(r) { if (!r.ok) { alert('Failed'); window.location.reload(); } });
+                    }).then(function(r) {
+                        if (r.ok) {
+                            RevPlay.toast({ type: 'success', message: 'Visibility updated' });
+                        } else {
+                            RevPlay.toast({ type: 'error', message: 'Failed to update visibility' });
+                            window.location.reload();
+                        }
+                    });
                 };
 
                 window.deleteSong = function(el) {
-                    if (!confirm('Delete this song? This cannot be undone.')) return;
-                    fetch('/api/artists/songs/' + el.dataset.id, {
-                        method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrfToken }
-                    }).then(function(r) {
-                        if (r.status >= 200 && r.status < 300) el.closest('tr').remove();
-                        else alert('Failed to delete');
+                    var title = el.dataset.title || 'this song';
+                    RevPlay.confirm({
+                        title: 'Delete Song',
+                        message: 'Delete "' + title + '"? This cannot be undone.',
+                        type: 'danger',
+                        confirmText: 'Delete',
+                        cancelText: 'Cancel'
+                    }).then(function(confirmed) {
+                        if (!confirmed) return;
+                        fetch('/api/artists/songs/' + el.dataset.id, {
+                            method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrfToken }
+                        }).then(function(r) {
+                            if (r.status >= 200 && r.status < 300) {
+                                var row = el.closest('tr');
+                                if (row) {
+                                    row.style.transition = 'opacity .3s, transform .3s';
+                                    row.style.opacity = '0';
+                                    row.style.transform = 'translateX(20px)';
+                                    setTimeout(function() { row.remove(); }, 300);
+                                }
+                                RevPlay.toast({ type: 'success', message: 'Song deleted' });
+                            } else {
+                                RevPlay.toast({ type: 'error', message: 'Failed to delete song' });
+                            }
+                        });
                     });
                 };
 

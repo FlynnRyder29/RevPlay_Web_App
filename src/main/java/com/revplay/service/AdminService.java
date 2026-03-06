@@ -16,6 +16,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.revplay.dto.ArtistRequestDTO;
+import com.revplay.model.ArtistRequest;
+import com.revplay.model.RequestStatus;
+import com.revplay.repository.ArtistRequestRepository;
+
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -49,6 +54,7 @@ public class AdminService {
         stats.put("totalSongs", songRepository.count());
         stats.put("totalAlbums", albumCount());
         stats.put("totalPlaylists", playlistRepository.count());
+        stats.put("pendingArtistRequests", artistRequestRepository.countByStatus(RequestStatus.PENDING));
 
         // New users this week
         LocalDateTime oneWeekAgo = LocalDateTime.now().minusDays(7);
@@ -164,6 +170,113 @@ public class AdminService {
 
         userRepository.delete(user);
         log.info("Deleted user {} ({})", userId, user.getUsername());
+    }
+
+    // ═══════════════════════════════════════════
+    // ARTIST REQUESTS (add to existing AdminService)
+    // ═══════════════════════════════════════════
+
+    private final ArtistRequestRepository artistRequestRepository;
+    // ↑ Add this field to the existing @RequiredArgsConstructor fields
+
+    public Map<String, Object> getArtistRequestStats() {
+        Map<String, Object> stats = new LinkedHashMap<>();
+        stats.put("pending", artistRequestRepository.countByStatus(RequestStatus.PENDING));
+        stats.put("approved", artistRequestRepository.countByStatus(RequestStatus.APPROVED));
+        stats.put("rejected", artistRequestRepository.countByStatus(RequestStatus.REJECTED));
+        return stats;
+    }
+
+    public Page<ArtistRequestDTO> getArtistRequests(String statusFilter, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        Page<ArtistRequest> requests;
+        if (statusFilter != null && !statusFilter.isBlank()) {
+            RequestStatus status = RequestStatus.valueOf(statusFilter.toUpperCase());
+            requests = artistRequestRepository.findByStatus(status, pageable);
+        } else {
+            requests = artistRequestRepository.findAllByOrderByCreatedAtDesc(pageable);
+        }
+
+        return requests.map(this::mapToRequestDTO);
+    }
+
+    @Transactional
+    public ArtistRequestDTO approveArtistRequest(Long requestId, Long adminUserId, String adminNote) {
+        ArtistRequest request = artistRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ResourceNotFoundException("ArtistRequest", "id", requestId));
+
+        if (request.getStatus() != RequestStatus.PENDING) {
+            throw new IllegalStateException("Request has already been " + request.getStatus().name().toLowerCase());
+        }
+
+        // Update request
+        request.setStatus(RequestStatus.APPROVED);
+        request.setReviewedBy(adminUserId);
+        request.setReviewedAt(LocalDateTime.now());
+        request.setAdminNote(adminNote);
+        artistRequestRepository.save(request);
+
+        // Promote user to ARTIST
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", request.getUserId()));
+        user.setRole(Role.ARTIST);
+        userRepository.save(user);
+
+        // Create Artist profile if not exists
+        if (!artistRepository.findByUserId(user.getId()).isPresent()) {
+            Artist artist = new Artist();
+            artist.setUserId(user.getId());
+            artist.setArtistName(request.getArtistName());
+            artist.setBio("New artist on RevPlay");
+            artist.setGenre(request.getGenre());
+            artist.setProfilePictureUrl(user.getProfilePictureUrl());
+            artist.setCreatedAt(LocalDateTime.now());
+            artistRepository.save(artist);
+            log.info("Created artist profile for user {} via approved request {}", user.getId(), requestId);
+        }
+
+        log.info("Approved artist request {} for user {} by admin {}", requestId, request.getUserId(), adminUserId);
+        return mapToRequestDTO(request);
+    }
+
+    @Transactional
+    public ArtistRequestDTO rejectArtistRequest(Long requestId, Long adminUserId, String adminNote) {
+        ArtistRequest request = artistRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ResourceNotFoundException("ArtistRequest", "id", requestId));
+
+        if (request.getStatus() != RequestStatus.PENDING) {
+            throw new IllegalStateException("Request has already been " + request.getStatus().name().toLowerCase());
+        }
+
+        request.setStatus(RequestStatus.REJECTED);
+        request.setReviewedBy(adminUserId);
+        request.setReviewedAt(LocalDateTime.now());
+        request.setAdminNote(adminNote != null && !adminNote.isBlank() ? adminNote : "Request declined by admin");
+        artistRequestRepository.save(request);
+
+        log.info("Rejected artist request {} for user {} by admin {}", requestId, request.getUserId(), adminUserId);
+        return mapToRequestDTO(request);
+    }
+
+    private ArtistRequestDTO mapToRequestDTO(ArtistRequest req) {
+        User user = userRepository.findById(req.getUserId()).orElse(null);
+        return ArtistRequestDTO.builder()
+                .id(req.getId())
+                .userId(req.getUserId())
+                .username(user != null ? user.getUsername() : "Unknown")
+                .email(user != null ? user.getEmail() : "")
+                .displayName(user != null ? user.getDisplayName() : "")
+                .profilePictureUrl(user != null ? user.getProfilePictureUrl() : null)
+                .artistName(req.getArtistName())
+                .genre(req.getGenre())
+                .reason(req.getReason())
+                .status(req.getStatus())
+                .adminNote(req.getAdminNote())
+                .reviewedBy(req.getReviewedBy())
+                .reviewedAt(req.getReviewedAt())
+                .createdAt(req.getCreatedAt())
+                .build();
     }
 
     // ═══════════════════════════════════════════

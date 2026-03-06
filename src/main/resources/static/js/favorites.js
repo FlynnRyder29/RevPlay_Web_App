@@ -155,6 +155,16 @@
         var onFavoritesPage = window.location.pathname === '/favorites'
             || window.location.pathname.indexOf('/favorites') === 0;
 
+        // Get song title for toast (from nearest song card)
+        var songTitle = '';
+        if (sourceBtn) {
+            var card = sourceBtn.closest('.song-card');
+            if (card) {
+                var titleEl = card.querySelector('.song-title');
+                if (titleEl) songTitle = titleEl.textContent.trim();
+            }
+        }
+
         fetch(url, {
             method: method,
             headers: {
@@ -172,7 +182,30 @@
                     }
                     updateAllCardButtons(songId);
                     syncPlayerBarHeart();
+
+                    if (window.RevPlay && window.RevPlay.toast) {
+                        RevPlay.toast({ type: 'error', message: 'Failed to update favorites' });
+                    }
                     return;
+                }
+
+                // Success toast
+                if (window.RevPlay && window.RevPlay.toast) {
+                    if (isFav) {
+                        // Was favorited, now removed
+                        RevPlay.toast({
+                            type: 'info',
+                            message: songTitle ? '"' + songTitle + '" removed from favorites' : 'Removed from favorites',
+                            duration: 2500
+                        });
+                    } else {
+                        // Was not favorited, now added
+                        RevPlay.toast({
+                            type: 'success',
+                            message: songTitle ? '"' + songTitle + '" added to favorites' : 'Added to favorites',
+                            duration: 2500
+                        });
+                    }
                 }
 
                 // Success — if on favorites page and we just unfavorited, remove the card
@@ -194,6 +227,10 @@
                 }
                 updateAllCardButtons(songId);
                 syncPlayerBarHeart();
+
+                if (window.RevPlay && window.RevPlay.toast) {
+                    RevPlay.toast({ type: 'error', message: 'Network error — please try again' });
+                }
             });
     }
 

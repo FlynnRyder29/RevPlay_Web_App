@@ -58,6 +58,7 @@
                     </button>
                     <button class="action-btn delete-btn" title="Delete"
                             th:data-id="${album.id}" th:data-count="${album.songCount}"
+                            th:data-name="${album.name}"
                             onclick="deleteAlbum(this)">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                             <polyline points="3 6 5 6 21 6"/>
@@ -222,11 +223,9 @@
 
                 document.getElementById('create-album-form').addEventListener('submit', function(e) {
                     e.preventDefault();
-                    var status = document.getElementById('album-create-status');
                     var btn = document.getElementById('btn-submit-album');
                     btn.disabled = true;
                     btn.textContent = 'Creating...';
-                    status.textContent = '';
 
                     fetch('/api/artists/albums', {
                         method: 'POST',
@@ -239,15 +238,13 @@
                         })
                     }).then(function(r) {
                         if (r.status >= 200 && r.status < 300) {
-                            status.style.color = '#4CAF50';
-                            status.textContent = 'Album created! Refreshing...';
+                            RevPlay.toast({ type: 'success', message: 'Album created!' });
                             setTimeout(function() { window.location.reload(); }, 800);
                         } else {
                             return r.json().then(function(d) { throw new Error(d.message || 'Failed'); });
                         }
                     }).catch(function(err) {
-                        status.style.color = '#e74c3c';
-                        status.textContent = err.message;
+                        RevPlay.toast({ type: 'error', message: err.message });
                         btn.disabled = false;
                         btn.textContent = 'Create Album';
                     });
@@ -265,7 +262,6 @@
                 document.getElementById('edit-album-form').addEventListener('submit', function(e) {
                     e.preventDefault();
                     var id = document.getElementById('editAlbumId').value;
-                    var status = document.getElementById('album-edit-status');
 
                     fetch('/api/artists/albums/' + id, {
                         method: 'PUT',
@@ -277,34 +273,56 @@
                         })
                     }).then(function(r) {
                         if (r.ok) {
-                            status.style.color = '#4CAF50';
-                            status.textContent = 'Saved! Refreshing...';
+                            RevPlay.toast({ type: 'success', message: 'Album updated!' });
                             setTimeout(function() { window.location.reload(); }, 800);
                         } else { throw new Error('Save failed'); }
                     }).catch(function(err) {
-                        status.style.color = '#e74c3c';
-                        status.textContent = err.message;
+                        RevPlay.toast({ type: 'error', message: err.message });
                     });
                 });
 
                 // ── Delete Album ──
                 window.deleteAlbum = function(el) {
                     var count = parseInt(el.dataset.count || '0');
+                    var albumName = el.dataset.name || 'this album';
+
                     if (count > 0) {
-                        alert('Cannot delete album with ' + count + ' song(s). Remove all songs first.');
+                        RevPlay.toast({
+                            type: 'warning',
+                            title: 'Cannot Delete',
+                            message: 'Album "' + albumName + '" has ' + count + ' song(s). Remove all songs first.'
+                        });
                         return;
                     }
-                    if (!confirm('Delete this album? This cannot be undone.')) return;
 
-                    fetch('/api/artists/albums/' + el.dataset.id, {
-                        method: 'DELETE',
-                        headers: { 'X-CSRF-TOKEN': csrfToken }
-                    }).then(function(r) {
-                        if (r.status >= 200 && r.status < 300) {
-                            el.closest('.album-manage-card').remove();
-                        } else {
-                            return r.json().then(function(d) { alert(d.message || 'Delete failed'); });
-                        }
+                    RevPlay.confirm({
+                        title: 'Delete Album',
+                        message: 'Delete "' + albumName + '"? This cannot be undone.',
+                        type: 'danger',
+                        confirmText: 'Delete',
+                        cancelText: 'Cancel'
+                    }).then(function(confirmed) {
+                        if (!confirmed) return;
+
+                        fetch('/api/artists/albums/' + el.dataset.id, {
+                            method: 'DELETE',
+                            headers: { 'X-CSRF-TOKEN': csrfToken }
+                        }).then(function(r) {
+                            if (r.status >= 200 && r.status < 300) {
+                                var card = el.closest('.album-manage-card');
+                                if (card) {
+                                    card.style.transition = 'opacity .3s, transform .3s';
+                                    card.style.opacity = '0';
+                                    card.style.transform = 'scale(0.95)';
+                                    setTimeout(function() { card.remove(); }, 300);
+                                }
+                                RevPlay.toast({ type: 'success', message: 'Album deleted' });
+                            } else {
+                                return r.json().then(function(d) {
+                                    RevPlay.toast({ type: 'error', message: d.message || 'Delete failed' });
+                                });
+                            }
+                        });
                     });
                 };
 
@@ -333,7 +351,7 @@
                                 html += '<div class="manage-song-row" data-id="' + t.id + '">' +
                                     '<img class="manage-song-cover" src="' + (t.coverImageUrl || 'https://placehold.co/36x36/1a1a2e/ffffff?text=♪') + '">' +
                                     '<span class="manage-song-title">' + t.title + '</span>' +
-                                    '<button class="action-btn delete-btn" onclick="removeSongFromAlbum(' + albumId + ',' + t.id + ',this)" title="Remove">' +
+                                    '<button class="action-btn delete-btn" data-title="' + t.title + '" onclick="removeSongFromAlbum(' + albumId + ',' + t.id + ',this)" title="Remove">' +
                                     '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
                                     '</button>' +
                                     '</div>';
@@ -349,49 +367,63 @@
                 document.getElementById('btn-add-song-to-album').addEventListener('click', function() {
                     var select = document.getElementById('add-song-select');
                     var songId = select.value;
-                    var status = document.getElementById('manage-songs-status');
 
                     if (!songId || !currentAlbumId) {
-                        status.style.color = '#e74c3c';
-                        status.textContent = 'Select a song first';
+                        RevPlay.toast({ type: 'warning', message: 'Select a song first' });
                         return;
                     }
-                    status.textContent = '';
 
                     fetch('/api/artists/albums/' + currentAlbumId + '/songs/' + songId, {
                         method: 'POST',
                         headers: { 'X-CSRF-TOKEN': csrfToken }
                     }).then(function(r) {
                         if (r.status >= 200 && r.status < 300) {
-                            status.style.color = '#4CAF50';
-                            status.textContent = 'Song added!';
+                            RevPlay.toast({ type: 'success', message: 'Song added to album!' });
                             select.querySelector('option[value="' + songId + '"]').remove();
                             select.value = '';
                             loadAlbumSongs(currentAlbumId);
-                            setTimeout(function() { status.textContent = ''; }, 2000);
                         } else {
                             return r.json().then(function(d) { throw new Error(d.message || 'Failed'); });
                         }
                     }).catch(function(err) {
-                        status.style.color = '#e74c3c';
-                        status.textContent = err.message;
+                        RevPlay.toast({ type: 'error', message: err.message });
                     });
                 });
 
                 // ── Remove Song from Album ──
                 window.removeSongFromAlbum = function(albumId, songId, el) {
-                    if (!confirm('Remove this song from the album?')) return;
-                    fetch('/api/artists/albums/' + albumId + '/songs/' + songId, {
-                        method: 'DELETE',
-                        headers: { 'X-CSRF-TOKEN': csrfToken }
-                    }).then(function(r) {
-                        if (r.status >= 200 && r.status < 300) {
-                            el.closest('.manage-song-row').remove();
-                            var container = document.getElementById('album-songs-list');
-                            if (!container.querySelector('.manage-song-row')) {
-                                container.innerHTML = '<p class="text-muted" style="text-align:center;padding:20px;">No songs in this album yet</p>';
+                    var songTitle = el.dataset.title || 'this song';
+
+                    RevPlay.confirm({
+                        title: 'Remove Song',
+                        message: 'Remove "' + songTitle + '" from this album?',
+                        type: 'warning',
+                        confirmText: 'Remove',
+                        cancelText: 'Cancel'
+                    }).then(function(confirmed) {
+                        if (!confirmed) return;
+                        fetch('/api/artists/albums/' + albumId + '/songs/' + songId, {
+                            method: 'DELETE',
+                            headers: { 'X-CSRF-TOKEN': csrfToken }
+                        }).then(function(r) {
+                            if (r.status >= 200 && r.status < 300) {
+                                var row = el.closest('.manage-song-row');
+                                if (row) {
+                                    row.style.transition = 'opacity .3s';
+                                    row.style.opacity = '0';
+                                    setTimeout(function() {
+                                        row.remove();
+                                        var container = document.getElementById('album-songs-list');
+                                        if (!container.querySelector('.manage-song-row')) {
+                                            container.innerHTML = '<p class="text-muted" style="text-align:center;padding:20px;">No songs in this album yet</p>';
+                                        }
+                                    }, 300);
+                                }
+                                RevPlay.toast({ type: 'success', message: 'Song removed from album' });
+                            } else {
+                                RevPlay.toast({ type: 'error', message: 'Failed to remove song' });
                             }
-                        } else { alert('Failed to remove song'); }
+                        });
                     });
                 };
 

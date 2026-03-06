@@ -453,3 +453,50 @@
         left: -250px;
     }
 }
+
+/* ═══════════════════════════════════════════════════════
+   CONFIRM & TOAST — Responsive
+   ═══════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+    .rp-toast-container {
+        top: 12px;
+        right: 12px;
+        left: 12px;
+        max-width: none;
+        width: auto;
+    }
+
+    .rp-confirm-modal {
+        padding: 24px 20px;
+        margin: 0 15px;
+        max-width: calc(100% - 30px);
+    }
+
+    .rp-confirm-actions {
+        flex-direction: column-reverse;
+    }
+
+    .rp-confirm-btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .rp-toast-container {
+        top: 8px;
+        right: 8px;
+        left: 8px;
+    }
+
+    .rp-toast {
+        padding: 12px 14px;
+        gap: 10px;
+    }
+
+    .rp-confirm-modal {
+        padding: 20px 16px;
+        margin: 0 10px;
+        border-radius: 12px;
+    }
+}

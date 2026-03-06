@@ -103,7 +103,6 @@
 
                     entries.forEach(function (entry) {
                         var url = entry.getAttribute('data-url') || '';
-                        // Deduplicate by URL for playback queue
                         if (url && !seenUrls[url]) {
                             seenUrls[url] = true;
                             songs.push({
@@ -128,6 +127,7 @@
                         var songs = getHistorySongs();
                         if (songs.length > 0 && window.RevPlay && window.RevPlay.playQueue) {
                             window.RevPlay.playQueue(songs, 0);
+                            RevPlay.toast({ type: 'info', message: 'Playing ' + songs.length + ' songs from history', duration: 2500 });
                         }
                     });
                 }
@@ -142,6 +142,7 @@
                         var songs = getHistorySongs();
                         if (songs.length > 0 && window.RevPlay && window.RevPlay.shuffleQueue) {
                             window.RevPlay.shuffleQueue(songs);
+                            RevPlay.toast({ type: 'info', message: 'Shuffling ' + songs.length + ' songs', duration: 2500 });
                         }
                     });
                 }
@@ -153,35 +154,45 @@
                 var clearBtn = document.getElementById('btn-clear-history');
                 if (clearBtn) {
                     clearBtn.addEventListener('click', function () {
-                        if (!confirm('Clear your entire listening history? This cannot be undone.')) return;
+                        var count = document.querySelectorAll('.history-entry').length;
 
-                        clearBtn.disabled = true;
-                        clearBtn.textContent = 'Clearing...';
+                        RevPlay.confirm({
+                            title: 'Clear Listening History',
+                            message: 'Clear all ' + count + ' entries from your listening history? This cannot be undone.',
+                            type: 'danger',
+                            confirmText: 'Clear All',
+                            cancelText: 'Keep History'
+                        }).then(function (confirmed) {
+                            if (!confirmed) return;
 
-                        fetch('/api/history', {
-                            method: 'DELETE',
-                            headers: { 'X-CSRF-TOKEN': csrfToken }
-                        })
-                            .then(function (res) {
-                                if (!(res.status >= 200 && res.status < 300)) throw new Error('Failed');
+                            clearBtn.disabled = true;
+                            clearBtn.textContent = 'Clearing...';
 
-                                // Invalidate PJAX cache
-                                if (window.PjaxRouter && window.PjaxRouter.invalidateCache) {
-                                    window.PjaxRouter.invalidateCache('/history');
-                                }
-
-                                // Reload page to show empty state
-                                if (window.PjaxRouter && window.PjaxRouter.reload) {
-                                    window.PjaxRouter.reload();
-                                } else {
-                                    window.location.reload();
-                                }
+                            fetch('/api/history', {
+                                method: 'DELETE',
+                                headers: { 'X-CSRF-TOKEN': csrfToken }
                             })
-                            .catch(function () {
-                                alert('Failed to clear history');
-                                clearBtn.disabled = false;
-                                clearBtn.textContent = '🗑️ Clear History';
-                            });
+                                .then(function (res) {
+                                    if (!(res.status >= 200 && res.status < 300)) throw new Error('Failed');
+
+                                    RevPlay.toast({ type: 'success', message: 'History cleared' });
+
+                                    if (window.PjaxRouter && window.PjaxRouter.invalidateCache) {
+                                        window.PjaxRouter.invalidateCache('/history');
+                                    }
+
+                                    if (window.PjaxRouter && window.PjaxRouter.reload) {
+                                        window.PjaxRouter.reload();
+                                    } else {
+                                        window.location.reload();
+                                    }
+                                })
+                                .catch(function () {
+                                    RevPlay.toast({ type: 'error', message: 'Failed to clear history' });
+                                    clearBtn.disabled = false;
+                                    clearBtn.textContent = '🗑️ Clear History';
+                                });
+                        });
                     });
                 }
 
@@ -196,7 +207,6 @@
                         var songs = getHistorySongs();
                         if (songs.length === 0) return;
 
-                        // Find this song's position in the deduplicated queue
                         var url = this.getAttribute('data-url');
                         var startIndex = 0;
                         for (var i = 0; i < songs.length; i++) {
@@ -210,7 +220,6 @@
                             window.RevPlay.playQueue(songs, startIndex);
                         }
 
-                        // Highlight active
                         document.querySelectorAll('.history-entry').forEach(function (e) {
                             e.classList.remove('history-entry--active');
                         });
@@ -250,7 +259,6 @@
                         } else if (diffDays < 7) {
                             relative = diffDays + 'd ago';
                         } else {
-                            // Keep the original formatted time for older entries
                             return;
                         }
 

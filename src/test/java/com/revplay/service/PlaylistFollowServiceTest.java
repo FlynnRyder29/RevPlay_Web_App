@@ -52,7 +52,7 @@ class PlaylistFollowServiceTest {
         publicPlaylist = new Playlist();
         publicPlaylist.setId(10L);
         publicPlaylist.setName("Bob's Public Playlist");
-        publicPlaylist.setPublic(true);
+        publicPlaylist.setPublicPlaylist(true);
         publicPlaylist.setUser(otherUser);           // owned by someone else
         publicPlaylist.setCreatedAt(LocalDateTime.now());
         publicPlaylist.setUpdatedAt(LocalDateTime.now());
@@ -60,7 +60,7 @@ class PlaylistFollowServiceTest {
         privatePlaylist = new Playlist();
         privatePlaylist.setId(11L);
         privatePlaylist.setName("Bob's Private Playlist");
-        privatePlaylist.setPublic(false);
+        privatePlaylist.setPublicPlaylist(false);
         privatePlaylist.setUser(otherUser);
         privatePlaylist.setCreatedAt(LocalDateTime.now());
         privatePlaylist.setUpdatedAt(LocalDateTime.now());

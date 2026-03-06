@@ -395,6 +395,7 @@
         </div>
 
         <!-- ═══ Dashboard Scripts ═══ -->
+        <!-- ═══ Dashboard Scripts ═══ -->
         <script th:inline="javascript">
             (function() {
                 var csrf = document.querySelector('meta[name="_csrf"]');
@@ -590,7 +591,10 @@
                                 img.id = 'picture-preview';
                                 document.querySelector('.picture-upload-area').prepend(img);
                             }
-                        }).catch(function(e) { alert(e.message); });
+                            RevPlay.toast({ type: 'success', message: 'Profile picture updated!' });
+                        }).catch(function(e) {
+                            RevPlay.toast({ type: 'error', message: e.message });
+                        });
                     });
                 }
 
@@ -613,7 +617,10 @@
                                 bp.style.backgroundImage = 'url(' + data.bannerImageUrl + ')';
                                 bp.innerHTML = '';
                             }
-                        }).catch(function(e) { alert(e.message); });
+                            RevPlay.toast({ type: 'success', message: 'Banner image updated!' });
+                        }).catch(function(e) {
+                            RevPlay.toast({ type: 'error', message: e.message });
+                        });
                     });
                 }
 
@@ -649,12 +656,18 @@
                             if (r.ok) return r.json();
                             throw new Error('Save failed');
                         }).then(function() {
-                            status.textContent = '✓ Saved';
-                            status.className = 'save-status save-success';
-                            setTimeout(function() { status.textContent = ''; }, 3000);
+                            RevPlay.toast({ type: 'success', message: 'Profile saved successfully!' });
+                            if (status) {
+                                status.textContent = '✓ Saved';
+                                status.className = 'save-status save-success';
+                                setTimeout(function() { status.textContent = ''; }, 3000);
+                            }
                         }).catch(function(e) {
-                            status.textContent = '✗ ' + e.message;
-                            status.className = 'save-status save-error';
+                            RevPlay.toast({ type: 'error', message: e.message });
+                            if (status) {
+                                status.textContent = '✗ ' + e.message;
+                                status.className = 'save-status save-error';
+                            }
                         }).finally(function() {
                             btn.disabled = false;
                             btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:6px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Changes';
@@ -665,8 +678,3 @@
                 loadOverviewFavorites();
             })();
         </script>
-
-    </div>
-</div>
-</body>
-</html>

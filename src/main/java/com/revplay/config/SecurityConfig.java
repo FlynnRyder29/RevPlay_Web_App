@@ -42,7 +42,7 @@ public class SecurityConfig {
                                         "/uploads/**",
                                         "/api/auth/**",
                                         "/swagger-ui/**", "/v3/api-docs/**",
-                                        "/search", "/artist/{id:\\d+}")  // public artist profile (numeric ID only)
+                                        "/search", "/artist/{id:\\d+}","/about")  // public artist profile (numeric ID only)
                                 .permitAll()
 
                                 // GET — listeners can browse
@@ -75,6 +75,8 @@ public class SecurityConfig {
                                 // ✅ Admin pages and API
                                 .requestMatchers("/admin/**").hasRole("ADMIN")
                                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                                // ✅ User artist request API
+                                .requestMatchers("/user/api/artist-request").authenticated()
 
                                 // ✅ Everything else
                                 .anyRequest().authenticated())
