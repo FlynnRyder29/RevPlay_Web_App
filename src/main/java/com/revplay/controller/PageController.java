@@ -14,6 +14,9 @@ import com.revplay.service.PlaylistFollowService;
 import com.revplay.service.SongService;
 import com.revplay.service.FavoriteService;
 import com.revplay.service.HistoryService;
+import com.revplay.model.Song;
+import com.revplay.model.Artist;
+import com.revplay.model.Album;
 import com.revplay.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -132,25 +135,32 @@ public class PageController {
 
         PlaylistDTO playlist = playlistService.getPlaylistById(id);
 
+        // ═══ FIX: Use JOIN FETCH query to eagerly load Song → Artist + Album ═══
         List<PlaylistSong> playlistSongs = playlistSongRepository
-                .findByPlaylist_IdOrderByPosition(id);
+                .findByPlaylistIdWithSongDetails(id);
 
         List<SongDTO> songs = playlistSongs.stream()
-                .map(ps -> SongDTO.builder()
-                        .id(ps.getSong().getId())
-                        .title(ps.getSong().getTitle())
-                        .genre(ps.getSong().getGenre())
-                        .duration(ps.getSong().getDuration())
-                        .audioUrl(ps.getSong().getAudioUrl())
-                        .coverImageUrl(ps.getSong().getCoverImageUrl())
-                        .releaseDate(ps.getSong().getReleaseDate())
-                        .playCount(ps.getSong().getPlayCount())
-                        .artistId(ps.getSong().getArtist().getId())
-                        .artistName(ps.getSong().getArtist().getArtistName())
-                        .albumId(ps.getSong().getAlbum() != null ? ps.getSong().getAlbum().getId() : null)
-                        .albumName(ps.getSong().getAlbum() != null ? ps.getSong().getAlbum().getName() : null)
-                        .createdAt(ps.getSong().getCreatedAt())
-                        .build())
+                .map(ps -> {
+                    Song song = ps.getSong();
+                    Artist artist = song.getArtist();   // Already fetched via JOIN FETCH
+                    Album album = song.getAlbum();       // Already fetched via LEFT JOIN FETCH
+
+                    return SongDTO.builder()
+                            .id(song.getId())
+                            .title(song.getTitle())
+                            .genre(song.getGenre())
+                            .duration(song.getDuration())
+                            .audioUrl(song.getAudioUrl())
+                            .coverImageUrl(song.getCoverImageUrl())
+                            .releaseDate(song.getReleaseDate())
+                            .playCount(song.getPlayCount())
+                            .artistId(artist.getId())
+                            .artistName(artist.getArtistName())
+                            .albumId(album != null ? album.getId() : null)
+                            .albumName(album != null ? album.getName() : null)
+                            .createdAt(song.getCreatedAt())
+                            .build();
+                })
                 .collect(Collectors.toList());
 
         Long currentUserId = securityUtils.getCurrentUser().getId();

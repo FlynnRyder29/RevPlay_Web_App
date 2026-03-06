@@ -247,7 +247,7 @@
                         </button>
                     </span>
                     <span th:if="${!isOwner}" class="col-duration"
-                          th:text="${song.duration != null ? T(String).format('%d:%02d', song.duration / 60, song.duration % 60) : '—'}">3:45</span>
+                          th:text="${song.duration != null ? T(java.lang.String).format('%d:%02d', song.duration / 60, song.duration % 60) : '—'}">3:45</span>
                 </div>
             </div>
 
