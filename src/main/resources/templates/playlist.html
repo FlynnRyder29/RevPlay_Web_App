@@ -48,9 +48,15 @@
 
                 <div class="pl-grid" th:if="${playlists != null && !playlists.isEmpty()}">
                     <div th:each="pl, iter : ${playlists}" class="pl-card" th:data-id="${pl.id}">
+                        <!-- Card Cover: image if exists, else gradient -->
                         <a th:href="@{/playlists/{id}(id=${pl.id})}" class="pl-card-cover"
-                           th:style="'background: linear-gradient(135deg, hsl(' + ${(pl.id * 47) % 360} + ', 45%, 28%), hsl(' + ${(pl.id * 137) % 360} + ', 55%, 18%))'">
-                            <svg class="pl-card-watermark" viewBox="0 0 24 24" fill="currentColor"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                           th:style="${pl.coverImageUrl != null && !pl.coverImageUrl.isEmpty()}
+                               ? ''
+                               : 'background: linear-gradient(135deg, hsl(' + ${(pl.id * 47) % 360} + ', 45%, 28%), hsl(' + ${(pl.id * 137) % 360} + ', 55%, 18%))'">
+                            <img th:if="${pl.coverImageUrl != null && !pl.coverImageUrl.isEmpty()}"
+                                 th:src="${pl.coverImageUrl}" alt="Playlist cover" class="pl-card-cover-img"/>
+                            <svg th:if="${pl.coverImageUrl == null || pl.coverImageUrl.isEmpty()}"
+                                 class="pl-card-watermark" viewBox="0 0 24 24" fill="currentColor"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
                             <div class="pl-card-play-btn">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="#000"><polygon points="8,5 20,12 8,19"/></svg>
                             </div>
@@ -93,8 +99,13 @@
                 <div class="pl-grid" th:if="${publicPlaylists != null && !publicPlaylists.isEmpty()}">
                     <div th:each="pl : ${publicPlaylists}" class="pl-card">
                         <a th:href="@{/playlists/{id}(id=${pl.id})}" class="pl-card-cover"
-                           th:style="'background: linear-gradient(135deg, hsl(' + ${(pl.id * 47) % 360} + ', 45%, 28%), hsl(' + ${(pl.id * 137) % 360} + ', 55%, 18%))'">
-                            <svg class="pl-card-watermark" viewBox="0 0 24 24" fill="currentColor"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                           th:style="${pl.coverImageUrl != null && !pl.coverImageUrl.isEmpty()}
+                               ? ''
+                               : 'background: linear-gradient(135deg, hsl(' + ${(pl.id * 47) % 360} + ', 45%, 28%), hsl(' + ${(pl.id * 137) % 360} + ', 55%, 18%))'">
+                            <img th:if="${pl.coverImageUrl != null && !pl.coverImageUrl.isEmpty()}"
+                                 th:src="${pl.coverImageUrl}" alt="Playlist cover" class="pl-card-cover-img"/>
+                            <svg th:if="${pl.coverImageUrl == null || pl.coverImageUrl.isEmpty()}"
+                                 class="pl-card-watermark" viewBox="0 0 24 24" fill="currentColor"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
                             <div class="pl-card-play-btn">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="#000"><polygon points="8,5 20,12 8,19"/></svg>
                             </div>
@@ -132,6 +143,24 @@
                         <p class="pl-modal-sub">Give your playlist a name and description</p>
                     </div>
                     <form id="create-playlist-form">
+                        <!-- Cover Image Upload -->
+                        <div class="pl-form-group">
+                            <label class="pl-form-label">Cover Image</label>
+                            <div class="pl-cover-upload" id="create-cover-dropzone">
+                                <input type="file" id="create-cover-input" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
+                                <div class="pl-cover-upload-placeholder" id="create-cover-placeholder">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4">
+                                        <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
+                                    </svg>
+                                    <span>Drag &amp; drop or click to upload</span>
+                                    <span class="pl-cover-upload-hint">JPEG, PNG, WebP · Max 5MB</span>
+                                </div>
+                                <img id="create-cover-preview" class="pl-cover-preview" src="" alt="Preview" style="display:none;">
+                                <button type="button" id="create-cover-remove" class="pl-cover-remove-btn" style="display:none;" title="Remove image">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                                </button>
+                            </div>
+                        </div>
                         <div class="pl-form-group">
                             <label class="pl-form-label" for="playlist-name">Name</label>
                             <input type="text" id="playlist-name" class="pl-form-input" placeholder="My awesome playlist" required autocomplete="off">
@@ -163,9 +192,15 @@
         <div th:if="${viewMode == 'detail'}">
 
             <div class="playlist-detail-header">
+                <!-- Detail Cover: image if exists, else gradient -->
                 <div class="pl-detail-cover"
-                     th:style="'background: linear-gradient(135deg, hsl(' + ${(playlist.id * 47) % 360} + ', 45%, 28%), hsl(' + ${(playlist.id * 137) % 360} + ', 55%, 18%))'">
-                    <svg width="60" height="60" viewBox="0 0 24 24" fill="currentColor" opacity="0.4"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                     th:style="${playlist.coverImageUrl != null && !playlist.coverImageUrl.isEmpty()}
+                         ? ''
+                         : 'background: linear-gradient(135deg, hsl(' + ${(playlist.id * 47) % 360} + ', 45%, 28%), hsl(' + ${(playlist.id * 137) % 360} + ', 55%, 18%))'">
+                    <img th:if="${playlist.coverImageUrl != null && !playlist.coverImageUrl.isEmpty()}"
+                         th:src="${playlist.coverImageUrl}" alt="Playlist cover" class="pl-detail-cover-img"/>
+                    <svg th:if="${playlist.coverImageUrl == null || playlist.coverImageUrl.isEmpty()}"
+                         width="60" height="60" viewBox="0 0 24 24" fill="currentColor" opacity="0.4"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
                 </div>
                 <div class="playlist-detail-info">
                     <span class="playlist-type-label">PLAYLIST</span>
@@ -198,7 +233,8 @@
                 <th:block th:if="${isOwner}">
                     <button class="pl-btn pl-btn--secondary" id="btn-edit-playlist"
                             th:data-id="${playlist.id}" th:data-name="${playlist.name}"
-                            th:data-desc="${playlist.description}" th:data-public="${playlist.publicPlaylist}">
+                            th:data-desc="${playlist.description}" th:data-public="${playlist.publicPlaylist}"
+                            th:data-cover="${playlist.coverImageUrl}">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit
                     </button>
                     <button class="pl-btn pl-btn--danger" id="btn-delete-playlist" th:data-id="${playlist.id}">
@@ -275,6 +311,28 @@
                     </div>
                     <form id="edit-playlist-form">
                         <input type="hidden" id="edit-playlist-id" th:value="${playlist.id}">
+                        <!-- Cover Image Upload -->
+                        <div class="pl-form-group">
+                            <label class="pl-form-label">Cover Image</label>
+                            <div class="pl-cover-upload" id="edit-cover-dropzone">
+                                <input type="file" id="edit-cover-input" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
+                                <div class="pl-cover-upload-placeholder" id="edit-cover-placeholder"
+                                     th:style="${playlist.coverImageUrl != null && !playlist.coverImageUrl.isEmpty()} ? 'display:none' : ''">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4">
+                                        <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
+                                    </svg>
+                                    <span>Drag &amp; drop or click to upload</span>
+                                    <span class="pl-cover-upload-hint">JPEG, PNG, WebP · Max 5MB</span>
+                                </div>
+                                <img id="edit-cover-preview" class="pl-cover-preview"
+                                     th:src="${playlist.coverImageUrl}" alt="Preview"
+                                     th:style="${playlist.coverImageUrl != null && !playlist.coverImageUrl.isEmpty()} ? '' : 'display:none'">
+                                <button type="button" id="edit-cover-remove" class="pl-cover-remove-btn" title="Remove image"
+                                        th:style="${playlist.coverImageUrl != null && !playlist.coverImageUrl.isEmpty()} ? '' : 'display:none'">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                                </button>
+                            </div>
+                        </div>
                         <div class="pl-form-group">
                             <label class="pl-form-label" for="edit-name">Name</label>
                             <input type="text" id="edit-name" class="pl-form-input" th:value="${playlist.name}" required>
@@ -306,7 +364,87 @@
                     if (window.PjaxRouter && window.PjaxRouter.invalidateCache) window.PjaxRouter.invalidateCache('/playlists');
                 }
 
-                // ── CREATE ────────────────────────────────────────
+                // ══════════════════════════════════════════════════
+                //  COVER IMAGE UPLOAD HELPER
+                // ══════════════════════════════════════════════════
+
+                function initCoverUpload(prefix) {
+                    var dropzone    = document.getElementById(prefix + '-cover-dropzone');
+                    var fileInput   = document.getElementById(prefix + '-cover-input');
+                    var placeholder = document.getElementById(prefix + '-cover-placeholder');
+                    var preview     = document.getElementById(prefix + '-cover-preview');
+                    var removeBtn   = document.getElementById(prefix + '-cover-remove');
+
+                    if (!dropzone || !fileInput) return;
+
+                    // Track whether user explicitly removed the existing cover
+                    dropzone._coverRemoved = false;
+
+                    // Click to browse
+                    dropzone.addEventListener('click', function (e) {
+                        if (e.target.closest('.pl-cover-remove-btn')) return;
+                        fileInput.click();
+                    });
+
+                    // File chosen
+                    fileInput.addEventListener('change', function () {
+                        if (this.files && this.files[0]) showPreview(this.files[0]);
+                    });
+
+                    // Drag events
+                    ['dragenter', 'dragover'].forEach(function (evt) {
+                        dropzone.addEventListener(evt, function (e) { e.preventDefault(); dropzone.classList.add('pl-cover-upload--drag'); });
+                    });
+                    ['dragleave', 'drop'].forEach(function (evt) {
+                        dropzone.addEventListener(evt, function (e) { e.preventDefault(); dropzone.classList.remove('pl-cover-upload--drag'); });
+                    });
+                    dropzone.addEventListener('drop', function (e) {
+                        var files = e.dataTransfer.files;
+                        if (files && files[0] && files[0].type.startsWith('image/')) {
+                            fileInput.files = files;
+                            showPreview(files[0]);
+                        }
+                    });
+
+                    // Remove button
+                    if (removeBtn) {
+                        removeBtn.addEventListener('click', function (e) {
+                            e.preventDefault(); e.stopPropagation();
+                            fileInput.value = '';
+                            preview.style.display = 'none';
+                            preview.src = '';
+                            removeBtn.style.display = 'none';
+                            placeholder.style.display = '';
+                            dropzone._coverRemoved = true;
+                        });
+                    }
+
+                    function showPreview(file) {
+                        // Validate size
+                        if (file.size > 5 * 1024 * 1024) {
+                            if (window.RevPlay && window.RevPlay.toast) RevPlay.toast({ type: 'error', message: 'Image must be less than 5MB' });
+                            return;
+                        }
+                        var reader = new FileReader();
+                        reader.onload = function (ev) {
+                            preview.src = ev.target.result;
+                            preview.style.display = 'block';
+                            placeholder.style.display = 'none';
+                            if (removeBtn) removeBtn.style.display = '';
+                            dropzone._coverRemoved = false;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                }
+
+                // Init cover uploads
+                initCoverUpload('create');
+                initCoverUpload('edit');
+
+                // ══════════════════════════════════════════════════
+                //  CREATE
+                // ══════════════════════════════════════════════════
+
                 var createForm = document.getElementById('create-playlist-form');
                 var createModal = document.getElementById('create-modal');
                 var openCreateBtn = document.getElementById('btn-open-create-modal');
@@ -321,14 +459,20 @@
                         var btn = this.querySelector('.pl-modal-submit');
                         if (btn) { btn.disabled = true; btn.textContent = 'Creating...'; }
 
+                        var formData = new FormData();
+                        formData.append('name', document.getElementById('playlist-name').value);
+                        formData.append('description', document.getElementById('playlist-desc').value || '');
+                        formData.append('isPublic', document.getElementById('playlist-public').checked);
+
+                        var coverInput = document.getElementById('create-cover-input');
+                        if (coverInput && coverInput.files && coverInput.files[0]) {
+                            formData.append('coverImage', coverInput.files[0]);
+                        }
+
                         fetch('/api/playlists', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-                            body: JSON.stringify({
-                                name: document.getElementById('playlist-name').value,
-                                description: document.getElementById('playlist-desc').value,
-                                isPublic: document.getElementById('playlist-public').checked
-                            })
+                            headers: { 'X-CSRF-TOKEN': csrfToken },
+                            body: formData
                         }).then(function (res) {
                             if (!res.ok) throw new Error('Failed');
                             RevPlay.toast({ type: 'success', message: 'Playlist created!' });
@@ -397,7 +541,10 @@
                     });
                 }
 
-                // ── EDIT ──────────────────────────────────────────
+                // ══════════════════════════════════════════════════
+                //  EDIT (with cover image support)
+                // ══════════════════════════════════════════════════
+
                 var editBtn = document.getElementById('btn-edit-playlist');
                 var editModal = document.getElementById('edit-modal');
                 var editForm = document.getElementById('edit-playlist-form');
@@ -416,18 +563,43 @@
                         var btn = this.querySelector('.pl-modal-submit');
                         if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
 
-                        fetch('/api/playlists/' + id, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-                            body: JSON.stringify({
-                                name: document.getElementById('edit-name').value,
-                                description: document.getElementById('edit-desc').value,
-                                isPublic: document.getElementById('edit-public').checked
-                            })
+                        var dropzone = document.getElementById('edit-cover-dropzone');
+                        var coverInput = document.getElementById('edit-cover-input');
+                        var coverRemoved = dropzone && dropzone._coverRemoved;
+                        var hasNewFile = coverInput && coverInput.files && coverInput.files[0];
+
+                        // Step 1: If cover was explicitly removed (and no new file), call DELETE /api/playlists/{id}/cover
+                        var removeCoverPromise;
+                        if (coverRemoved && !hasNewFile) {
+                            removeCoverPromise = fetch('/api/playlists/' + id + '/cover', {
+                                method: 'DELETE',
+                                headers: { 'X-CSRF-TOKEN': csrfToken }
+                            });
+                        } else {
+                            removeCoverPromise = Promise.resolve();
+                        }
+
+                        removeCoverPromise.then(function () {
+                            // Step 2: Update playlist with FormData (multipart)
+                            var formData = new FormData();
+                            formData.append('name', document.getElementById('edit-name').value);
+                            formData.append('description', document.getElementById('edit-desc').value || '');
+                            formData.append('isPublic', document.getElementById('edit-public').checked);
+
+                            if (hasNewFile) {
+                                formData.append('coverImage', coverInput.files[0]);
+                            }
+
+                            return fetch('/api/playlists/' + id, {
+                                method: 'PUT',
+                                headers: { 'X-CSRF-TOKEN': csrfToken },
+                                body: formData
+                            });
                         }).then(function (res) {
                             if (!res.ok) throw new Error('Failed');
                             return res.json();
                         }).then(function (data) {
+                            // Update detail page in-place
                             var nameEl = document.getElementById('pl-detail-name');
                             var descEl = document.getElementById('pl-detail-desc');
                             var badgeEl = document.getElementById('pl-detail-badge');
@@ -443,11 +615,46 @@
                                     ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px;margin-right:3px;"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/></svg>Public'
                                     : '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-1px;margin-right:3px;"><rect x="3" y="11" width="18" height="11" rx="2"/></svg>Private';
                             }
+
+                            // Update detail cover image
+                            var detailCover = document.querySelector('.pl-detail-cover');
+                            if (detailCover && data.coverImageUrl) {
+                                // Has cover image — show it
+                                detailCover.style.background = '';
+                                var existingImg = detailCover.querySelector('.pl-detail-cover-img');
+                                var existingSvg = detailCover.querySelector('svg');
+                                if (existingImg) {
+                                    existingImg.src = data.coverImageUrl;
+                                    existingImg.style.display = '';
+                                } else {
+                                    var img = document.createElement('img');
+                                    img.src = data.coverImageUrl;
+                                    img.alt = 'Playlist cover';
+                                    img.className = 'pl-detail-cover-img';
+                                    detailCover.appendChild(img);
+                                }
+                                if (existingSvg) existingSvg.style.display = 'none';
+                            } else if (detailCover && !data.coverImageUrl) {
+                                // No cover — restore gradient
+                                var plId = data.id || id;
+                                detailCover.style.background = 'linear-gradient(135deg, hsl(' + ((plId * 47) % 360) + ', 45%, 28%), hsl(' + ((plId * 137) % 360) + ', 55%, 18%))';
+                                var imgEl = detailCover.querySelector('.pl-detail-cover-img');
+                                if (imgEl) imgEl.style.display = 'none';
+                                var svgEl = detailCover.querySelector('svg');
+                                if (svgEl) svgEl.style.display = '';
+                            }
+
+                            // Also update the edit button's data-cover for next edit
+                            if (editBtn) editBtn.setAttribute('data-cover', data.coverImageUrl || '');
+
                             editModal.style.display = 'none';
                             RevPlay.toast({ type: 'success', message: 'Playlist updated' });
                             invalidatePlaylistCache();
-                        }).catch(function () { RevPlay.toast({ type: 'error', message: 'Failed to update playlist' }); })
-                            .finally(function () { if (btn) { btn.disabled = false; btn.textContent = 'Save Changes'; } });
+                        }).catch(function () {
+                            RevPlay.toast({ type: 'error', message: 'Failed to update playlist' });
+                        }).finally(function () {
+                            if (btn) { btn.disabled = false; btn.textContent = 'Save Changes'; }
+                        });
                     });
                 }
 

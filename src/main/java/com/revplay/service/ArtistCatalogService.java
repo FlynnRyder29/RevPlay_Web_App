@@ -48,6 +48,13 @@ public class ArtistCatalogService {
                 .toList();
     }
 
+    // ═══ NEW: Search artists by keyword ═══
+    @Transactional(readOnly = true)
+    public Page<ArtistDTO> searchArtists(String keyword, Pageable pageable) {
+        log.info("Searching artists with keyword='{}'", keyword);
+        return artistRepository.searchByKeyword(keyword, pageable).map(this::mapToDTO);
+    }
+
     @Transactional(readOnly = true)
     public ArtistDTO getArtistById(Long id) {
         log.info("Fetching artist detail for id={}", id);

@@ -1340,3 +1340,18 @@ textarea.modal-form-input {
     margin-top: 20px;
     display: inline-block;
 }
+
+/* ── Song Title Link ── */
+.song-title-link {
+    text-decoration: none;
+    color: var(--text-primary);
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.song-title-link:hover {
+    color: var(--accent);
+    text-decoration: underline;
+}

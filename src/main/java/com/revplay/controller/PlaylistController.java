@@ -2,13 +2,14 @@ package com.revplay.controller;
 
 import com.revplay.dto.PlaylistDTO;
 import com.revplay.service.PlaylistService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -21,13 +22,33 @@ public class PlaylistController {
 
     private final PlaylistService playlistService;
 
-
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<PlaylistDTO> createPlaylist(
-            @Valid @RequestBody PlaylistDTO dto) {
-        log.info("POST /api/playlists");
+            @RequestParam("name") String name,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "isPublic", defaultValue = "false") boolean isPublic,
+            @RequestParam(value = "coverImage", required = false) MultipartFile coverImage) {
+
+        log.info("POST /api/playlists (multipart)");
+
+        PlaylistDTO dto = new PlaylistDTO();
+        dto.setName(name);
+        dto.setDescription(description);
+        dto.setPublicPlaylist(isPublic);
+
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(playlistService.createPlaylist(dto));
+                .body(playlistService.createPlaylist(dto, coverImage));
+    }
+
+    // Keep JSON fallback for backward compatibility (playlist-actions.js "Add to Playlist" modal)
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<PlaylistDTO> createPlaylistJson(
+            @RequestBody PlaylistDTO dto) {
+
+        log.info("POST /api/playlists (json)");
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(playlistService.createPlaylist(dto, null));
     }
 
     @GetMapping("/me")
@@ -35,14 +56,6 @@ public class PlaylistController {
         log.info("GET /api/playlists/me");
         return ResponseEntity.ok(playlistService.getMyPlaylists());
     }
-
-    // -------------------------
-    // BROWSE PUBLIC PLAYLISTS
-    // Returns all public playlists sorted newest-first.
-    // Optional ?search= param filters by playlist name (case-insensitive).
-    // GET /api/playlists/public
-    // GET /api/playlists/public?search=chill
-    // -------------------------
 
     @GetMapping("/public")
     public ResponseEntity<List<PlaylistDTO>> getPublicPlaylists(
@@ -57,12 +70,39 @@ public class PlaylistController {
         return ResponseEntity.ok(playlistService.getPlaylistById(id));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<PlaylistDTO> update(
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<PlaylistDTO> updatePlaylist(
             @PathVariable Long id,
-            @Valid @RequestBody PlaylistDTO dto) {
-        log.info("PUT /api/playlists/{}", id);
-        return ResponseEntity.ok(playlistService.updatePlaylist(id, dto));
+            @RequestParam("name") String name,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "isPublic", defaultValue = "false") boolean isPublic,
+            @RequestParam(value = "coverImage", required = false) MultipartFile coverImage) {
+
+        log.info("PUT /api/playlists/{} (multipart)", id);
+
+        PlaylistDTO dto = new PlaylistDTO();
+        dto.setName(name);
+        dto.setDescription(description);
+        dto.setPublicPlaylist(isPublic);
+
+        return ResponseEntity.ok(playlistService.updatePlaylist(id, dto, coverImage));
+    }
+
+    // Keep JSON fallback for backward compatibility
+    @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<PlaylistDTO> updatePlaylistJson(
+            @PathVariable Long id,
+            @RequestBody PlaylistDTO dto) {
+
+        log.info("PUT /api/playlists/{} (json)", id);
+
+        return ResponseEntity.ok(playlistService.updatePlaylist(id, dto, null));
+    }
+
+    @DeleteMapping("/{id}/cover")
+    public ResponseEntity<PlaylistDTO> removeCover(@PathVariable Long id) {
+        log.info("DELETE /api/playlists/{}/cover", id);
+        return ResponseEntity.ok(playlistService.removeCoverImage(id));
     }
 
     @DeleteMapping("/{id}")
@@ -98,6 +138,4 @@ public class PlaylistController {
         playlistService.reorderSongs(id, orderedSongIds);
         return ResponseEntity.noContent().build();
     }
-
-    // follow/unfollow/isFollowing → handled by PlaylistFollowController
 }

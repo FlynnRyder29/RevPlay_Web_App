@@ -24,7 +24,6 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 public class SecurityConfig {
 
         private final CustomUserDetailsService userDetailsService;
-
         private final RevPlayAuthenticationEntryPoint authEntryPoint;
         private final RevPlayAccessDeniedHandler accessDeniedHandler;
 
@@ -32,7 +31,7 @@ public class SecurityConfig {
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
                 http
-                                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
+                        .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
 
                         .authorizeHttpRequests(auth -> auth
                                 // ✅ Public pages
@@ -42,12 +41,19 @@ public class SecurityConfig {
                                         "/uploads/**",
                                         "/api/auth/**",
                                         "/swagger-ui/**", "/v3/api-docs/**",
-                                        "/search", "/artist/{id:\\d+}","/about")  // public artist profile (numeric ID only)
+                                        "/search", "/about",
+                                        "/artist/{id:\\d+}",
+                                        "/artists",              // NEW: browse artists page
+                                        "/albums",               // NEW: browse albums page
+                                        "/albums/{id:\\d+}",     // NEW: album detail page
+                                        "/songs/{id:\\d+}"       // NEW: song detail page
+                                )
                                 .permitAll()
 
                                 // GET — listeners can browse
-                                .requestMatchers(HttpMethod.GET, "/api/songs/**")
-                                .authenticated()
+                                .requestMatchers(HttpMethod.GET, "/api/songs/**").authenticated()
+                                .requestMatchers(HttpMethod.GET, "/api/albums/**").permitAll()   // NEW: album API public
+                                .requestMatchers(HttpMethod.GET, "/api/artists", "/api/artists/{id:\\d+}").permitAll()  // NEW: artist API public
 
                                 // Modify songs — only ARTIST
                                 .requestMatchers(HttpMethod.POST, "/api/songs/**").hasRole("ARTIST")
@@ -65,44 +71,41 @@ public class SecurityConfig {
                                 .requestMatchers("/api/artists/albums/**").hasRole("ARTIST")
                                 .requestMatchers("/api/artists/analytics/**").hasRole("ARTIST")
 
-                                // ✅ Artist registration — any authenticated user can register as artist
+                                // ✅ Artist registration
                                 .requestMatchers(HttpMethod.POST, "/api/artists/register").authenticated()
-
-                                // ✅ Public artist catalog (GET only)
-                                .requestMatchers(HttpMethod.GET, "/api/artists", "/api/artists/{id:\\d+}")
-                                .authenticated()
 
                                 // ✅ Admin pages and API
                                 .requestMatchers("/admin/**").hasRole("ADMIN")
                                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
                                 // ✅ User artist request API
                                 .requestMatchers("/user/api/artist-request").authenticated()
 
                                 // ✅ Everything else
                                 .anyRequest().authenticated())
 
-                                .exceptionHandling(ex -> ex
-                                                .defaultAuthenticationEntryPointFor(
-                                                                authEntryPoint,
-                                                                new AntPathRequestMatcher("/api/**"))
-                                                .accessDeniedHandler(accessDeniedHandler))
+                        .exceptionHandling(ex -> ex
+                                .defaultAuthenticationEntryPointFor(
+                                        authEntryPoint,
+                                        new AntPathRequestMatcher("/api/**"))
+                                .accessDeniedHandler(accessDeniedHandler))
 
-                                .formLogin(form -> form
-                                                .loginPage("/auth/login")
-                                                .loginProcessingUrl("/auth/login")
-                                                .usernameParameter("emailOrUsername")
-                                                .passwordParameter("password")
-                                                .defaultSuccessUrl("/", true)
-                                                .failureUrl("/auth/login?error=true")
-                                                .permitAll())
+                        .formLogin(form -> form
+                                .loginPage("/auth/login")
+                                .loginProcessingUrl("/auth/login")
+                                .usernameParameter("emailOrUsername")
+                                .passwordParameter("password")
+                                .defaultSuccessUrl("/", true)
+                                .failureUrl("/auth/login?error=true")
+                                .permitAll())
 
-                                .logout(logout -> logout
-                                                .logoutUrl("/auth/logout")
-                                                .logoutSuccessUrl("/auth/login?logout=true")
-                                                .deleteCookies("JSESSIONID")
-                                                .permitAll())
+                        .logout(logout -> logout
+                                .logoutUrl("/auth/logout")
+                                .logoutSuccessUrl("/auth/login?logout=true")
+                                .deleteCookies("JSESSIONID")
+                                .permitAll())
 
-                                .userDetailsService(userDetailsService);
+                        .userDetailsService(userDetailsService);
 
                 return http.build();
         }
@@ -114,7 +117,7 @@ public class SecurityConfig {
 
         @Bean
         public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
-                        throws Exception {
+                throws Exception {
                 return config.getAuthenticationManager();
         }
 }

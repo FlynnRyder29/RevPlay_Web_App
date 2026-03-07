@@ -23,11 +23,10 @@ public class PlaylistDTO {
     @Size(max = 500, message = "Description cannot exceed 500 characters")
     private String description;
 
-    // FIX: Rename field from "isPublic" to "publicPlaylist" to avoid Lombok/Jackson
-    // is-prefix collision. @JsonProperty ensures JSON key stays "isPublic" for
-    // backward compatibility with all frontend code.
     @JsonProperty("isPublic")
     private boolean publicPlaylist;
+
+    private String coverImageUrl;
 
     private Long userId;
 
