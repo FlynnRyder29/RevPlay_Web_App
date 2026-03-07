@@ -157,7 +157,7 @@
 
     // ========================= API HELPERS =========================
 
-    function recordHistory(songId) {
+    function recordHistory(songId, refreshIfOnPage) {
         if (!songId) return;
         var meta = document.querySelector('meta[name="_csrf"]');
         if (meta) csrfToken = meta.content;
@@ -170,9 +170,25 @@
                 'X-CSRF-TOKEN': csrfToken
             },
             body: JSON.stringify({ songId: parseInt(songId) })
-        }).catch(function (err) {
-            console.warn('Failed to record history:', err.message);
-        });
+        })
+            .then(function (res) {
+                if (!(res.status >= 200 && res.status < 300)) return;
+
+                // Always invalidate cache so next visit gets fresh data
+                if (window.PjaxRouter && window.PjaxRouter.invalidateCache) {
+                    window.PjaxRouter.invalidateCache('/history');
+                }
+
+                // If user is currently on history page, reload it live
+                if (refreshIfOnPage && window.location.pathname === '/history') {
+                    if (window.PjaxRouter && window.PjaxRouter.reload) {
+                        window.PjaxRouter.reload();
+                    }
+                }
+            })
+            .catch(function (err) {
+                console.warn('Failed to record history:', err.message);
+            });
     }
 
     // ========================= CORE PLAYBACK =========================
@@ -223,7 +239,7 @@
         updatePlayerPage(song);
         highlightActiveCard(song.id);
         highlightActiveRow(song.id);
-        recordHistory(song.id);
+        recordHistory(song.id, true);
         updateQueueDisplay();
     }
 
