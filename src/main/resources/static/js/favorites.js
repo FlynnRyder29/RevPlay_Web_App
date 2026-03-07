@@ -3,10 +3,9 @@
  *
  * Day 8: Heart button on song cards — POST/DELETE /api/favorites/{songId}
  *        Pre-marks already-favorited songs on page load.
- * Day 9: PJAX support, player bar heart sync, favorites page card removal,
- *        exposed initFavorites globally for navigation.js reinit.
- * Day 10: Fixed player bar heart inconsistency — unified img+fallback update,
- *         added pending queue for sync calls before favorites load.
+ * Day 9: PJAX support, player bar heart sync, favorites page card removal.
+ * Day 10: Fixed player bar heart — text mode, capture phase delegation,
+ *         CSRF refresh, credentials: same-origin on all fetches.
  */
 (function () {
     'use strict';
@@ -14,24 +13,57 @@
     // ========================= CSRF TOKEN =========================
 
     var csrfToken = '';
-    var csrfMeta = document.querySelector('meta[name="_csrf"]');
-    if (csrfMeta) csrfToken = csrfMeta.content;
+
+    function refreshCsrfToken() {
+        var meta = document.querySelector('meta[name="_csrf"]');
+        if (meta) csrfToken = meta.content;
+    }
+
+    refreshCsrfToken();
 
     // ========================= STATE =========================
 
     var favoritedIds = new Set();
     var loaded = false;
-    var pendingSyncSongId = null; // Queue sync calls that arrive before load completes
+    var pendingSyncSongId = null;
 
-    // ========================= INIT =========================
+    // ========================= HELPERS =========================
 
-    /**
-     * Fetch the user's favorited song IDs and mark buttons accordingly.
-     * Safe to call multiple times (after PJAX navigations).
-     */
+    function getCurrentPlayingSongId() {
+        if (window.RevPlay && window.RevPlay.getState) {
+            var state = window.RevPlay.getState();
+            if (state.currentSong && state.currentSong.id) {
+                return Number(state.currentSong.id);
+            }
+        }
+        return null;
+    }
+
+    function getSongTitle(sourceBtn, songId) {
+        if (sourceBtn) {
+            var card = sourceBtn.closest('.song-card');
+            if (card) {
+                var titleEl = card.querySelector('.song-title');
+                if (titleEl) return titleEl.textContent.trim();
+            }
+        }
+        if (window.RevPlay && window.RevPlay.getState) {
+            var state = window.RevPlay.getState();
+            if (state.currentSong && Number(state.currentSong.id) === Number(songId)) {
+                return state.currentSong.title || '';
+            }
+        }
+        return '';
+    }
+
+    // ========================= LOAD FAVORITES =========================
+
     function loadFavorites() {
+        refreshCsrfToken();
+
         fetch('/api/favorites/ids', {
             method: 'GET',
+            credentials: 'same-origin',
             headers: { 'Accept': 'application/json' }
         })
             .then(function (res) {
@@ -41,7 +73,6 @@
             .then(function (ids) {
                 if (!Array.isArray(ids)) return;
 
-                // Rebuild the set from server truth
                 favoritedIds.clear();
                 ids.forEach(function (id) {
                     favoritedIds.add(Number(id));
@@ -49,23 +80,18 @@
 
                 loaded = true;
                 markFavoriteButtons();
-                syncPlayerBarHeart();
+                forcePlayerHeartSync();
 
-                // If a sync was requested before load finished, honor it now
                 if (pendingSyncSongId !== null) {
-                    syncPlayerBarHeart();
+                    forcePlayerHeartSync();
                     pendingSyncSongId = null;
                 }
             })
             .catch(function () {
-                // Silently fail — user might not be authenticated
+                // Silently fail
             });
     }
 
-    /**
-     * Mark all .song-card-fav-btn that match favorited IDs.
-     * Also works after PJAX content swap (new cards in DOM).
-     */
     function markFavoriteButtons() {
         var btns = document.querySelectorAll('.song-card-fav-btn');
         btns.forEach(function (btn) {
@@ -82,147 +108,97 @@
         });
     }
 
-    /**
-     * Sync the player bar heart with the currently playing song.
-     */
-    function syncPlayerBarHeart() {
-        var playerFav = document.getElementById('player-favorite');
-        if (!playerFav) return;
+    // ========================= PLAYER BAR HEART =========================
 
-        // Get current song ID from RevPlay
+    function forcePlayerHeartSync() {
+        var btn = document.getElementById('player-favorite');
+        if (!btn) return;
+
         var currentSongId = getCurrentPlayingSongId();
-
         if (!currentSongId) return;
 
-        // If favorites haven't loaded yet, store the request for later
         if (!loaded) {
             pendingSyncSongId = currentSongId;
             return;
         }
 
+        btn.style.display = 'inline-block';
+
         var isFav = favoritedIds.has(Number(currentSongId));
-        setPlayerHeartUI(playerFav, isFav);
+        applyHeartState(btn, isFav);
     }
 
-    /**
-     * Get the currently playing song ID from RevPlay state.
-     */
-    function getCurrentPlayingSongId() {
-        if (window.RevPlay && window.RevPlay.getState) {
-            var state = window.RevPlay.getState();
-            if (state.currentSong && state.currentSong.id) {
-                return Number(state.currentSong.id);
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Update the player bar heart button visual.
-     * Handles BOTH the <img> element AND the <span> fallback,
-     * regardless of which one is currently visible.
-     */
-    function setPlayerHeartUI(btn, isFav) {
+    function applyHeartState(btn, isFav) {
+        if (!btn) btn = document.getElementById('player-favorite');
         if (!btn) return;
 
         var img = btn.querySelector('.player-icon-img');
         var fallback = btn.querySelector('.icon-fallback');
 
+        // Always force text mode
+        if (img) img.style.display = 'none';
+        if (fallback) fallback.style.display = 'inline';
+
         if (isFav) {
             btn.classList.add('favorited');
             btn.title = 'Remove from Favorites';
-
-            // Update fallback text
-            if (fallback) fallback.textContent = '♥';
-
-            // Update/hide img and show fallback with filled heart
-            // Since there's no "filled heart" icon image, we switch to text-based display
-            if (img) {
-                img.style.display = 'none';
-            }
             if (fallback) {
-                fallback.style.display = 'inline';
+                fallback.textContent = '♥';
                 fallback.style.color = '#ff4757';
                 fallback.style.fontSize = '18px';
             }
         } else {
             btn.classList.remove('favorited');
             btn.title = 'Add to Favorites';
-
-            // Update fallback text
             if (fallback) {
                 fallback.textContent = '♡';
                 fallback.style.color = '';
                 fallback.style.fontSize = '';
-            }
-
-            // Restore original display: try to show img, hide fallback
-            if (img) {
-                // Test if the image had previously errored
-                if (img.naturalWidth === 0 && img.complete) {
-                    // Image failed to load — keep fallback visible
-                    img.style.display = 'none';
-                    if (fallback) fallback.style.display = 'inline';
-                } else {
-                    // Image is fine — show it, hide fallback
-                    img.style.display = '';
-                    if (fallback) fallback.style.display = 'none';
-                }
-            } else {
-                // No img element — show fallback
-                if (fallback) fallback.style.display = 'inline';
             }
         }
     }
 
     // ========================= TOGGLE =========================
 
-    /**
-     * Toggle favorite for a song via AJAX.
-     * Works for both song card hearts AND the player bar heart.
-     */
     function toggleFavorite(songId, sourceBtn) {
         songId = Number(songId);
         if (!songId || isNaN(songId)) return;
 
-        var isFav = favoritedIds.has(songId);
-        var method = isFav ? 'DELETE' : 'POST';
+        refreshCsrfToken();
+
+        var wasFav = favoritedIds.has(songId);
+        var method = wasFav ? 'DELETE' : 'POST';
         var url = '/api/favorites/' + songId;
 
-        // Optimistic UI update
-        if (isFav) {
+        // Optimistic UI
+        if (wasFav) {
             favoritedIds.delete(songId);
         } else {
             favoritedIds.add(songId);
         }
 
-        // Update ALL matching song card buttons (same song may appear in multiple places)
         updateAllCardButtons(songId);
 
-        // Update player bar heart if this song is currently playing
+        // Sync player bar heart
         var currentSongId = getCurrentPlayingSongId();
         if (currentSongId && Number(currentSongId) === songId) {
-            var playerFav = document.getElementById('player-favorite');
-            setPlayerHeartUI(playerFav, favoritedIds.has(songId));
+            applyHeartState(null, favoritedIds.has(songId));
         }
 
-        // Pop animation on source button
+        // Pop animation
         if (sourceBtn) {
             sourceBtn.style.transform = 'scale(1.3)';
-            setTimeout(function () {
-                sourceBtn.style.transform = '';
-            }, 200);
+            setTimeout(function () { sourceBtn.style.transform = ''; }, 200);
         }
 
-        // Check if we're on the favorites page — remove card after unfavorite
         var onFavoritesPage = window.location.pathname === '/favorites'
             || window.location.pathname.indexOf('/favorites') === 0;
 
-        // Get song title for toast (from nearest song card or player)
         var songTitle = getSongTitle(sourceBtn, songId);
 
         fetch(url, {
             method: method,
+            credentials: 'same-origin',
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
                 'Content-Type': 'application/json'
@@ -230,54 +206,37 @@
         })
             .then(function (res) {
                 if (!(res.status >= 200 && res.status < 300)) {
-                    // Revert on failure
-                    revertToggle(songId, isFav);
-
+                    revertToggle(songId, wasFav);
                     if (window.RevPlay && window.RevPlay.toast) {
                         RevPlay.toast({ type: 'error', message: 'Failed to update favorites' });
                     }
                     return;
                 }
 
-                // Success toast
                 if (window.RevPlay && window.RevPlay.toast) {
-                    if (isFav) {
-                        RevPlay.toast({
-                            type: 'info',
-                            message: songTitle ? '"' + songTitle + '" removed from favorites' : 'Removed from favorites',
-                            duration: 2500
-                        });
+                    if (wasFav) {
+                        RevPlay.toast({ type: 'info', message: songTitle ? '"' + songTitle + '" removed from favorites' : 'Removed from favorites', duration: 2500 });
                     } else {
-                        RevPlay.toast({
-                            type: 'success',
-                            message: songTitle ? '"' + songTitle + '" added to favorites' : 'Added to favorites',
-                            duration: 2500
-                        });
+                        RevPlay.toast({ type: 'success', message: songTitle ? '"' + songTitle + '" added to favorites' : 'Added to favorites', duration: 2500 });
                     }
                 }
 
-                // If on favorites page and we just unfavorited, remove the card
-                if (onFavoritesPage && isFav) {
+                if (onFavoritesPage && wasFav) {
                     removeFavoriteCard(songId);
                 }
 
-                // Invalidate PJAX cache for favorites page
                 if (window.PjaxRouter && window.PjaxRouter.invalidateCache) {
                     window.PjaxRouter.invalidateCache('/favorites');
                 }
             })
             .catch(function () {
-                revertToggle(songId, isFav);
-
+                revertToggle(songId, wasFav);
                 if (window.RevPlay && window.RevPlay.toast) {
                     RevPlay.toast({ type: 'error', message: 'Network error — please try again' });
                 }
             });
     }
 
-    /**
-     * Revert an optimistic toggle on failure.
-     */
     function revertToggle(songId, wasFav) {
         if (wasFav) {
             favoritedIds.add(songId);
@@ -286,41 +245,12 @@
         }
         updateAllCardButtons(songId);
 
-        // Revert player bar heart too
         var currentSongId = getCurrentPlayingSongId();
         if (currentSongId && Number(currentSongId) === songId) {
-            var playerFav = document.getElementById('player-favorite');
-            setPlayerHeartUI(playerFav, favoritedIds.has(songId));
+            applyHeartState(null, favoritedIds.has(songId));
         }
     }
 
-    /**
-     * Get song title from the source button's card, or from the player state.
-     */
-    function getSongTitle(sourceBtn, songId) {
-        // Try from card
-        if (sourceBtn) {
-            var card = sourceBtn.closest('.song-card');
-            if (card) {
-                var titleEl = card.querySelector('.song-title');
-                if (titleEl) return titleEl.textContent.trim();
-            }
-        }
-
-        // Try from player state (for player bar heart clicks)
-        if (window.RevPlay && window.RevPlay.getState) {
-            var state = window.RevPlay.getState();
-            if (state.currentSong && Number(state.currentSong.id) === songId) {
-                return state.currentSong.title || '';
-            }
-        }
-
-        return '';
-    }
-
-    /**
-     * Update all song card favorite buttons for a given song ID.
-     */
     function updateAllCardButtons(songId) {
         songId = Number(songId);
         var isFav = favoritedIds.has(songId);
@@ -338,9 +268,6 @@
         });
     }
 
-    /**
-     * Animate and remove a song card from the favorites page after unfavoriting.
-     */
     function removeFavoriteCard(songId) {
         var card = document.querySelector('.song-card[data-id="' + songId + '"]')
             || document.querySelector('.song-card-fav-btn[data-song-id="' + songId + '"]');
@@ -355,24 +282,15 @@
             setTimeout(function () {
                 songCard.remove();
 
-                // Update count in hero subtitle
                 var remaining = document.querySelectorAll('.song-card').length;
                 var subtitle = document.querySelector('.hero-subtitle');
-                if (subtitle) {
-                    subtitle.textContent = remaining + ' saved songs';
-                }
+                if (subtitle) subtitle.textContent = remaining + ' saved songs';
 
-                // Show empty state if no more songs
                 if (remaining === 0) {
                     var grid = document.querySelector('.song-grid');
                     if (grid) grid.remove();
-
-                    // Also remove action buttons
                     var actionBtns = document.querySelector('#btn-play-all-favs');
-                    if (actionBtns) {
-                        var actionBar = actionBtns.parentElement;
-                        if (actionBar) actionBar.remove();
-                    }
+                    if (actionBtns && actionBtns.parentElement) actionBtns.parentElement.remove();
 
                     var contentArea = document.getElementById('favorites-content');
                     if (contentArea) {
@@ -388,91 +306,88 @@
                         contentArea.appendChild(emptyDiv);
                     }
                 }
+
+                forcePlayerHeartSync();
             }, 300);
         }
     }
 
-    // ========================= EVENT LISTENERS =========================
+    // ========================= SINGLE DELEGATION LISTENER =========================
 
-    // Song card heart buttons — document-level delegation (survives PJAX)
-    if (!window._favCardClickBound) {
+    if (!window._favClickBound) {
         document.addEventListener('click', function (e) {
-            var btn = e.target.closest('.song-card-fav-btn');
-            if (!btn) return;
-            e.preventDefault();
-            e.stopPropagation();
-            var songId = btn.getAttribute('data-song-id');
-            if (songId) toggleFavorite(songId, btn);
-        });
-        window._favCardClickBound = true;
-    }
 
-    // Player bar heart button — document-level delegation (survives PJAX)
-    if (!window._favPlayerClickBound) {
-        document.addEventListener('click', function (e) {
-            var playerFavBtn = e.target.closest('#player-favorite');
-            if (!playerFavBtn) return;
-            e.preventDefault();
-            e.stopPropagation();
-
-            // Get current song ID from RevPlay
-            var currentSongId = getCurrentPlayingSongId();
-
-            if (currentSongId) {
-                toggleFavorite(currentSongId, playerFavBtn);
+            // Check 1: Song card heart
+            var cardBtn = e.target.closest('.song-card-fav-btn');
+            if (cardBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                var songId = cardBtn.getAttribute('data-song-id');
+                if (songId) toggleFavorite(songId, cardBtn);
+                return;
             }
-        });
-        window._favPlayerClickBound = true;
+
+            // Check 2: Player bar heart — walk up from click target
+            var el = e.target;
+            while (el && el !== document.body) {
+                if (el.id === 'player-favorite') {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    var currentSongId = getCurrentPlayingSongId();
+                    if (currentSongId) {
+                        toggleFavorite(currentSongId, el);
+                    }
+                    return;
+                }
+                el = el.parentElement;
+            }
+
+        }, true); // CAPTURE PHASE
+
+        window._favClickBound = true;
     }
 
     // ========================= EXPOSE FOR PJAX =========================
 
-    /**
-     * Called by navigation.js reinitComponents() after every PJAX swap.
-     */
     window.initFavorites = function () {
-        if (loaded) {
-            markFavoriteButtons();
-            syncPlayerBarHeart();
-        }
+        refreshCsrfToken();
+        if (loaded) markFavoriteButtons();
+        forcePlayerHeartSync();
         loadFavorites();
     };
 
-    /**
-     * Called by player.js when a new song starts playing.
-     * Syncs the player bar heart with the favorites state.
-     */
     window.syncFavoritesForSong = function (songId) {
         if (!songId) return;
-
         if (!loaded) {
-            // Favorites haven't loaded yet — queue the sync
             pendingSyncSongId = Number(songId);
             return;
         }
-
-        syncPlayerBarHeart();
+        forcePlayerHeartSync();
     };
 
-    /**
-     * Check if a song is favorited (used by player.js).
-     */
     window.isSongFavorited = function (songId) {
         return favoritedIds.has(Number(songId));
     };
 
     // ========================= STARTUP =========================
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', loadFavorites);
-    } else {
+    function init() {
+        refreshCsrfToken();
+        forcePlayerHeartSync();
         loadFavorites();
     }
 
-    // Re-init after PJAX content swap
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
     document.addEventListener('pjax:complete', function () {
+        refreshCsrfToken();
         markFavoriteButtons();
-        syncPlayerBarHeart();
+        forcePlayerHeartSync();
     });
 
 })();

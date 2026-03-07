@@ -24,9 +24,9 @@
         <span>RevPlay</span>
     </a>
 
-    <!-- Center: Search Bar -->
+    <!-- Center: Search Bar (no form — JS handles it) -->
     <div class="nav-search" sec:authorize="isAuthenticated()">
-        <form th:action="@{/library}" method="get" class="nav-search-form">
+        <div class="nav-search-form">
             <span class="nav-search-icon">
                 <img th:src="@{/images/icons/search.png}"
                      alt="🔍"
@@ -35,11 +35,11 @@
                 <span class="icon-fallback" style="display:none;">🔍</span>
             </span>
             <input type="text"
-                   name="q"
+                   id="nav-search-input"
                    class="nav-search-input"
                    placeholder="What do you want to listen to?"
                    autocomplete="off">
-        </form>
+        </div>
     </div>
 
     <!-- Right -->
@@ -80,12 +80,10 @@
         <div sec:authorize="isAuthenticated()" class="nav-links">
             <a th:href="@{/user/profile}" class="nav-profile-link" title="Profile">
                 <span class="nav-profile-avatar">
-                    <!-- Show profile image if available -->
                     <img th:if="${currentUserPicUrl != null}"
                          th:src="${currentUserPicUrl}"
                          alt="Profile"
                          class="nav-avatar-img">
-                    <!-- Fallback: first letter -->
                     <span th:if="${currentUserPicUrl == null}"
                           sec:authentication="principal.username"
                           class="nav-avatar-letter"

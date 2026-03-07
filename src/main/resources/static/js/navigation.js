@@ -9,6 +9,9 @@
  *   - Dispatches 'pjax:complete' for per-page scripts
  *   - Exposes PjaxRouter.invalidateCache / .reload / .navigate
  *   - Stores initial popstate
+ * Day 10 fixes:
+ *   - Navbar search uses PJAX instead of form submit
+ *   - Form interception for any remaining forms
  */
 (function () {
     'use strict';
@@ -60,17 +63,14 @@
     }
 
     function reinitComponents() {
-        // Re-scan player queue and reattach card/row listeners
         if (window.RevPlay && window.RevPlay.rescan) {
             window.RevPlay.rescan();
         }
 
-        // Re-init favorites hearts on new song cards
         if (typeof window.initFavorites === 'function') {
             window.initFavorites();
         }
 
-        // Dispatch event for any page-specific script that listens
         document.dispatchEvent(new CustomEvent('pjax:complete'));
     }
 
@@ -86,7 +86,8 @@
         }
 
         fetch(url, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin'
         })
             .then(function (res) {
                 if (res.redirected) {
@@ -133,10 +134,7 @@
             window.history.pushState({ url: url }, title, url);
         }
 
-        // Execute inline scripts in the new content
         executeScripts(contentArea);
-
-        // Re-init all components
         reinitComponents();
 
         window.scrollTo(0, 0);
@@ -175,7 +173,7 @@
         });
     }
 
-    // ── Click listener ──
+    // ── Link click listener ──
     document.addEventListener('click', function (e) {
         var a = e.target.closest('a');
         if (!a) return;
@@ -186,6 +184,62 @@
             loadPage(a.href, true);
         }
     });
+
+    // ── Form submission interceptor ──
+    // Catches ALL GET forms that point to internal URLs and routes them through PJAX
+    document.addEventListener('submit', function (e) {
+        var form = e.target;
+        if (!form || form.tagName !== 'FORM') return;
+
+        // Only intercept GET forms (search, filter, etc.)
+        var method = (form.method || 'get').toLowerCase();
+        if (method !== 'get') return;
+
+        // Only intercept forms pointing to same host
+        var action = form.action || window.location.href;
+        try {
+            var actionUrl = new URL(action, window.location.origin);
+            if (actionUrl.host !== window.location.host) return;
+        } catch (err) {
+            return;
+        }
+
+        // Skip auth-related forms
+        var path = new URL(action, window.location.origin).pathname;
+        if (path.startsWith('/auth/') || path.startsWith('/oauth2')) return;
+
+        e.preventDefault();
+
+        // Build URL from form data
+        var formData = new FormData(form);
+        var params = new URLSearchParams();
+        formData.forEach(function (value, key) {
+            if (value) params.append(key, value);
+        });
+
+        var url = path + (params.toString() ? '?' + params.toString() : '');
+        loadPage(url, true);
+
+    }, true);
+
+    // ── Navbar search handler ──
+    // The navbar is OUTSIDE .content-area so it's never replaced by PJAX.
+    // We bind once here and it persists for the entire session.
+    (function initNavbarSearch() {
+        var navInput = document.getElementById('nav-search-input');
+        if (!navInput) return;
+
+        navInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.keyCode === 13) {
+                e.preventDefault();
+                var query = navInput.value.trim();
+                if (!query) return;
+
+                var url = '/library?q=' + encodeURIComponent(query);
+                loadPage(url, true);
+            }
+        });
+    })();
 
     // ── Back/forward ──
     window.addEventListener('popstate', function (e) {

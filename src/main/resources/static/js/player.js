@@ -5,6 +5,8 @@
  * Day 7: playlist row click, history recording, favorites toggle,
  *         keyboard shortcuts, queue display, drag-seek progress bar.
  * Day 9: RevPlay public API, PJAX support, favorites.js integration.
+ * Day 10: Fixed rescan() destroying playback state on PJAX navigation.
+ *         Separated "active playback queue" from "page scan queue".
  */
 (function () {
     'use strict';
@@ -36,6 +38,10 @@
     var isShuffle = false;
     var repeatMode = 0;
 
+    // Track the currently playing song separately from the queue
+    // This survives queue rebuilds during PJAX navigation
+    var currentSong = null;
+
     var csrfToken = '';
     var csrfMeta = document.querySelector('meta[name="_csrf"]');
     if (csrfMeta) csrfToken = csrfMeta.content;
@@ -51,9 +57,9 @@
 
     function buildQueueFromCards() {
         var cards = document.querySelectorAll('.song-card');
-        queue = [];
+        var newQueue = [];
         cards.forEach(function (card) {
-            queue.push({
+            newQueue.push({
                 id: card.dataset.id || '',
                 url: card.dataset.url || '',
                 title: card.dataset.title || 'Unknown Title',
@@ -61,14 +67,15 @@
                 cover: card.querySelector('img') ? card.querySelector('img').src : ''
             });
         });
+        return newQueue;
     }
 
     function buildQueueFromPlaylistRows() {
         var rows = document.querySelectorAll('.playlist-song-row');
-        queue = [];
+        var newQueue = [];
         rows.forEach(function (row) {
             var coverImg = row.querySelector('.song-row-cover');
-            queue.push({
+            newQueue.push({
                 id: row.dataset.id || row.dataset.songId || '',
                 url: row.dataset.url || '',
                 title: row.dataset.title || 'Unknown Title',
@@ -76,6 +83,33 @@
                 cover: coverImg ? coverImg.src : ''
             });
         });
+        return newQueue;
+    }
+
+    /**
+     * Set the queue and update currentIndex to match the currently playing song.
+     * If the current song exists in the new queue, preserve its position.
+     * If not, keep currentIndex as -1 (playback continues but next/prev use new queue).
+     */
+    function setQueue(newQueue) {
+        queue = newQueue;
+
+        // Try to find the currently playing song in the new queue
+        if (currentSong && currentSong.id) {
+            var found = false;
+            for (var i = 0; i < queue.length; i++) {
+                if (String(queue[i].id) === String(currentSong.id)) {
+                    currentIndex = i;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                // Song is still playing but not in this page's cards — that's OK
+                // Keep currentIndex at -1 so next/prev work from start of new queue
+                currentIndex = -1;
+            }
+        }
     }
 
     // ========================= ICON HELPERS =========================
@@ -125,8 +159,12 @@
 
     function recordHistory(songId) {
         if (!songId) return;
+        var meta = document.querySelector('meta[name="_csrf"]');
+        if (meta) csrfToken = meta.content;
+
         fetch('/api/history', {
             method: 'POST',
+            credentials: 'same-origin',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': csrfToken
@@ -144,6 +182,15 @@
 
         currentIndex = index;
         var song = queue[currentIndex];
+
+        // Store the currently playing song separately
+        currentSong = {
+            id: song.id,
+            url: song.url,
+            title: song.title,
+            artist: song.artist,
+            cover: song.cover
+        };
 
         if (song.url) {
             audio.src = song.url;
@@ -327,9 +374,8 @@
         });
     }
 
-    // NOTE: Player bar heart click is now handled by favorites.js
+    // NOTE: Player bar heart click is handled by favorites.js
     // via document-level delegation on #player-favorite.
-    // No listener needed here — removed to prevent double-handling.
 
     // ========================= SONG CARD CLICKS =========================
 
@@ -342,7 +388,8 @@
             card.addEventListener('click', function (e) {
                 if (e.target.closest('button') || e.target.closest('a')) return;
 
-                buildQueueFromCards();
+                // Build fresh queue from current page cards and play
+                queue = buildQueueFromCards();
                 playSongAtIndex(index);
             });
         });
@@ -372,7 +419,8 @@
             row.addEventListener('click', function (e) {
                 if (e.target.closest('button') || e.target.closest('a')) return;
 
-                buildQueueFromPlaylistRows();
+                // Build fresh queue from playlist rows and play
+                queue = buildQueueFromPlaylistRows();
                 playSongAtIndex(index);
             });
         });
@@ -554,7 +602,7 @@
 
     // ========================= INIT =========================
 
-    buildQueueFromCards();
+    queue = buildQueueFromCards();
     attachCardListeners();
     attachPlaylistRowListeners();
 
@@ -570,10 +618,6 @@
         }
         return shuffled;
     }
-
-    // ========================= PUBLIC API =========================
-    // IMPORTANT: Merge into existing window.RevPlay instead of overwriting.
-    // confirm-toast.js may have already added .confirm() and .toast() to it.
 
     window.RevPlay = window.RevPlay || {};
 
@@ -614,13 +658,12 @@
             repeatMode: repeatMode,
             queueLength: queue.length,
             currentIndex: currentIndex,
-            currentSong: currentIndex >= 0 && currentIndex < queue.length
-                ? queue[currentIndex]
-                : null
+            currentSong: currentSong
         };
     };
 
     window.RevPlay.rescan = function () {
+        // Clear bound flags on new DOM elements
         document.querySelectorAll('.song-card[data-player-bound]').forEach(function (el) {
             delete el.dataset.playerBound;
         });
@@ -628,11 +671,26 @@
             delete el.dataset.playerBound;
         });
 
-        buildQueueFromCards();
+        // Build new queue from page content WITHOUT destroying current playback
+        var newQueue = buildQueueFromCards();
+        if (newQueue.length === 0) {
+            newQueue = buildQueueFromPlaylistRows();
+        }
+
+        if (newQueue.length > 0) {
+            setQueue(newQueue);
+        }
+        // If no cards/rows on this page, keep the existing queue intact
+
         attachCardListeners();
-        buildQueueFromPlaylistRows();
         attachPlaylistRowListeners();
         updateQueueDisplay();
+
+        // Re-highlight the currently playing song on the new page
+        if (currentSong && currentSong.id) {
+            highlightActiveCard(currentSong.id);
+            highlightActiveRow(currentSong.id);
+        }
     };
 
 })();
