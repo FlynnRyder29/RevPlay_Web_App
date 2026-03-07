@@ -422,3 +422,89 @@
 .playlist-row--active .song-row-title {
     color: var(--primary-color);
 }
+
+/* ── Player Action Buttons (fav + playlist) ──────── */
+
+.player-action-btns {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    margin-left: 4px;
+}
+
+/* ── Add to Playlist Button ──────────────────────── */
+
+.player-playlist-btn {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    color: var(--text-muted);
+    transition: color 0.2s, background-color 0.2s, transform 0.15s;
+}
+
+.player-playlist-btn:hover {
+    color: var(--text-main);
+    background-color: rgba(255, 255, 255, 0.08);
+    transform: scale(1.1);
+}
+
+.player-playlist-btn:active {
+    transform: scale(0.95);
+}
+
+/* Plus badge on the playlist icon */
+.player-playlist-plus {
+    position: absolute;
+    bottom: 2px;
+    right: 1px;
+    width: 10px;
+    height: 10px;
+    background-color: var(--bg-dark);
+    border-radius: 50%;
+    padding: 1px;
+    color: var(--primary-color);
+    pointer-events: none;
+}
+
+.player-playlist-btn:hover .player-playlist-plus {
+    color: var(--primary-hover);
+}
+
+/* Tooltip on hover */
+.player-playlist-btn::after {
+    content: 'Add to Playlist';
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--bg-surface);
+    color: var(--text-main);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 6px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.2s, visibility 0.2s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    z-index: 10;
+}
+
+.player-playlist-btn:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ── Light Theme ─────────────────────────────────── */
+
+[data-theme="light"] .player-playlist-btn:hover {
+    background-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .player-playlist-plus {
+    background-color: var(--bg-surface);
+}

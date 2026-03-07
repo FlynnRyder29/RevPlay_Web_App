@@ -59,6 +59,11 @@
         height: 140px;
         font-size: 60px;
     }
+
+    /* ── Favorites ── */
+    .fav-action-btns {
+        gap: 10px;
+    }
 }
 
 
@@ -121,7 +126,7 @@
         flex-direction: column;
         width: 100%;
         justify-content: flex-start;
-        padding: 70px 0 20px; /* Space for navbar height */
+        padding: 70px 0 20px;
     }
 
     /* Items back to normal vertical layout */
@@ -146,7 +151,7 @@
     /* ── Main content adjustments ── */
     .content-area {
         padding: 20px;
-        padding-bottom: 100px; /* Space for player bar */
+        padding-bottom: 120px;
     }
 
     .main-content {
@@ -182,49 +187,124 @@
         gap: 12px;
     }
 
-    /* ── Player bar: compact ── */
+    /* ═══ Player Bar — Mobile Redesign ═══
+       Two-row layout:
+       Row 1: Album art + song info + fav/playlist
+       Row 2: Controls centered
+       Volume hidden on mobile (use physical buttons)
+    ═══════════════════════════════════════ */
+
     .player-bar {
-        height: 70px;
-        padding: 0 12px;
+        height: auto;
+        flex-wrap: wrap;
+        padding: 8px 12px;
+        gap: 0;
     }
 
+    /* Row 1: Song info spans full width */
     .player-left {
-        width: 40%;
-        gap: 8px;
+        width: 100%;
+        order: 1;
+        gap: 10px;
+        padding-bottom: 6px;
     }
 
     .player-left img,
     .player-album-art {
-        width: 42px;
-        height: 42px;
+        width: 40px;
+        height: 40px;
+        border-radius: 4px;
+        flex-shrink: 0;
     }
 
-    .player-track-title { font-size: 12px; }
-    .player-track-artist { font-size: 11px; }
+    .player-track-info {
+        flex: 1;
+        min-width: 0;
+    }
 
-    .player-center { width: 30%; }
-    .player-controls { gap: 10px; }
+    .player-track-title {
+        font-size: 13px;
+        line-height: 1.3;
+    }
 
-    .player-bar #btn-shuffle,
-    .player-bar #btn-repeat {
+    .player-track-artist {
+        font-size: 11px;
+        line-height: 1.2;
+    }
+
+    .player-action-btns {
+        gap: 4px;
+        flex-shrink: 0;
+        margin-left: auto;
+    }
+
+    .player-fav-btn {
+        font-size: 16px;
+    }
+
+    .player-playlist-btn {
+        width: 28px;
+        height: 28px;
+    }
+
+    .player-playlist-btn svg:first-child {
+        width: 14px;
+        height: 14px;
+    }
+
+    .player-playlist-plus {
+        width: 8px;
+        height: 8px;
+        bottom: 1px;
+        right: 0;
+    }
+
+    /* Hide tooltip on touch devices */
+    .player-playlist-btn::after {
         display: none;
     }
 
-    .progress-container { display: none; }
+    /* Row 2: Controls centered, full width */
+    .player-center {
+        width: 100%;
+        order: 2;
+    }
 
+    .player-controls {
+        gap: 20px;
+        margin-bottom: 0;
+    }
+
+    /* Show all controls on mobile */
+    .player-bar #btn-shuffle,
+    .player-bar #btn-repeat {
+        display: inline-flex;
+    }
+
+    .control-btn {
+        font-size: 18px;
+    }
+
+    .control-play {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        min-height: 32px;
+    }
+
+    .control-play .player-icon-img {
+        width: 32px;
+        height: 32px;
+    }
+
+    /* Hide progress bar on mobile player bar */
+    .player-bar .progress-container {
+        display: none;
+    }
+
+    /* Hide volume on mobile — use device buttons */
     .player-right {
-        width: 35%;
-        justify-content: flex-end;
-    }
-
-    .volume-bar {
-        display: block;
-        width: 50px;
-    }
-
-    .volume-icon {
-        width: 16px;
-        height: 16px;
+        display: none;
     }
 
     /* ── Library ── */
@@ -342,6 +422,60 @@
     }
 
     .keyboard-hints { display: none; }
+
+    /* ── Favorites — overflow fix ── */
+    #favorites-content {
+        overflow-x: hidden;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    #favorites-content .hero-section {
+        margin-left: -20px !important;
+        margin-right: -20px !important;
+        border-radius: 0 !important;
+        padding: 30px 20px !important;
+    }
+
+    #favorites-content .song-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+        margin-top: 20px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    #favorites-content .song-card {
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    #favorites-content .song-card img {
+        width: 100%;
+        height: auto;
+    }
+
+    #favorites-content .song-title {
+        font-size: 13px;
+    }
+
+    #favorites-content .song-artist {
+        font-size: 11px;
+    }
+
+    .fav-action-btns {
+        flex-direction: column !important;
+        gap: 8px !important;
+        margin-top: 16px !important;
+        width: 100% !important;
+    }
+
+    .fav-action-btns .pl-btn {
+        width: 100%;
+        justify-content: center;
+        box-sizing: border-box;
+    }
 }
 
 
@@ -364,15 +498,28 @@
     .navbar { padding: 10px 15px; }
     .nav-brand { font-size: 18px; }
 
+    /* ═══ Player Bar — Small Mobile ═══ */
+
     .player-bar {
-        height: 60px;
-        padding: 0 10px;
+        padding: 6px 10px;
     }
 
     .player-left img,
     .player-album-art {
         width: 36px;
         height: 36px;
+    }
+
+    .player-track-title {
+        font-size: 12px;
+    }
+
+    .player-track-artist {
+        font-size: 10px;
+    }
+
+    .player-controls {
+        gap: 16px;
     }
 
     .control-play {
@@ -385,6 +532,30 @@
     .control-play .player-icon-img {
         width: 30px;
         height: 30px;
+    }
+
+    .player-action-btns {
+        gap: 2px;
+    }
+
+    .player-playlist-btn {
+        width: 24px;
+        height: 24px;
+    }
+
+    .player-playlist-btn svg:first-child {
+        width: 12px;
+        height: 12px;
+    }
+
+    .player-fav-btn {
+        font-size: 14px;
+    }
+
+    /* Hide shuffle/repeat on very small screens */
+    .player-bar #btn-shuffle,
+    .player-bar #btn-repeat {
+        display: none;
     }
 
     .hero-title { font-size: 1.8rem; }
@@ -452,7 +623,31 @@
     .sidebar {
         left: -250px;
     }
+
+    /* ── Favorites — small mobile ── */
+    #favorites-content .hero-section {
+        margin-left: -15px !important;
+        margin-right: -15px !important;
+        padding: 24px 15px !important;
+    }
+
+    #favorites-content .hero-title {
+        font-size: 1.5rem !important;
+    }
+
+    #favorites-content .hero-subtitle {
+        font-size: 0.85rem !important;
+    }
+
+    #favorites-content .song-grid {
+        gap: 6px !important;
+    }
+
+    #favorites-content .song-card {
+        padding: 8px;
+    }
 }
+
 
 /* ═══════════════════════════════════════════════════════
    CONFIRM & TOAST — Responsive
