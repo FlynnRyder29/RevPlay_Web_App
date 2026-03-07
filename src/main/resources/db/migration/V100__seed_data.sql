@@ -1,0 +1,316 @@
+-- ============================================================
+-- RevPlay Music Streaming Application
+-- Flyway Migration: V99__seed_data.sql
+-- Author: Member 6 — Database, Testing & DevOps
+-- Description: Demo seed data for development and presentation
+--
+-- PASSWORDS (plain text for login):
+--   admin@revplay.com  → Password@123
+--   alice@mail.com     → AlicePass@1
+--   bob@mail.com       → BobPass@123
+--   aria@mail.com      → AriaPass@1
+--   djnova@mail.com    → NovaPass@1
+--   marco@mail.com     → MarcoPass@1
+--
+-- Audio  : SoundHelix (royalty-free, stable hosted URLs)
+-- Images : picsum.photos (stable seeded images, always same result)
+-- ============================================================
+
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ============================================================
+-- USERS
+-- password column stores BCrypt hash of the plain passwords above
+-- Users log in with the plain password — Spring Security hashes
+-- and compares automatically. Never store or type the hash manually.
+-- ============================================================
+
+INSERT INTO users (id, email, username, password_hash, display_name, bio, role) VALUES
+(1, 'admin@revplay.com', 'admin',       '$2b$12$0cfRzzj9DathC2D5Z09KOei8iqM3ertj/wpSRyHVU5qqsoVR9QNPu', 'RevPlay Admin', 'Platform administrator.',             'ADMIN'),
+(2, 'alice@mail.com',    'alice_music', '$2b$12$Q7aTmvskio0upCAhKQY/IOtH4g54vd0rerkCDjP4zNEL/yB9ywAMW', 'Alice',         'Music lover. Playlist curator.',      'LISTENER'),
+(3, 'bob@mail.com',      'bob_beats',  '$2b$12$KqVbQqYuVfuS9PZP0Zvm2.5ND8xMrKhl9ITBQjT23F1Qx4YPVNvt.', 'Bob',           'Hip-hop and chill vibes only.',       'LISTENER'),
+(4, 'aria@mail.com',     'aria_artist','$2b$12$00/7sieERo7NkR8efLu5C..90W16GzW7l9pRx8DgEe2Qm2E7bGRw2', 'Aria',          'Singer-songwriter. Indie pop artist.','ARTIST'),
+(5, 'djnova@mail.com',   'dj_nova',    '$2b$12$ynDFideg8lr41cjtjZecIeF4MCuL93EKbMzjx7iAr6OlHcQ0qMjuC', 'DJ Nova',       'Electronic and house music producer.','ARTIST'),
+(6, 'marco@mail.com',    'marco_jazz', '$2b$12$Wsu2G7H9n1JAge9be/0TuuPdcAVGCOasMDHj2qy8Qc1b74rSGrUlO', 'Marco Jazz',    'Jazz guitarist. Bringing classics back.','ARTIST');
+
+-- ============================================================
+-- GENRES
+-- ============================================================
+
+INSERT INTO genres (id, name) VALUES
+(1, 'Pop'),
+(2, 'Hip-Hop'),
+(3, 'Electronic'),
+(4, 'Jazz'),
+(5, 'Rock'),
+(6, 'R&B'),
+(7, 'Classical'),
+(8, 'Indie');
+
+-- ============================================================
+-- ARTISTS
+-- Images: picsum.photos/seed/{keyword}/WxH — same keyword always
+--         returns the same image, making data consistent across resets
+-- ============================================================
+
+INSERT INTO artists (id, user_id, artist_name, bio, genre, profile_picture_url, banner_image_url, instagram, twitter, youtube, spotify, website) VALUES
+(1, 4, 'Aria',
+    'Indie pop singer-songwriter based in Austin, TX. Known for dreamy melodies and honest lyrics.',
+    'Indie',
+    'https://picsum.photos/seed/aria-pfp/300/300',
+    'https://picsum.photos/seed/aria-banner/1200/400',
+    'https://instagram.com/aria_music',
+    'https://twitter.com/aria_music',
+    NULL, NULL, NULL),
+
+(2, 5, 'DJ Nova',
+    'Electronic music producer and live performer. Specializes in deep house and ambient techno.',
+    'Electronic',
+    'https://picsum.photos/seed/nova-pfp/300/300',
+    'https://picsum.photos/seed/nova-banner/1200/400',
+    NULL,
+    'https://twitter.com/djnova',
+    'https://youtube.com/@djnova',
+    NULL, NULL),
+
+(3, 6, 'Marco Jazz',
+    'Jazz guitarist with 15 years of studio and live performance experience.',
+    'Jazz',
+    'https://picsum.photos/seed/marco-pfp/300/300',
+    NULL,
+    NULL, NULL, NULL, NULL,
+    'https://marcojazz.com');
+
+-- ============================================================
+-- ALBUMS
+-- ============================================================
+
+INSERT INTO albums (id, name, description, cover_image_url, release_date, artist_id) VALUES
+(1, 'Daydream',
+    'Debut album by Aria. Soft indie pop tracks about love and growth.',
+    'https://picsum.photos/seed/daydream/400/400',
+    '2023-03-15', 1),
+
+(2, 'Pulse',
+    'High energy electronic album by DJ Nova. Floor-ready from start to finish.',
+    'https://picsum.photos/seed/pulse-album/400/400',
+    '2023-07-01', 2),
+
+(3, 'Blue Hour',
+    'Mellow jazz sessions recorded live in one evening.',
+    'https://picsum.photos/seed/bluehour/400/400',
+    '2022-11-20', 3),
+
+(4, 'Neon Nights EP',
+    'Four-track EP with dark synth and driving bass lines.',
+    'https://picsum.photos/seed/neonnights/400/400',
+    '2024-01-10', 2);
+
+-- ============================================================
+-- SONGS
+-- Audio: SoundHelix royalty-free MP3s (17 available, all stable)
+-- https://www.soundhelix.com/examples/mp3/SoundHelix-Song-N.mp3
+-- Assigned by vibe: slow/indie → lower numbers, electronic → mid,
+-- jazz → higher numbers
+-- ============================================================
+
+INSERT INTO songs (id, title, genre, duration, audio_url, cover_image_url, release_date, play_count, visibility, artist_id, album_id) VALUES
+
+-- ── Aria — Daydream ──────────────────────────────────────────
+(1,  'Golden Hour',
+     'Indie', 214,
+     'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+     'https://picsum.photos/seed/daydream/400/400',
+     '2023-03-15', 18420, 'PUBLIC', 1, 1),
+
+(2,  'Paper Walls',
+     'Indie', 198,
+     'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+     'https://picsum.photos/seed/daydream/400/400',
+     '2023-03-15', 9310, 'PUBLIC', 1, 1),
+
+(3,  'Gravity',
+     'Pop', 223,
+     'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+     'https://picsum.photos/seed/daydream/400/400',
+     '2023-03-15', 7650, 'PUBLIC', 1, 1),
+
+(4,  'Wildfire',
+     'Indie', 187,
+     'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
+     'https://picsum.photos/seed/daydream/400/400',
+     '2023-03-15', 5200, 'PUBLIC', 1, 1),
+
+-- ── Aria — standalone single ─────────────────────────────────
+(5,  'Haze',
+     'Indie', 205,
+     'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
+     'https://picsum.photos/seed/haze-cover/400/400',
+     '2024-02-01', 3100, 'PUBLIC', 1, NULL),
+
+-- ── DJ Nova — Pulse ──────────────────────────────────────────
+(6,  'Overdrive',
+     'Electronic', 382,
+     'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3',
+     'https://picsum.photos/seed/pulse-album/400/400',
+     '2023-07-01', 31200, 'PUBLIC', 2, 2),
+
+(7,  'Resonance',
+     'Electronic', 354,
+     'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3',
+     'https://picsum.photos/seed/pulse-album/400/400',
+     '2023-07-01', 22800, 'PUBLIC', 2, 2),
+
+(8,  'Midnight Grid',
+     'Electronic', 410,
+     'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3',
+     'https://picsum.photos/seed/pulse-album/400/400',
+     '2023-07-01', 17500, 'PUBLIC', 2, 2),
+
+-- ── DJ Nova — Neon Nights EP ─────────────────────────────────
+(9,  'Neon Drift',
+     'Electronic', 298,
+     'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3',
+     'https://picsum.photos/seed/neonnights/400/400',
+     '2024-01-10', 12400, 'PUBLIC', 2, 4),
+
+(10, 'Static Pulse',
+     'Electronic', 315,
+     'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3',
+     'https://picsum.photos/seed/neonnights/400/400',
+     '2024-01-10', 8900, 'PUBLIC', 2, 4),
+
+-- ── DJ Nova — unlisted WIP ───────────────────────────────────
+(11, 'Untitled WIP',
+     'Electronic', 180,
+     'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3',
+     NULL,
+     '2024-06-01', 0, 'UNLISTED', 2, NULL),
+
+-- ── Marco Jazz — Blue Hour ───────────────────────────────────
+(12, 'Blue in Green',
+     'Jazz', 328,
+     'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3',
+     'https://picsum.photos/seed/bluehour/400/400',
+     '2022-11-20', 14300, 'PUBLIC', 3, 3),
+
+(13, 'Autumn Leaves',
+     'Jazz', 295,
+     'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-13.mp3',
+     'https://picsum.photos/seed/bluehour/400/400',
+     '2022-11-20', 11600, 'PUBLIC', 3, 3),
+
+(14, 'Misty',
+     'Jazz', 310,
+     'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3',
+     'https://picsum.photos/seed/bluehour/400/400',
+     '2022-11-20', 9800, 'PUBLIC', 3, 3),
+
+(15, 'So What',
+     'Jazz', 342,
+     'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3',
+     'https://picsum.photos/seed/bluehour/400/400',
+     '2022-11-20', 8200, 'PUBLIC', 3, 3);
+
+-- ============================================================
+-- PLAYLISTS
+-- ============================================================
+
+INSERT INTO playlists (id, name, description, is_public, user_id) VALUES
+(1, 'Morning Vibes',    'Chill songs to start the day right.',      TRUE,  2),
+(2, 'Late Night Drive', 'Electronic bangers for the road.',         TRUE,  2),
+(3, 'My Private Mix',   'Personal collection — not for sharing.',   FALSE, 2),
+(4, 'Jazz Corner',      'Classic jazz and new recordings.',         TRUE,  3),
+(5, 'Workout Mix',      'High BPM tracks for gym sessions.',        TRUE,  3);
+
+-- ============================================================
+-- PLAYLIST SONGS
+-- ============================================================
+
+INSERT INTO playlist_songs (playlist_id, song_id, position) VALUES
+-- Morning Vibes
+(1, 1, 1), (1, 2, 2), (1, 5, 3), (1, 12, 4), (1, 13, 5),
+-- Late Night Drive
+(2, 6, 1), (2, 7, 2), (2, 8, 3), (2, 9, 4),  (2, 10, 5),
+-- My Private Mix
+(3, 1, 1), (3, 3, 2), (3, 6, 3),
+-- Jazz Corner
+(4, 12, 1), (4, 13, 2), (4, 14, 3), (4, 15, 4),
+-- Workout Mix
+(5, 6, 1), (5, 8, 2), (5, 9, 3), (5, 7, 4);
+
+-- ============================================================
+-- FAVORITES
+-- ============================================================
+
+INSERT INTO favorites (user_id, song_id) VALUES
+-- Alice
+(2, 1), (2, 2), (2, 6), (2, 12), (2, 13),
+-- Bob
+(3, 6), (3, 7), (3, 8), (3, 12), (3, 1);
+
+-- ============================================================
+-- PLAYLIST FOLLOWS
+-- ============================================================
+
+INSERT INTO playlist_follows (user_id, playlist_id, followed_at) VALUES
+(3, 1, NOW() - INTERVAL 5 DAY),  -- Bob follows Alice's Morning Vibes
+(3, 2, NOW() - INTERVAL 3 DAY),  -- Bob follows Alice's Late Night Drive
+(2, 4, NOW() - INTERVAL 4 DAY),  -- Alice follows Bob's Jazz Corner
+(2, 5, NOW() - INTERVAL 2 DAY);  -- Alice follows Bob's Workout Mix
+
+-- ============================================================
+-- LISTENING HISTORY
+-- ============================================================
+
+INSERT INTO listening_history (user_id, song_id, played_at) VALUES
+-- Alice
+(2, 1,  NOW() - INTERVAL 10 MINUTE),
+(2, 2,  NOW() - INTERVAL 25 MINUTE),
+(2, 3,  NOW() - INTERVAL 40 MINUTE),
+(2, 6,  NOW() - INTERVAL 1  HOUR),
+(2, 12, NOW() - INTERVAL 2  HOUR),
+(2, 13, NOW() - INTERVAL 3  HOUR),
+(2, 7,  NOW() - INTERVAL 1  DAY),
+(2, 8,  NOW() - INTERVAL 1  DAY),
+(2, 5,  NOW() - INTERVAL 2  DAY),
+(2, 14, NOW() - INTERVAL 3  DAY),
+-- Bob
+(3, 6,  NOW() - INTERVAL 15 MINUTE),
+(3, 7,  NOW() - INTERVAL 30 MINUTE),
+(3, 8,  NOW() - INTERVAL 50 MINUTE),
+(3, 12, NOW() - INTERVAL 2  HOUR),
+(3, 9,  NOW() - INTERVAL 4  HOUR),
+(3, 1,  NOW() - INTERVAL 1  DAY),
+(3, 13, NOW() - INTERVAL 2  DAY);
+
+-- ============================================================
+-- PLAY EVENTS (analytics)
+-- ============================================================
+
+INSERT INTO play_events (song_id, user_id, played_at) VALUES
+(1,  2,    NOW() - INTERVAL 10 MINUTE),
+(1,  3,    NOW() - INTERVAL 1  DAY),
+(1,  NULL, NOW() - INTERVAL 2  DAY),
+(1,  2,    NOW() - INTERVAL 3  DAY),
+(1,  3,    NOW() - INTERVAL 5  DAY),
+(1,  NULL, NOW() - INTERVAL 7  DAY),
+(6,  2,    NOW() - INTERVAL 1  HOUR),
+(6,  3,    NOW() - INTERVAL 15 MINUTE),
+(6,  NULL, NOW() - INTERVAL 2  DAY),
+(6,  2,    NOW() - INTERVAL 4  DAY),
+(6,  3,    NOW() - INTERVAL 6  DAY),
+(6,  NULL, NOW() - INTERVAL 8  DAY),
+(6,  2,    NOW() - INTERVAL 10 DAY),
+(12, 2,    NOW() - INTERVAL 2  HOUR),
+(12, 3,    NOW() - INTERVAL 2  HOUR),
+(12, NULL, NOW() - INTERVAL 3  DAY),
+(12, 2,    NOW() - INTERVAL 7  DAY),
+(7,  3,    NOW() - INTERVAL 30 MINUTE),
+(7,  NULL, NOW() - INTERVAL 3  DAY),
+(7,  2,    NOW() - INTERVAL 6  DAY),
+(13, 2,    NOW() - INTERVAL 3  HOUR),
+(13, 3,    NOW() - INTERVAL 2  DAY),
+(13, NULL, NOW() - INTERVAL 9  DAY);
+
+SET FOREIGN_KEY_CHECKS = 1;

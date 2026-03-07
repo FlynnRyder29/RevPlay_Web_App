@@ -23,6 +23,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -96,7 +97,7 @@ class PlaylistControllerIntegrationTest {
             request.setName("Road Trip");
             when(playlistService.createPlaylist(any())).thenReturn(samplePlaylist());
 
-            mockMvc.perform(post("/api/playlists")
+            mockMvc.perform(post("/api/playlists").with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(json(request)))
                     .andExpect(status().isCreated())
@@ -111,7 +112,7 @@ class PlaylistControllerIntegrationTest {
             PlaylistDTO request = new PlaylistDTO();
             request.setName("");
 
-            mockMvc.perform(post("/api/playlists")
+            mockMvc.perform(post("/api/playlists").with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(json(request)))
                     .andExpect(status().isBadRequest());
@@ -125,7 +126,7 @@ class PlaylistControllerIntegrationTest {
             PlaylistDTO request = new PlaylistDTO();
             request.setName("Road Trip");
 
-            mockMvc.perform(post("/api/playlists")
+            mockMvc.perform(post("/api/playlists").with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(json(request)))
                     .andExpect(status().isUnauthorized());
@@ -281,7 +282,7 @@ class PlaylistControllerIntegrationTest {
             request.setName("Updated Name");
             when(playlistService.updatePlaylist(eq(1L), any())).thenReturn(samplePlaylist());
 
-            mockMvc.perform(put("/api/playlists/1")
+            mockMvc.perform(put("/api/playlists/1").with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(json(request)))
                     .andExpect(status().isOk());
@@ -296,9 +297,11 @@ class PlaylistControllerIntegrationTest {
             when(playlistService.updatePlaylist(eq(1L), any()))
                     .thenThrow(new UnauthorizedAccessException("You don't own this playlist"));
 
-            mockMvc.perform(put("/api/playlists/1")
+            PlaylistDTO request = new PlaylistDTO();
+            request.setName("Some Name");
+            mockMvc.perform(put("/api/playlists/1").with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(json(new PlaylistDTO())))
+                            .content(json(request)))
                     .andExpect(status().isForbidden());
         }
 
@@ -309,16 +312,18 @@ class PlaylistControllerIntegrationTest {
             when(playlistService.updatePlaylist(eq(999L), any()))
                     .thenThrow(new ResourceNotFoundException("Playlist", "id", 999L));
 
-            mockMvc.perform(put("/api/playlists/999")
+            PlaylistDTO request = new PlaylistDTO();
+            request.setName("Some Name");
+            mockMvc.perform(put("/api/playlists/999").with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(json(new PlaylistDTO())))
+                            .content(json(request)))
                     .andExpect(status().isNotFound());
         }
 
         @Test
         @DisplayName("unauthenticated — returns 401")
         void updatePlaylist_unauthenticated_returns401() throws Exception {
-            mockMvc.perform(put("/api/playlists/1")
+            mockMvc.perform(put("/api/playlists/1").with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(json(new PlaylistDTO())))
                     .andExpect(status().isUnauthorized());
@@ -339,7 +344,7 @@ class PlaylistControllerIntegrationTest {
         void deletePlaylist_owner_returns204() throws Exception {
             doNothing().when(playlistService).deletePlaylist(1L);
 
-            mockMvc.perform(delete("/api/playlists/1"))
+            mockMvc.perform(delete("/api/playlists/1").with(csrf()))
                     .andExpect(status().isNoContent());
 
             verify(playlistService).deletePlaylist(1L);
@@ -354,7 +359,7 @@ class PlaylistControllerIntegrationTest {
             doThrow(new UnauthorizedAccessException("You don't own this playlist"))
                     .when(playlistService).deletePlaylist(1L);
 
-            mockMvc.perform(delete("/api/playlists/1"))
+            mockMvc.perform(delete("/api/playlists/1").with(csrf()))
                     .andExpect(status().isForbidden());
         }
 
@@ -365,14 +370,14 @@ class PlaylistControllerIntegrationTest {
             doThrow(new ResourceNotFoundException("Playlist", "id", 999L))
                     .when(playlistService).deletePlaylist(999L);
 
-            mockMvc.perform(delete("/api/playlists/999"))
+            mockMvc.perform(delete("/api/playlists/999").with(csrf()))
                     .andExpect(status().isNotFound());
         }
 
         @Test
         @DisplayName("unauthenticated — returns 401")
         void deletePlaylist_unauthenticated_returns401() throws Exception {
-            mockMvc.perform(delete("/api/playlists/1"))
+            mockMvc.perform(delete("/api/playlists/1").with(csrf()))
                     .andExpect(status().isUnauthorized());
         }
     }
@@ -391,7 +396,7 @@ class PlaylistControllerIntegrationTest {
         void addSong_valid_returns204() throws Exception {
             doNothing().when(playlistService).addSongToPlaylist(1L, 2L);
 
-            mockMvc.perform(post("/api/playlists/1/songs/2"))
+            mockMvc.perform(post("/api/playlists/1/songs/2").with(csrf()))
                     .andExpect(status().isNoContent());
 
             verify(playlistService).addSongToPlaylist(1L, 2L);
@@ -404,7 +409,7 @@ class PlaylistControllerIntegrationTest {
             doThrow(new ResourceNotFoundException("Song", "id", 2L))
                     .when(playlistService).addSongToPlaylist(1L, 2L);
 
-            mockMvc.perform(post("/api/playlists/1/songs/2"))
+            mockMvc.perform(post("/api/playlists/1/songs/2").with(csrf()))
                     .andExpect(status().isNotFound());
         }
 
@@ -415,14 +420,14 @@ class PlaylistControllerIntegrationTest {
             doThrow(new UnauthorizedAccessException("You don't own this playlist"))
                     .when(playlistService).addSongToPlaylist(1L, 2L);
 
-            mockMvc.perform(post("/api/playlists/1/songs/2"))
+            mockMvc.perform(post("/api/playlists/1/songs/2").with(csrf()))
                     .andExpect(status().isForbidden());
         }
 
         @Test
         @DisplayName("unauthenticated — returns 401")
         void addSong_unauthenticated_returns401() throws Exception {
-            mockMvc.perform(post("/api/playlists/1/songs/2"))
+            mockMvc.perform(post("/api/playlists/1/songs/2").with(csrf()))
                     .andExpect(status().isUnauthorized());
         }
     }
@@ -441,7 +446,7 @@ class PlaylistControllerIntegrationTest {
         void removeSong_valid_returns204() throws Exception {
             doNothing().when(playlistService).removeSongFromPlaylist(1L, 2L);
 
-            mockMvc.perform(delete("/api/playlists/1/songs/2"))
+            mockMvc.perform(delete("/api/playlists/1/songs/2").with(csrf()))
                     .andExpect(status().isNoContent());
         }
 
@@ -452,14 +457,14 @@ class PlaylistControllerIntegrationTest {
             doThrow(new UnauthorizedAccessException("You don't own this playlist"))
                     .when(playlistService).removeSongFromPlaylist(1L, 2L);
 
-            mockMvc.perform(delete("/api/playlists/1/songs/2"))
+            mockMvc.perform(delete("/api/playlists/1/songs/2").with(csrf()))
                     .andExpect(status().isForbidden());
         }
 
         @Test
         @DisplayName("unauthenticated — returns 401")
         void removeSong_unauthenticated_returns401() throws Exception {
-            mockMvc.perform(delete("/api/playlists/1/songs/2"))
+            mockMvc.perform(delete("/api/playlists/1/songs/2").with(csrf()))
                     .andExpect(status().isUnauthorized());
         }
     }
@@ -478,7 +483,7 @@ class PlaylistControllerIntegrationTest {
         void reorderSongs_valid_returns204() throws Exception {
             doNothing().when(playlistService).reorderSongs(eq(1L), anyList());
 
-            mockMvc.perform(put("/api/playlists/1/reorder")
+            mockMvc.perform(put("/api/playlists/1/reorder").with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("[1, 2, 3]"))
                     .andExpect(status().isNoContent());
@@ -493,7 +498,7 @@ class PlaylistControllerIntegrationTest {
             doThrow(new UnauthorizedAccessException("You can only reorder songs in your own playlist"))
                     .when(playlistService).reorderSongs(eq(1L), anyList());
 
-            mockMvc.perform(put("/api/playlists/1/reorder")
+            mockMvc.perform(put("/api/playlists/1/reorder").with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("[1, 2, 3]"))
                     .andExpect(status().isForbidden());
@@ -502,7 +507,7 @@ class PlaylistControllerIntegrationTest {
         @Test
         @DisplayName("unauthenticated — returns 401")
         void reorderSongs_unauthenticated_returns401() throws Exception {
-            mockMvc.perform(put("/api/playlists/1/reorder")
+            mockMvc.perform(put("/api/playlists/1/reorder").with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("[1,2,3]"))
                     .andExpect(status().isUnauthorized());
