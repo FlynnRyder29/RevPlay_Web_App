@@ -26,10 +26,11 @@ public class Playlist {
     @Column(length = 500)
     private String description;
 
-    // FIX: Rename Java field to avoid Lombok is-prefix getter collision.
-    // @Column maps it to the same DB column "is_public" — zero schema change.
     @Column(name = "is_public", nullable = false)
     private boolean publicPlaylist;
+
+    @Column(name = "cover_image_url", length = 500)
+    private String coverImageUrl;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)

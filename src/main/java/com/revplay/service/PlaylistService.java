@@ -19,9 +19,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,18 +32,23 @@ public class PlaylistService {
 
     private static final Logger log = LoggerFactory.getLogger(PlaylistService.class);
 
+    private static final Set<String> ALLOWED_IMAGE_TYPES = Set.of(
+            "image/jpeg", "image/png", "image/webp", "image/gif"
+    );
+
     private final PlaylistRepository       playlistRepository;
     private final PlaylistSongRepository   playlistSongRepository;
     private final PlaylistFollowRepository playlistFollowRepository;
     private final SongRepository           songRepository;
     private final SecurityUtils            securityUtils;
+    private final FileStorageService       fileStorageService;
 
     // -------------------------
     // CREATE
     // -------------------------
 
     @Transactional
-    public PlaylistDTO createPlaylist(PlaylistDTO dto) {
+    public PlaylistDTO createPlaylist(PlaylistDTO dto, MultipartFile coverImage) {
 
         User currentUser = securityUtils.getCurrentUser();
 
@@ -51,8 +58,16 @@ public class PlaylistService {
         Playlist playlist = new Playlist();
         playlist.setName(dto.getName());
         playlist.setDescription(dto.getDescription());
-        playlist.setPublicPlaylist(dto.isPublicPlaylist());  // FIX
+        playlist.setPublicPlaylist(dto.isPublicPlaylist());
         playlist.setUser(currentUser);
+
+        // Handle cover image upload
+        if (coverImage != null && !coverImage.isEmpty()) {
+            validateImage(coverImage);
+            String path = fileStorageService.storeFile(coverImage, "playlist-covers");
+            playlist.setCoverImageUrl("/uploads/" + path);
+            log.debug("Playlist cover image stored: {}", path);
+        }
 
         return toDTO(playlistRepository.save(playlist));
     }
@@ -88,7 +103,7 @@ public class PlaylistService {
         if (search != null && !search.isBlank()) {
             results = playlistRepository.searchPublicByName(search.trim());
         } else {
-            results = playlistRepository.findByPublicPlaylistTrueOrderByCreatedAtDesc();  // FIX
+            results = playlistRepository.findByPublicPlaylistTrueOrderByCreatedAtDesc();
         }
 
         return results.stream()
@@ -109,7 +124,7 @@ public class PlaylistService {
 
         User currentUser = securityUtils.getCurrentUser();
 
-        if (!playlist.isPublicPlaylist()  // FIX
+        if (!playlist.isPublicPlaylist()
                 && !playlist.getUser().getId().equals(currentUser.getId())) {
             throw new UnauthorizedAccessException(
                     "Access denied to playlist: " + id);
@@ -123,7 +138,7 @@ public class PlaylistService {
     // -------------------------
 
     @Transactional
-    public PlaylistDTO updatePlaylist(Long id, PlaylistDTO dto) {
+    public PlaylistDTO updatePlaylist(Long id, PlaylistDTO dto, MultipartFile coverImage) {
 
         Playlist playlist = playlistRepository.findById(id)
                 .orElseThrow(() ->
@@ -137,9 +152,40 @@ public class PlaylistService {
 
         playlist.setName(dto.getName());
         playlist.setDescription(dto.getDescription());
-        playlist.setPublicPlaylist(dto.isPublicPlaylist());  // FIX
+        playlist.setPublicPlaylist(dto.isPublicPlaylist());
+
+        // Handle cover image upload
+        if (coverImage != null && !coverImage.isEmpty()) {
+            validateImage(coverImage);
+            String path = fileStorageService.storeFile(coverImage, "playlist-covers");
+            playlist.setCoverImageUrl("/uploads/" + path);
+            log.debug("Updated playlist cover image: {}", path);
+        }
 
         log.debug("Updated playlist: {}, isPublic: {}", id, dto.isPublicPlaylist());
+
+        return toDTO(playlistRepository.save(playlist));
+    }
+
+    // -------------------------
+    // REMOVE COVER IMAGE
+    // -------------------------
+
+    @Transactional
+    public PlaylistDTO removeCoverImage(Long id) {
+
+        Playlist playlist = playlistRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Playlist", "id", id));
+
+        User currentUser = securityUtils.getCurrentUser();
+
+        if (!playlist.getUser().getId().equals(currentUser.getId())) {
+            throw new UnauthorizedAccessException("You don't own this playlist");
+        }
+
+        playlist.setCoverImageUrl(null);
+        log.debug("Removed cover image for playlist: {}", id);
 
         return toDTO(playlistRepository.save(playlist));
     }
@@ -295,7 +341,7 @@ public class PlaylistService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Playlist", "id", playlistId));
 
-        if (!playlist.isPublicPlaylist()) {  // FIX
+        if (!playlist.isPublicPlaylist()) {
             throw new BadRequestException("Cannot follow a private playlist");
         }
 
@@ -341,6 +387,21 @@ public class PlaylistService {
     }
 
     // -------------------------
+    // IMAGE VALIDATION
+    // -------------------------
+
+    private void validateImage(MultipartFile file) {
+        if (file.getSize() > 5 * 1024 * 1024) {
+            throw new BadRequestException("Cover image must be less than 5MB");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || !ALLOWED_IMAGE_TYPES.contains(contentType)) {
+            throw new BadRequestException(
+                    "Invalid image type. Allowed: JPEG, PNG, WebP, GIF");
+        }
+    }
+
+    // -------------------------
     // MAPPER
     // -------------------------
 
@@ -350,7 +411,8 @@ public class PlaylistService {
         dto.setId(playlist.getId());
         dto.setName(playlist.getName());
         dto.setDescription(playlist.getDescription());
-        dto.setPublicPlaylist(playlist.isPublicPlaylist());  // FIX
+        dto.setPublicPlaylist(playlist.isPublicPlaylist());
+        dto.setCoverImageUrl(playlist.getCoverImageUrl());
         dto.setUserId(playlist.getUser().getId());
         dto.setCreatedAt(playlist.getCreatedAt());
         dto.setUpdatedAt(playlist.getUpdatedAt());

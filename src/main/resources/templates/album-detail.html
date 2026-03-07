@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head('Album')}"></head>
+<body>
+<div th:replace="~{layout :: page(~{::#album-detail-content})}">
+
+    <div id="album-detail-content">
+
+        <!-- ═══ Album Header ═══ -->
+        <div class="album-detail-header">
+            <div class="album-detail-cover">
+                <img th:src="${album.coverImageUrl != null ? album.coverImageUrl : 'https://placehold.co/300x300/1a1a2e/ffffff?text=💿'}"
+                     alt="Album Cover" class="album-detail-cover-img">
+            </div>
+            <div class="album-detail-info">
+                <span class="album-detail-type">ALBUM</span>
+                <h1 class="album-detail-name" th:text="${album.name}">Album Name</h1>
+                <div class="album-detail-meta">
+                    <a th:if="${album.artistId != null}" th:href="@{'/artist/' + ${album.artistId}}" class="album-detail-artist-link">
+                        <span th:text="${album.artistName != null ? album.artistName : 'Unknown Artist'}">Artist Name</span>
+                    </a>
+                    <span th:if="${album.artistId == null}" th:text="${album.artistName != null ? album.artistName : 'Unknown Artist'}">Artist</span>
+                    <span th:if="${album.releaseDate != null}" class="album-detail-year"
+                          th:text="' • ' + ${album.releaseDate.year}"> • 2026</span>
+                    <span th:if="${album.tracks != null}" class="album-detail-count"
+                          th:text="' • ' + ${album.tracks.size()} + ' songs'"> • 10 songs</span>
+                    <span th:if="${totalDuration != null}" class="album-detail-duration"
+                          th:text="' • ' + ${totalDuration}"> • 45 min 30 sec</span>
+                </div>
+                <p th:if="${album.description != null && !album.description.isEmpty()}"
+                   class="album-detail-description" th:text="${album.description}">Album description</p>
+            </div>
+        </div>
+
+        <!-- ═══ Track List ═══ -->
+        <div class="album-tracklist" th:if="${album.tracks != null && !album.tracks.isEmpty()}">
+            <div class="tracklist-header">
+                <span class="tracklist-col-num">#</span>
+                <span class="tracklist-col-title">Title</span>
+                <span class="tracklist-col-genre">Genre</span>
+                <span class="tracklist-col-date">Release Date</span>
+                <span class="tracklist-col-plays">Plays</span>
+                <span class="tracklist-col-duration">Duration</span>
+            </div>
+
+            <div th:each="track, iter : ${album.tracks}"
+                 class="tracklist-row"
+                 th:data-id="${track.id}"
+                 th:data-url="${track.audioUrl}"
+                 th:data-title="${track.title}"
+                 th:data-artist="${track.artistName != null ? track.artistName : 'Unknown'}">
+
+                <span class="tracklist-col-num" th:text="${iter.count}">1</span>
+
+                <div class="tracklist-col-title">
+                    <img th:src="${track.coverImageUrl != null ? track.coverImageUrl : (album.coverImageUrl != null ? album.coverImageUrl : 'https://placehold.co/40x40/1a1a2e/ffffff?text=🎵')}"
+                         alt="Cover" class="tracklist-thumb">
+                    <div class="tracklist-title-group">
+                        <a th:href="@{'/songs/' + ${track.id}}" class="tracklist-song-title"
+                           th:text="${track.title != null ? track.title : 'Unknown'}">Song Title</a>
+                        <span class="tracklist-song-artist"
+                              th:text="${track.artistName != null ? track.artistName : 'Unknown'}">Artist</span>
+                    </div>
+                </div>
+
+                <span class="tracklist-col-genre"
+                      th:text="${track.genre != null ? track.genre : '—'}">Pop</span>
+
+                <span class="tracklist-col-date"
+                      th:text="${track.releaseDate != null ? track.releaseDate.toString() : '—'}">2026-01-01</span>
+
+                <span class="tracklist-col-plays"
+                      th:text="${track.playCount != null ? track.playCount : 0}">0</span>
+
+                <span class="tracklist-col-duration"
+                      th:text="${track.duration != null ? T(java.lang.String).format('%d:%02d', track.duration / 60, track.duration % 60) : '—'}">3:45</span>
+            </div>
+        </div>
+
+        <!-- ═══ Empty Track List ═══ -->
+        <div class="empty-state" th:if="${album.tracks == null || album.tracks.isEmpty()}">
+            <div class="empty-icon">🎵</div>
+            <h2>No tracks yet</h2>
+            <p>This album doesn't have any public tracks</p>
+        </div>
+
+        <!-- ═══ Back Link ═══ -->
+        <div style="text-align: center; margin-top: 30px;">
+            <a th:href="@{/albums}" class="btn-primary"
+               style="display: inline-block; width: auto; padding: 12px 30px;">
+                ← Browse Albums
+            </a>
+        </div>
+
+        <!-- ═══ Click-to-play on tracklist rows ═══ -->
+        <script>
+            (function () {
+                'use strict';
+                document.querySelectorAll('.tracklist-row').forEach(function (row) {
+                    row.addEventListener('click', function (e) {
+                        if (e.target.closest('a')) return;
+
+                        var id = row.getAttribute('data-id');
+                        var url = row.getAttribute('data-url');
+                        var title = row.getAttribute('data-title');
+                        var artist = row.getAttribute('data-artist');
+
+                        if (url && window.RevPlay && window.RevPlay.play) {
+                            var queue = [];
+                            document.querySelectorAll('.tracklist-row').forEach(function (r) {
+                                queue.push({
+                                    id: r.getAttribute('data-id'),
+                                    url: r.getAttribute('data-url'),
+                                    title: r.getAttribute('data-title'),
+                                    artist: r.getAttribute('data-artist')
+                                });
+                            });
+
+                            var index = queue.findIndex(function (s) { return s.id === id; });
+                            window.RevPlay.playQueue(queue, index >= 0 ? index : 0);
+                        } else if (url && window.RevPlay && window.RevPlay.playSong) {
+                            window.RevPlay.playSong({ id: id, url: url, title: title, artist: artist });
+                        }
+                    });
+                });
+            })();
+        </script>
+
+    </div>
+</div>
+</body>
+</html>

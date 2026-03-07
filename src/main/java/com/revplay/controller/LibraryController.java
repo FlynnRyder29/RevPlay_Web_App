@@ -28,49 +28,37 @@ public class LibraryController {
     private final GenreRepository genreRepository;
 
     /**
-     * GET / — Home page with recently added songs.
-     */
-//    @GetMapping("/")
-//    public String showHome(Model model) {
-//        log.info("GET / — Home page");
-//
-//        // Fetch the 6 most recently added songs for the "Recently Added" section
-//        Pageable pageable = PageRequest.of(0, 6, Sort.by("createdAt").descending());
-//        Page<SongDTO> recentSongs = songService.getAllSongs(pageable);
-//
-//        model.addAttribute("recentSongs", recentSongs.getContent());
-//
-//        return "index";
-//    }
-
-    /**
-     * GET /library — Song browsing page with search, genre filter, and pagination.
-     *
-     * Query params:
-     *   q     — search keyword (optional)
-     *   genre — filter by genre name (optional)
-     *   page  — page number, 0-indexed (default 0)
-     *   size  — page size (default 20)
+     * GET /library — Song browsing with search + multi-filter (genre, artist, album, year).
      */
     @GetMapping("/library")
     public String showLibrary(
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String genre,
+            @RequestParam(required = false) String artist,
+            @RequestParam(required = false) String album,
+            @RequestParam(required = false) Integer year,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             Model model) {
 
-        log.info("GET /library — q='{}', genre='{}', page={}, size={}", q, genre, page, size);
+        log.info("GET /library — q='{}', genre='{}', artist='{}', album='{}', year={}, page={}",
+                q, genre, artist, album, year, page);
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<SongDTO> songs;
 
-        if (q != null && !q.isBlank()) {
-            // Search mode
+        boolean hasSearch = q != null && !q.isBlank();
+        boolean hasFilters = (genre != null && !genre.isBlank())
+                || (artist != null && !artist.isBlank())
+                || (album != null && !album.isBlank())
+                || year != null;
+
+        if (hasSearch && !hasFilters) {
+            // Search-only mode
             songs = songService.searchSongs(q.trim(), pageable);
-        } else if (genre != null && !genre.isBlank()) {
-            // Filter by genre
-            songs = songService.filterSongs(genre, null, null, null, pageable);
+        } else if (hasFilters) {
+            // Filter mode (may also have search — filter takes priority)
+            songs = songService.filterSongs(genre, artist, album, year, pageable);
         } else {
             // Browse all
             songs = songService.getAllSongs(pageable);
@@ -83,12 +71,15 @@ public class LibraryController {
         model.addAttribute("genres", genres);
         model.addAttribute("currentQuery", q);
         model.addAttribute("currentGenre", genre);
+        model.addAttribute("currentArtist", artist);
+        model.addAttribute("currentAlbum", album);
+        model.addAttribute("currentYear", year);
 
         return "library";
     }
 
     /**
-     * GET /player — Dedicated full-screen player page (optional).
+     * GET /player — Dedicated full-screen player page.
      */
     @GetMapping("/player")
     public String showPlayer() {

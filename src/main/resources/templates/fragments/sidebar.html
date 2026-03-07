@@ -9,21 +9,45 @@
         <!-- ═══ Main Navigation ═══ -->
         <div class="sidebar-section">
             <a th:href="@{/}" class="sidebar-item" data-nav="primary" title="Home">
-                <span class="sidebar-icon">
-                    <img th:src="@{/images/icons/home.png}" alt="🏠" class="sidebar-icon-img"
-                         onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
-                    <span class="sidebar-icon-fallback" style="display:none;">🏠</span>
-                </span>
+        <span class="sidebar-icon">
+            <img th:src="@{/images/icons/home.png}" alt="🏠" class="sidebar-icon-img"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+            <span class="sidebar-icon-fallback" style="display:none;">🏠</span>
+        </span>
                 <span class="sidebar-label">Home</span>
             </a>
 
             <a th:href="@{/library}" class="sidebar-item" data-nav="primary" title="Browse Music">
-                <span class="sidebar-icon">
-                    <img th:src="@{/images/icons/music-book.png}" alt="📚" class="sidebar-icon-img"
-                         onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
-                    <span class="sidebar-icon-fallback" style="display:none;">📚</span>
-                </span>
+        <span class="sidebar-icon">
+            <img th:src="@{/images/icons/music-book.png}" alt="📚" class="sidebar-icon-img"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+            <span class="sidebar-icon-fallback" style="display:none;">📚</span>
+        </span>
                 <span class="sidebar-label">Library</span>
+            </a>
+
+        </div>
+
+        <!-- ═══ Browse ═══ -->
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">Browse</div>
+
+            <a th:href="@{/artists}" class="sidebar-item" data-nav="primary" title="Artists">
+        <span class="sidebar-icon">
+            <img th:src="@{/images/icons/microphone.png}" alt="🎤" class="sidebar-icon-img"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+            <span class="sidebar-icon-fallback" style="display:none;">🎤</span>
+        </span>
+                <span class="sidebar-label">Artists</span>
+            </a>
+
+            <a th:href="@{/albums}" class="sidebar-item" data-nav="primary" title="Albums">
+        <span class="sidebar-icon">
+            <img th:src="@{/images/icons/vynil.png}" alt="💿" class="sidebar-icon-img"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+            <span class="sidebar-icon-fallback" style="display:none;">💿</span>
+        </span>
+                <span class="sidebar-label">Albums</span>
             </a>
         </div>
 

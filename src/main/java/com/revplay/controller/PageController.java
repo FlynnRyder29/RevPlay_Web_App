@@ -1,22 +1,15 @@
 package com.revplay.controller;
 
-import com.revplay.dto.ArtistDTO;
-import com.revplay.dto.PlaylistDTO;
-import com.revplay.dto.SongDTO;
+import com.revplay.dto.*;
 import com.revplay.model.PlaylistSong;
-import com.revplay.repository.ArtistRepository;
-import com.revplay.repository.PlaylistSongRepository;
-import com.revplay.repository.UserRepository;
-import com.revplay.service.ArtistCatalogService;
-import com.revplay.service.ArtistService;
-import com.revplay.service.PlaylistService;
-import com.revplay.service.PlaylistFollowService;
-import com.revplay.service.SongService;
-import com.revplay.service.FavoriteService;
-import com.revplay.service.HistoryService;
 import com.revplay.model.Song;
 import com.revplay.model.Artist;
 import com.revplay.model.Album;
+import com.revplay.repository.ArtistRepository;
+import com.revplay.repository.PlaylistSongRepository;
+import com.revplay.repository.PlaylistRepository;
+import com.revplay.repository.UserRepository;
+import com.revplay.service.*;
 import com.revplay.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -46,8 +39,10 @@ public class PageController {
     private final PlaylistService playlistService;
     private final PlaylistFollowService playlistFollowService;
     private final PlaylistSongRepository playlistSongRepository;
+    private final PlaylistRepository playlistRepository;
     private final SongService songService;
     private final ArtistCatalogService artistCatalogService;
+    private final AlbumCatalogService albumCatalogService;
     private final ArtistService artistService;
     private final ArtistRepository artistRepository;
     private final UserRepository userRepository;
@@ -68,16 +63,13 @@ public class PageController {
                 && !"anonymousUser".equals(auth.getPrincipal());
 
         if (isAuthenticated) {
-            // Recently added songs (latest 10)
             Pageable recentPageable = PageRequest.of(0, 10, Sort.by("createdAt").descending());
             Page<SongDTO> recentPage = songService.getAllSongs(recentPageable);
             model.addAttribute("recentSongs", recentPage.getContent());
 
-            // Trending songs (top 10 by play count)
             List<SongDTO> trendingSongs = songService.getTrendingSongs(10);
             model.addAttribute("trendingSongs", trendingSongs);
 
-            // User's playlists (up to 6)
             try {
                 List<PlaylistDTO> myPlaylists = playlistService.getMyPlaylists();
                 model.addAttribute("myPlaylists",
@@ -87,7 +79,6 @@ public class PageController {
                 model.addAttribute("myPlaylists", Collections.emptyList());
             }
 
-            // Public playlists (up to 6)
             try {
                 List<PlaylistDTO> publicPlaylists = playlistService.getPublicPlaylists(null);
                 model.addAttribute("publicPlaylists",
@@ -97,7 +88,6 @@ public class PageController {
                 model.addAttribute("publicPlaylists", Collections.emptyList());
             }
 
-            // Featured artists (up to 8)
             List<ArtistDTO> featuredArtists = artistCatalogService.getFeaturedArtists(8);
             model.addAttribute("featuredArtists", featuredArtists);
         }
@@ -135,15 +125,14 @@ public class PageController {
 
         PlaylistDTO playlist = playlistService.getPlaylistById(id);
 
-        // ═══ FIX: Use JOIN FETCH query to eagerly load Song → Artist + Album ═══
         List<PlaylistSong> playlistSongs = playlistSongRepository
                 .findByPlaylistIdWithSongDetails(id);
 
         List<SongDTO> songs = playlistSongs.stream()
                 .map(ps -> {
                     Song song = ps.getSong();
-                    Artist artist = song.getArtist();   // Already fetched via JOIN FETCH
-                    Album album = song.getAlbum();       // Already fetched via LEFT JOIN FETCH
+                    Artist artist = song.getArtist();
+                    Album album = song.getAlbum();
 
                     return SongDTO.builder()
                             .id(song.getId())
@@ -185,29 +174,175 @@ public class PageController {
     }
 
     // ═══════════════════════════════════════════
-    // SEARCH PAGE
+    // SEARCH PAGE (multi-type: songs, artists, albums, playlists)
     // ═══════════════════════════════════════════
 
     @GetMapping("/search")
     public String showSearch(
             @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "all") String type,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             Model model) {
 
-        log.info("GET /search — q='{}'", q);
-
-        Page<SongDTO> results = null;
+        log.info("GET /search — q='{}', type='{}'", q, type);
 
         if (q != null && !q.isBlank()) {
+            String trimmed = q.trim();
             Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-            results = songService.searchSongs(q.trim(), pageable);
+            Pageable smallPageable = PageRequest.of(0, 6);
+
+            if ("all".equals(type)) {
+                // Search all types — show top results from each
+                Page<SongDTO> songResults = songService.searchSongs(trimmed, pageable);
+                model.addAttribute("songResults", songResults);
+
+                Page<ArtistDTO> artistResults = artistCatalogService.searchArtists(trimmed, smallPageable);
+                model.addAttribute("artistResults", artistResults);
+
+                Page<AlbumDTO> albumResults = albumCatalogService.searchAlbums(trimmed, smallPageable);
+                model.addAttribute("albumResults", albumResults);
+
+                Page<com.revplay.model.Playlist> playlistPage = playlistRepository
+                        .searchPublicByKeyword(trimmed, smallPageable);
+                List<PlaylistDTO> playlistResults = playlistPage.getContent().stream()
+                        .map(p -> {
+                            PlaylistDTO dto = new PlaylistDTO();
+                            dto.setId(p.getId());
+                            dto.setName(p.getName());
+                            dto.setDescription(p.getDescription());
+                            dto.setPublicPlaylist(p.isPublicPlaylist());
+                            dto.setUserId(p.getUser().getId());
+                            dto.setOwnerName(p.getUser().getDisplayName() != null
+                                    ? p.getUser().getDisplayName() : p.getUser().getUsername());
+                            dto.setCreatedAt(p.getCreatedAt());
+                            return dto;
+                        })
+                        .collect(Collectors.toList());
+                model.addAttribute("playlistResults", playlistResults);
+
+                long totalResults = songResults.getTotalElements()
+                        + artistResults.getTotalElements()
+                        + albumResults.getTotalElements()
+                        + playlistPage.getTotalElements();
+                model.addAttribute("totalResults", totalResults);
+
+            } else if ("songs".equals(type)) {
+                Page<SongDTO> songResults = songService.searchSongs(trimmed, pageable);
+                model.addAttribute("songResults", songResults);
+            } else if ("artists".equals(type)) {
+                Page<ArtistDTO> artistResults = artistCatalogService.searchArtists(trimmed, pageable);
+                model.addAttribute("artistResults", artistResults);
+            } else if ("albums".equals(type)) {
+                Page<AlbumDTO> albumResults = albumCatalogService.searchAlbums(trimmed, pageable);
+                model.addAttribute("albumResults", albumResults);
+            } else if ("playlists".equals(type)) {
+                Page<com.revplay.model.Playlist> playlistPage = playlistRepository
+                        .searchPublicByKeyword(trimmed, pageable);
+                List<PlaylistDTO> playlistResults = playlistPage.getContent().stream()
+                        .map(p -> {
+                            PlaylistDTO dto = new PlaylistDTO();
+                            dto.setId(p.getId());
+                            dto.setName(p.getName());
+                            dto.setDescription(p.getDescription());
+                            dto.setPublicPlaylist(p.isPublicPlaylist());
+                            dto.setUserId(p.getUser().getId());
+                            dto.setOwnerName(p.getUser().getDisplayName() != null
+                                    ? p.getUser().getDisplayName() : p.getUser().getUsername());
+                            dto.setCreatedAt(p.getCreatedAt());
+                            return dto;
+                        })
+                        .collect(Collectors.toList());
+                model.addAttribute("playlistResults", playlistResults);
+            }
         }
 
-        model.addAttribute("results", results);
         model.addAttribute("query", q);
+        model.addAttribute("activeType", type);
 
         return "search";
+    }
+
+    // ═══════════════════════════════════════════
+    // SONG DETAIL PAGE
+    // ═══════════════════════════════════════════
+
+    @GetMapping("/songs/{id}")
+    public String showSongDetail(@PathVariable Long id, Model model) {
+        log.info("GET /songs/{}", id);
+
+        SongDTO song = songService.getSongById(id);
+        model.addAttribute("song", song);
+
+        // Format duration
+        if (song.getDuration() != null) {
+            int mins = song.getDuration() / 60;
+            int secs = song.getDuration() % 60;
+            model.addAttribute("formattedDuration", String.format("%d:%02d", mins, secs));
+        }
+
+        return "song-detail";
+    }
+
+    // ═══════════════════════════════════════════
+    // ARTISTS BROWSE PAGE
+    // ═══════════════════════════════════════════
+
+    @GetMapping("/artists")
+    public String showArtists(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            Model model) {
+        log.info("GET /artists page={}", page);
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<ArtistDTO> artists = artistCatalogService.getAllArtists(pageable);
+        model.addAttribute("artists", artists);
+
+        return "artists";
+    }
+
+    // ═══════════════════════════════════════════
+    // ALBUMS BROWSE PAGE
+    // ═══════════════════════════════════════════
+
+    @GetMapping("/albums")
+    public String showAlbums(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            Model model) {
+        log.info("GET /albums page={}", page);
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<AlbumDTO> albums = albumCatalogService.getAllAlbums(pageable);
+        model.addAttribute("albums", albums);
+
+        return "albums";
+    }
+
+    // ═══════════════════════════════════════════
+    // ALBUM DETAIL PAGE
+    // ═══════════════════════════════════════════
+
+    @GetMapping("/albums/{id}")
+    public String showAlbumDetail(@PathVariable Long id, Model model) {
+        log.info("GET /albums/{}", id);
+
+        AlbumDTO album = albumCatalogService.getAlbumById(id);
+        model.addAttribute("album", album);
+
+        // Calculate total duration
+        if (album.getTracks() != null) {
+            int totalSeconds = album.getTracks().stream()
+                    .filter(t -> t.getDuration() != null)
+                    .mapToInt(SongDTO::getDuration)
+                    .sum();
+            int mins = totalSeconds / 60;
+            int secs = totalSeconds % 60;
+            model.addAttribute("totalDuration", String.format("%d min %d sec", mins, secs));
+        }
+
+        return "album-detail";
     }
 
     // ═══════════════════════════════════════════
@@ -339,10 +474,6 @@ public class PageController {
         return "favorites";
     }
 
-    // ═══════════════════════════════════════════
-    // ABOUT PAGE (PUBLIC)
-    // ═══════════════════════════════════════════
-
     @GetMapping("/about")
     public String showAboutPage() {
         log.info("GET /about");
@@ -353,7 +484,7 @@ public class PageController {
     public String showHistoryPage(Model model) {
         log.info("GET /history");
 
-        List<com.revplay.dto.HistoryDTO> historyEntries = historyService.getAllHistory();
+        List<HistoryDTO> historyEntries = historyService.getAllHistory();
         model.addAttribute("historyEntries", historyEntries);
 
         List<SongDTO> songs = historyEntries.stream()

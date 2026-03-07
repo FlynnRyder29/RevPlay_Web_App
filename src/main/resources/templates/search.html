@@ -10,7 +10,7 @@
         <!-- ═══ Search Header ═══ -->
         <div class="search-page-header">
             <h1>Search</h1>
-            <p class="search-page-subtitle">Find songs, artists, and more</p>
+            <p class="search-page-subtitle">Find songs, artists, albums, and playlists</p>
         </div>
 
         <!-- ═══ Search Bar ═══ -->
@@ -27,60 +27,206 @@
             <button type="button" id="search-btn" class="btn-search">Search</button>
         </div>
 
+        <!-- ═══ Type Filter Tabs ═══ -->
+        <div class="search-type-tabs" th:if="${query != null && !query.isEmpty()}">
+            <a th:href="@{/search(q=${query}, type='all')}"
+               th:classappend="${activeType == 'all' ? ' active' : ''}"
+               class="search-type-tab">All</a>
+            <a th:href="@{/search(q=${query}, type='songs')}"
+               th:classappend="${activeType == 'songs' ? ' active' : ''}"
+               class="search-type-tab">Songs</a>
+            <a th:href="@{/search(q=${query}, type='artists')}"
+               th:classappend="${activeType == 'artists' ? ' active' : ''}"
+               class="search-type-tab">Artists</a>
+            <a th:href="@{/search(q=${query}, type='albums')}"
+               th:classappend="${activeType == 'albums' ? ' active' : ''}"
+               class="search-type-tab">Albums</a>
+            <a th:href="@{/search(q=${query}, type='playlists')}"
+               th:classappend="${activeType == 'playlists' ? ' active' : ''}"
+               class="search-type-tab">Playlists</a>
+        </div>
+
         <!-- ═══ Results Summary ═══ -->
-        <div class="search-results-summary" th:if="${query != null && !query.isEmpty()}">
-            <span th:if="${results != null}" th:text="'Found ' + ${results.totalElements} + ' results for '">Found X results for </span>
-            <strong th:if="${results != null}" th:text="'&quot;' + ${query} + '&quot;'">"query"</strong>
-            <span th:if="${results == null || results.totalElements == 0}" class="no-results-text">No results found</span>
+        <div class="search-results-summary" th:if="${query != null && !query.isEmpty() && activeType == 'all'}">
+            <span th:if="${totalResults != null && totalResults > 0}"
+                  th:text="'Found ' + ${totalResults} + ' results for '">Found X results for </span>
+            <strong th:if="${totalResults != null && totalResults > 0}"
+                    th:text="'&quot;' + ${query} + '&quot;'">"query"</strong>
         </div>
 
-        <!-- ═══ Results Grid ═══ -->
-        <div class="song-grid" th:if="${results != null && results.totalElements > 0}">
-            <th:block th:each="song : ${results.content}">
-                <div th:replace="~{fragments/song-card :: card(song=${song})}"></div>
-            </th:block>
-        </div>
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- ARTIST RESULTS -->
+        <!-- ═══════════════════════════════════════════ -->
+        <section th:if="${artistResults != null && artistResults.totalElements > 0}" class="search-result-section">
+            <div class="section-header">
+                <h2 class="section-title">Artists</h2>
+                <a th:if="${activeType == 'all' && artistResults.totalElements > 6}"
+                   th:href="@{/search(q=${query}, type='artists')}"
+                   class="section-see-all">See all →</a>
+            </div>
+            <div class="artist-results-grid">
+                <div th:each="artist : ${activeType == 'all' ? artistResults.content : artistResults.content}"
+                     class="artist-result-card">
+                    <a th:href="@{'/artist/' + ${artist.id}}" class="artist-result-link">
+                        <div class="artist-result-avatar">
+                            <img th:if="${artist.profilePictureUrl != null}"
+                                 th:src="${artist.profilePictureUrl}"
+                                 alt="Artist" class="artist-result-img">
+                            <div th:if="${artist.profilePictureUrl == null}" class="artist-result-fallback">
+                                <span th:text="${artist.artistName != null ? artist.artistName.substring(0,1).toUpperCase() : '?'}">A</span>
+                            </div>
+                        </div>
+                        <div class="artist-result-name" th:text="${artist.artistName}">Artist Name</div>
+                        <div class="artist-result-genre" th:if="${artist.genre}" th:text="${artist.genre}">Genre</div>
+                    </a>
+                </div>
+            </div>
 
-        <!-- ═══ Pagination ═══ -->
-        <div class="pagination" th:if="${results != null && results.totalPages > 1}">
-            <!-- Previous -->
-            <a th:if="${results.hasPrevious()}"
-               th:href="@{/search(q=${query}, page=${results.number - 1}, size=${results.size})}"
-               class="page-link">← Previous</a>
-            <span th:if="${!results.hasPrevious()}" class="page-link disabled">← Previous</span>
+            <!-- Pagination for artists-only view -->
+            <div class="pagination" th:if="${activeType == 'artists' && artistResults.totalPages > 1}">
+                <a th:if="${artistResults.hasPrevious()}"
+                   th:href="@{/search(q=${query}, type='artists', page=${artistResults.number - 1})}"
+                   class="page-link">← Previous</a>
+                <span th:if="${!artistResults.hasPrevious()}" class="page-link disabled">← Previous</span>
+                <div class="page-numbers">
+                    <th:block th:each="i : ${#numbers.sequence(0, artistResults.totalPages - 1)}">
+                        <a th:if="${i != artistResults.number}"
+                           th:href="@{/search(q=${query}, type='artists', page=${i})}"
+                           th:text="${i + 1}" class="page-num"></a>
+                        <span th:if="${i == artistResults.number}" th:text="${i + 1}" class="page-num active"></span>
+                    </th:block>
+                </div>
+                <a th:if="${artistResults.hasNext()}"
+                   th:href="@{/search(q=${query}, type='artists', page=${artistResults.number + 1})}"
+                   class="page-link">Next →</a>
+                <span th:if="${!artistResults.hasNext()}" class="page-link disabled">Next →</span>
+            </div>
+        </section>
 
-            <!-- Page Numbers -->
-            <div class="page-numbers">
-                <th:block th:each="i : ${#numbers.sequence(0, results.totalPages - 1)}">
-                    <a th:if="${i != results.number}"
-                       th:href="@{/search(q=${query}, page=${i}, size=${results.size})}"
-                       th:text="${i + 1}"
-                       class="page-num"></a>
-                    <span th:if="${i == results.number}"
-                          th:text="${i + 1}"
-                          class="page-num active"></span>
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- ALBUM RESULTS -->
+        <!-- ═══════════════════════════════════════════ -->
+        <section th:if="${albumResults != null && albumResults.totalElements > 0}" class="search-result-section">
+            <div class="section-header">
+                <h2 class="section-title">Albums</h2>
+                <a th:if="${activeType == 'all' && albumResults.totalElements > 6}"
+                   th:href="@{/search(q=${query}, type='albums')}"
+                   class="section-see-all">See all →</a>
+            </div>
+            <div class="album-results-grid">
+                <div th:each="album : ${albumResults.content}" class="album-card">
+                    <a th:href="@{'/albums/' + ${album.id}}" class="album-card-link">
+                        <img th:src="${album.coverImageUrl != null ? album.coverImageUrl : 'https://placehold.co/200x200/1a1a2e/ffffff?text=💿'}"
+                             alt="Album Cover" class="album-cover">
+                        <div class="album-card-name" th:text="${album.name}">Album Name</div>
+                        <div class="album-card-meta">
+                            <span th:text="${album.artistName}">Artist</span>
+                            <span th:if="${album.releaseDate != null}" th:text="' • ' + ${album.releaseDate.year}"> • 2026</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Pagination for albums-only view -->
+            <div class="pagination" th:if="${activeType == 'albums' && albumResults.totalPages > 1}">
+                <a th:if="${albumResults.hasPrevious()}"
+                   th:href="@{/search(q=${query}, type='albums', page=${albumResults.number - 1})}"
+                   class="page-link">← Previous</a>
+                <span th:if="${!albumResults.hasPrevious()}" class="page-link disabled">← Previous</span>
+                <div class="page-numbers">
+                    <th:block th:each="i : ${#numbers.sequence(0, albumResults.totalPages - 1)}">
+                        <a th:if="${i != albumResults.number}"
+                           th:href="@{/search(q=${query}, type='albums', page=${i})}"
+                           th:text="${i + 1}" class="page-num"></a>
+                        <span th:if="${i == albumResults.number}" th:text="${i + 1}" class="page-num active"></span>
+                    </th:block>
+                </div>
+                <a th:if="${albumResults.hasNext()}"
+                   th:href="@{/search(q=${query}, type='albums', page=${albumResults.number + 1})}"
+                   class="page-link">Next →</a>
+                <span th:if="${!albumResults.hasNext()}" class="page-link disabled">Next →</span>
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- SONG RESULTS -->
+        <!-- ═══════════════════════════════════════════ -->
+        <section th:if="${songResults != null && songResults.totalElements > 0}" class="search-result-section">
+            <div class="section-header">
+                <h2 class="section-title">Songs</h2>
+                <a th:if="${activeType == 'all' && songResults.totalElements > 20}"
+                   th:href="@{/search(q=${query}, type='songs')}"
+                   class="section-see-all">See all →</a>
+            </div>
+            <div class="song-grid">
+                <th:block th:each="song : ${songResults.content}">
+                    <div th:replace="~{fragments/song-card :: card(song=${song})}"></div>
                 </th:block>
             </div>
 
-            <!-- Next -->
-            <a th:if="${results.hasNext()}"
-               th:href="@{/search(q=${query}, page=${results.number + 1}, size=${results.size})}"
-               class="page-link">Next →</a>
-            <span th:if="${!results.hasNext()}" class="page-link disabled">Next →</span>
-        </div>
+            <!-- Pagination for songs-only view -->
+            <div class="pagination" th:if="${(activeType == 'songs' || activeType == 'all') && songResults.totalPages > 1}">
+                <a th:if="${songResults.hasPrevious()}"
+                   th:href="@{/search(q=${query}, type=${activeType}, page=${songResults.number - 1})}"
+                   class="page-link">← Previous</a>
+                <span th:if="${!songResults.hasPrevious()}" class="page-link disabled">← Previous</span>
+                <div class="page-numbers">
+                    <th:block th:each="i : ${#numbers.sequence(0, songResults.totalPages - 1)}">
+                        <a th:if="${i != songResults.number}"
+                           th:href="@{/search(q=${query}, type=${activeType}, page=${i})}"
+                           th:text="${i + 1}" class="page-num"></a>
+                        <span th:if="${i == songResults.number}" th:text="${i + 1}" class="page-num active"></span>
+                    </th:block>
+                </div>
+                <a th:if="${songResults.hasNext()}"
+                   th:href="@{/search(q=${query}, type=${activeType}, page=${songResults.number + 1})}"
+                   class="page-link">Next →</a>
+                <span th:if="${!songResults.hasNext()}" class="page-link disabled">Next →</span>
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- PLAYLIST RESULTS -->
+        <!-- ═══════════════════════════════════════════ -->
+        <section th:if="${playlistResults != null && !playlistResults.isEmpty()}" class="search-result-section">
+            <div class="section-header">
+                <h2 class="section-title">Playlists</h2>
+                <a th:if="${activeType == 'all' && playlistResults.size() > 6}"
+                   th:href="@{/search(q=${query}, type='playlists')}"
+                   class="section-see-all">See all →</a>
+            </div>
+            <div class="playlist-results-grid">
+                <div th:each="pl : ${playlistResults}" class="playlist-result-card">
+                    <a th:href="@{'/playlists/' + ${pl.id}}" class="playlist-result-link">
+                        <div class="playlist-result-icon">📋</div>
+                        <div class="playlist-result-info">
+                            <div class="playlist-result-name" th:text="${pl.name}">Playlist Name</div>
+                            <div class="playlist-result-meta">
+                                <span th:text="'by ' + ${pl.ownerName}">by User</span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </section>
 
         <!-- ═══ Empty/Initial State ═══ -->
         <div class="empty-state" th:if="${query == null || query.isEmpty()}">
             <div class="empty-icon">🔍</div>
             <h2>Start searching</h2>
-            <p>Type a song name, artist, or genre to find music</p>
+            <p>Type a song name, artist, album, or playlist name to find music</p>
         </div>
 
-        <div class="empty-state" th:if="${query != null && !query.isEmpty() && (results == null || results.totalElements == 0)}">
+        <div class="empty-state" th:if="${query != null && !query.isEmpty()
+            && (songResults == null || songResults.totalElements == 0)
+            && (artistResults == null || artistResults.totalElements == 0)
+            && (albumResults == null || albumResults.totalElements == 0)
+            && (playlistResults == null || playlistResults.isEmpty())}">
             <div class="empty-icon">😔</div>
             <h2>No results found</h2>
             <p th:text="'We couldn\'t find anything matching &quot;' + ${query} + '&quot;'">No results</p>
-            <a th:href="@{/library}" class="btn-primary" style="display: inline-block; width: auto; padding: 12px 30px; margin-top: 15px;">
+            <a th:href="@{/library}" class="btn-primary"
+               style="display: inline-block; width: auto; padding: 12px 30px; margin-top: 15px;">
                 Browse Library
             </a>
         </div>
@@ -100,29 +246,24 @@
 
                     var url = '/search?q=' + encodeURIComponent(query);
 
-                    // Use PJAX if available — keeps music playing
                     if (window.PjaxRouter && window.PjaxRouter.navigate) {
                         window.PjaxRouter.navigate(url);
                     } else {
-                        // Fallback: full page navigation
                         window.location.href = url;
                     }
                 }
 
-                // Click search button
                 searchBtn.addEventListener('click', function (e) {
                     e.preventDefault();
                     doSearch();
                 });
 
-                // Press Enter in input
                 searchInput.addEventListener('keydown', function (e) {
                     if (e.key === 'Enter' || e.keyCode === 13) {
                         e.preventDefault();
                         doSearch();
                     }
                 });
-
             })();
         </script>
 

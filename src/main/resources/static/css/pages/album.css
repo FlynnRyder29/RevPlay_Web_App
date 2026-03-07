@@ -1,0 +1,242 @@
+/* ═══════════════════════════════════════════
+   ALBUM BROWSE PAGE + ALBUM DETAIL PAGE
+   ═══════════════════════════════════════════ */
+
+/* ── Album Card Link (clickable) ── */
+.album-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.album-card-link:hover .album-cover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* ── Album Detail Header ── */
+.album-detail-header {
+    display: flex;
+    gap: 40px;
+    margin-bottom: 40px;
+    align-items: flex-end;
+}
+
+.album-detail-cover {
+    flex-shrink: 0;
+}
+
+.album-detail-cover-img {
+    width: 250px;
+    height: 250px;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+.album-detail-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.album-detail-type {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin-bottom: 8px;
+    display: block;
+}
+
+.album-detail-name {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin: 0 0 12px 0;
+    color: var(--text-primary);
+    line-height: 1.1;
+}
+
+.album-detail-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+}
+
+.album-detail-artist-link {
+    color: var(--text-primary);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.album-detail-artist-link:hover {
+    color: var(--accent);
+    text-decoration: underline;
+}
+
+.album-detail-description {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-top: 12px;
+    max-width: 600px;
+}
+
+/* ── Tracklist Table ── */
+.album-tracklist {
+    margin-top: 10px;
+}
+
+.tracklist-header {
+    display: grid;
+    grid-template-columns: 40px 1fr 120px 120px 80px 70px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.tracklist-row {
+    display: grid;
+    grid-template-columns: 40px 1fr 120px 120px 80px 70px;
+    padding: 10px 16px;
+    align-items: center;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.tracklist-row:hover {
+    background: var(--hover-bg, rgba(255, 255, 255, 0.05));
+}
+
+.tracklist-col-num {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.tracklist-col-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.tracklist-thumb {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.tracklist-title-group {
+    min-width: 0;
+}
+
+.tracklist-song-title {
+    display: block;
+    font-weight: 500;
+    color: var(--text-primary);
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tracklist-song-title:hover {
+    color: var(--accent);
+    text-decoration: underline;
+}
+
+.tracklist-song-artist {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tracklist-col-genre,
+.tracklist-col-date,
+.tracklist-col-plays {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.tracklist-col-duration {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    text-align: right;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+    .album-detail-header {
+        gap: 24px;
+    }
+    .album-detail-cover-img {
+        width: 200px;
+        height: 200px;
+    }
+    .album-detail-name {
+        font-size: 2rem;
+    }
+    .tracklist-header,
+    .tracklist-row {
+        grid-template-columns: 40px 1fr 80px 70px;
+    }
+    .tracklist-col-genre,
+    .tracklist-col-date {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .album-detail-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 20px;
+    }
+    .album-detail-cover-img {
+        width: 220px;
+        height: 220px;
+    }
+    .album-detail-name {
+        font-size: 1.6rem;
+    }
+    .album-detail-meta {
+        justify-content: center;
+    }
+    .tracklist-header,
+    .tracklist-row {
+        grid-template-columns: 30px 1fr 60px;
+    }
+    .tracklist-col-plays {
+        display: none;
+    }
+    .tracklist-thumb {
+        width: 32px;
+        height: 32px;
+    }
+}
+
+@media (max-width: 480px) {
+    .album-detail-cover-img {
+        width: 180px;
+        height: 180px;
+    }
+    .album-detail-name {
+        font-size: 1.3rem;
+    }
+}

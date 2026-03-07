@@ -34,6 +34,13 @@ public class AlbumCatalogService {
         return albumRepository.findAll(pageable).map(this::mapToDTO);
     }
 
+    // ═══ NEW: Search albums by keyword ═══
+    @Transactional(readOnly = true)
+    public Page<AlbumDTO> searchAlbums(String keyword, Pageable pageable) {
+        log.info("Searching albums with keyword='{}'", keyword);
+        return albumRepository.searchByKeyword(keyword, pageable).map(this::mapToDTO);
+    }
+
     @Transactional(readOnly = true)
     public AlbumDTO getAlbumById(Long id) {
         log.info("Fetching album detail for id={}", id);
