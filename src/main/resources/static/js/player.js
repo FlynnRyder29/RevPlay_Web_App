@@ -231,6 +231,10 @@
         }
         if (playerFav) playerFav.style.display = 'inline-block';
 
+        // Show "Add to Playlist" button when a song is playing
+        var playerPlaylistBtn = document.getElementById('player-add-to-playlist');
+        if (playerPlaylistBtn) playerPlaylistBtn.style.display = 'inline-flex';
+
         // Sync player bar heart with favorites.js state
         if (window.syncFavoritesForSong) {
             window.syncFavoritesForSong(song.id);

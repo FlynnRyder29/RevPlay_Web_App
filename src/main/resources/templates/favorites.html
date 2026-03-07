@@ -7,15 +7,14 @@
 
     <div id="favorites-content">
 
-        <div class="hero-section"
-             style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--bg-surface) 100%);">
+        <div class="hero-section fav-hero">
             <h1 class="hero-title">My Favorites</h1>
             <p class="hero-subtitle"
                th:text="${songs != null ? songs.size() + ' saved songs' : '0 saved songs'}">0 saved songs</p>
         </div>
 
         <!-- Action Buttons -->
-        <div style="display: flex; gap: 12px; margin-top: 20px;" th:if="${songs != null and !songs.isEmpty()}">
+        <div class="fav-action-btns" th:if="${songs != null and !songs.isEmpty()}">
             <button class="pl-btn pl-btn--primary" id="btn-play-all-favs">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="#000"><polygon points="6,3 20,12 6,21"/></svg>
                 Play All
@@ -31,19 +30,17 @@
         </div>
 
         <!-- SONG GRID FOR FAVORITES -->
-        <div class="song-grid" style="margin-top: 30px;" th:if="${songs != null and !songs.isEmpty()}">
+        <div class="song-grid fav-song-grid" th:if="${songs != null and !songs.isEmpty()}">
             <th:block th:each="song : ${songs}">
                 <div th:replace="~{fragments/song-card :: card(song=${song})}"></div>
             </th:block>
         </div>
 
-        <div th:if="${songs == null or songs.isEmpty()}" class="empty-state"
-             style="text-align: center; margin-top: 60px;">
-            <div style="font-size: 48px; margin-bottom: 20px;">🎬</div>
+        <div th:if="${songs == null or songs.isEmpty()}" class="empty-state fav-empty-state">
+            <div class="empty-icon">🎬</div>
             <h2>No favorites yet</h2>
-            <p style="color: var(--text-muted);">Find some music you love and click the heart icon.</p>
-            <a th:href="@{/search}" class="btn-primary"
-               style="margin-top: 20px; display: inline-block;">Discover Music</a>
+            <p>Find some music you love and click the heart icon.</p>
+            <a th:href="@{/search}" class="btn-primary fav-discover-btn">Discover Music</a>
         </div>
 
         <!-- Favorites page script -->
@@ -98,7 +95,6 @@
                         }).then(function (confirmed) {
                             if (!confirmed) return;
 
-                            // Delete each favorite
                             var cards = document.querySelectorAll('.song-card');
                             var songIds = [];
                             cards.forEach(function (card) {
@@ -132,7 +128,6 @@
                     });
                 }
 
-                // ── Helper: get songs from card DOM ──
                 function getSongsFromCards() {
                     var cards = document.querySelectorAll('.song-card');
                     var songs = [];

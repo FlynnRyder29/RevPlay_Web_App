@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -27,16 +28,12 @@ public interface SongRepository extends JpaRepository<Song, Long>, JpaSpecificat
 
     Page<Song> findByVisibility(Song.Visibility visibility, Pageable pageable);
 
-    // ── ORIGINAL — kept for artist's own song management (no visibility filter) ──
     @Query("SELECT s FROM Song s WHERE " +
             "LOWER(s.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(s.genre) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(s.artist.artistName) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     Page<Song> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
-    // ── FIX: Public-only search — used by browse endpoints ──
-    // Only returns songs matching the keyword AND the specified visibility.
-    // Called with Song.Visibility.PUBLIC from SongService.searchSongs()
     @Query("SELECT s FROM Song s WHERE s.visibility = :visibility AND (" +
             "LOWER(s.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(s.genre) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
@@ -47,11 +44,13 @@ public interface SongRepository extends JpaRepository<Song, Long>, JpaSpecificat
 
     Page<Song> findByGenreIgnoreCase(String genre, Pageable pageable);
 
-    // ── FIX: Efficient count for analytics (Day 6 — Member 5) ──
     @Query("SELECT COUNT(s) FROM Song s WHERE s.artist.id = :artistId")
     long countByArtistId(@Param("artistId") Long artistId);
 
-    // ── PR FIX: Ownership check for per-song fans endpoint (Day 7 — Member 5) ──
-    // Spring Data JPA auto-generates: SELECT COUNT(*) > 0 WHERE id = ? AND artist_id = ?
     boolean existsByIdAndArtistId(Long id, Long artistId);
+
+    // ═══ FIX: Atomic play count increment ═══
+    @Modifying
+    @Query("UPDATE Song s SET s.playCount = s.playCount + 1 WHERE s.id = :songId")
+    void incrementPlayCount(@Param("songId") Long songId);
 }

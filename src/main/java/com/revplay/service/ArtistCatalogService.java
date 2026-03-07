@@ -37,7 +37,6 @@ public class ArtistCatalogService {
         return artistRepository.findAll(pageable).map(this::mapToDTO);
     }
 
-    // ── FEATURED ARTISTS (for home page) ──────────────────────────────────
     @Transactional(readOnly = true)
     public List<ArtistDTO> getFeaturedArtists(int limit) {
         log.info("Fetching top {} featured artists", limit);
@@ -57,9 +56,6 @@ public class ArtistCatalogService {
 
         ArtistDTO dto = mapToDTO(artist);
 
-        // 🔴 FIX: Only show PUBLIC songs on public artist profile
-        // Artists manage their own songs (including UNLISTED/PRIVATE) via
-        // the artist dashboard. Public visitors should only see PUBLIC songs.
         dto.setSongs(songRepository.findAllByArtistId(id)
                 .stream()
                 .filter(song -> song.getVisibility() == Song.Visibility.PUBLIC)
@@ -108,7 +104,10 @@ public class ArtistCatalogService {
                 .build();
     }
 
+    // ═══ FIX: Added songCount ═══
     private AlbumDTO mapAlbumToDTO(Album album) {
+        int songCount = albumRepository.countSongsByAlbumId(album.getId());
+
         return AlbumDTO.builder()
                 .id(album.getId())
                 .name(album.getName())
@@ -119,6 +118,7 @@ public class ArtistCatalogService {
                         ? album.getArtist().getId() : null)
                 .artistName(album.getArtist() != null
                         ? album.getArtist().getArtistName() : "Unknown")
+                .songCount(songCount)
                 .build();
     }
 }

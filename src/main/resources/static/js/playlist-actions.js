@@ -186,8 +186,12 @@
 
     // ── Document-level click delegation for '+' buttons ──
     // Registered ONCE, survives all PJAX swaps
+    // ── Document-level click delegation for '+' buttons ──
+// Registered ONCE, survives all PJAX swaps
     if (!window._playlistActionsClickBound) {
         document.addEventListener('click', function (e) {
+
+            // 1. Song card "+" button (existing)
             var addBtn = e.target.closest('.song-card-add-playlist-btn');
             if (addBtn) {
                 e.preventDefault();
@@ -196,6 +200,33 @@
                 if (sid && window._playlistActionsOpenModal) {
                     window._playlistActionsOpenModal(sid);
                 }
+                return;
+            }
+
+            // 2. Player bar "Add to Playlist" button (NEW)
+            var playerBtn = e.target.closest('#player-add-to-playlist');
+            if (playerBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Get currently playing song ID from player.js public API
+                var state = window.RevPlay && window.RevPlay.getState
+                    ? window.RevPlay.getState()
+                    : null;
+
+                if (state && state.currentSong && state.currentSong.id) {
+                    if (window._playlistActionsOpenModal) {
+                        window._playlistActionsOpenModal(state.currentSong.id);
+                    }
+                } else {
+                    if (window.RevPlay && window.RevPlay.toast) {
+                        window.RevPlay.toast({
+                            type: 'warning',
+                            message: 'Play a song first to add it to a playlist'
+                        });
+                    }
+                }
+                return;
             }
         });
         window._playlistActionsClickBound = true;

@@ -1304,3 +1304,39 @@ textarea.modal-form-input {
 .rp-toast--error { border-left: 3px solid #ef4444; }
 .rp-toast--warning { border-left: 3px solid #f59e0b; }
 .rp-toast--info { border-left: 3px solid #3b82f6; }
+
+/* ── Favorites Action Buttons ────────────────────── */
+
+/* ── Favorites Page Base Styles ──────────────────── */
+
+.fav-hero {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--bg-surface) 100%);
+    border-radius: 12px;
+    padding: 40px 30px;
+    text-align: center;
+}
+
+.fav-action-btns {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.fav-song-grid {
+    margin-top: 30px;
+}
+
+.fav-empty-state {
+    text-align: center;
+    margin-top: 60px;
+}
+
+.fav-empty-state p {
+    color: var(--text-muted);
+}
+
+.fav-discover-btn {
+    margin-top: 20px;
+    display: inline-block;
+}
