@@ -2,12 +2,7 @@
  * playlist-actions.js — Add to Playlist modal (global)
  * Loaded on all pages via layout.html
  *
- * Day 9 fixes:
- *   - Uses PjaxRouter.invalidateCache + PjaxRouter.reload
- *   - String() cast on both playlist IDs
- *   - Document-level click delegation (survives PJAX swaps)
- *   - Re-inits on pjax:complete
- *   - Prevents listener stacking with flags
+ * Updated: Added cover image display in playlist list items
  */
 (function () {
     'use strict';
@@ -111,14 +106,27 @@
                     playlists.forEach(function (pl) {
                         var item = document.createElement('div');
                         item.className = 'pl-modal-item';
+
+                        // Build cover thumbnail: image or gradient fallback
+                        var coverHtml;
+                        if (pl.coverImageUrl) {
+                            coverHtml = '<img src="' + escapeHtml(pl.coverImageUrl) + '" alt="" class="pl-modal-item-cover">';
+                        } else {
+                            var hue1 = (pl.id * 47) % 360;
+                            var hue2 = (pl.id * 137) % 360;
+                            coverHtml = '<div class="pl-modal-item-cover pl-modal-item-cover--gradient" style="background:linear-gradient(135deg, hsl(' + hue1 + ',45%,28%), hsl(' + hue2 + ',55%,18%))">' +
+                                '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" opacity="0.4"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>' +
+                                '</div>';
+                        }
+
                         item.innerHTML =
                             '<div class="pl-modal-item-left">' +
-                            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>' +
+                            coverHtml +
+                            '<div class="pl-modal-item-info">' +
                             '<span class="pl-modal-item-name">' + escapeHtml(pl.name) + '</span>' +
+                            '<span class="pl-modal-item-meta">' + (pl.songCount !== undefined ? pl.songCount + ' songs' : '') + '</span>' +
                             '</div>' +
-                            '<span class="pl-modal-item-meta">' +
-                            (pl.songCount !== undefined ? pl.songCount + ' songs' : '') +
-                            '</span>';
+                            '</div>';
 
                         item.addEventListener('click', function () {
                             addSongToPlaylist(pl.id, songId);
@@ -147,12 +155,10 @@
 
                     showStatus('✓ Added!', 'success');
 
-                    // Invalidate PJAX cache
                     if (window.PjaxRouter && window.PjaxRouter.invalidateCache) {
                         window.PjaxRouter.invalidateCache('/playlists');
                     }
 
-                    // Check if we're on THIS playlist's detail page
                     var songList = document.getElementById('playlist-song-list');
                     if (songList) {
                         var currentPlaylistId = songList.getAttribute('data-playlist-id');
@@ -175,23 +181,17 @@
                 });
         }
 
-        // Expose openModal for the document-level click handler
         window._playlistActionsOpenModal = openModal;
 
-        // Close on overlay click
         modal.onclick = function (e) {
             if (e.target === modal) closeModal();
         };
     }
 
     // ── Document-level click delegation for '+' buttons ──
-    // Registered ONCE, survives all PJAX swaps
-    // ── Document-level click delegation for '+' buttons ──
-// Registered ONCE, survives all PJAX swaps
     if (!window._playlistActionsClickBound) {
         document.addEventListener('click', function (e) {
 
-            // 1. Song card "+" button (existing)
             var addBtn = e.target.closest('.song-card-add-playlist-btn');
             if (addBtn) {
                 e.preventDefault();
@@ -203,13 +203,11 @@
                 return;
             }
 
-            // 2. Player bar "Add to Playlist" button (NEW)
             var playerBtn = e.target.closest('#player-add-to-playlist');
             if (playerBtn) {
                 e.preventDefault();
                 e.stopPropagation();
 
-                // Get currently playing song ID from player.js public API
                 var state = window.RevPlay && window.RevPlay.getState
                     ? window.RevPlay.getState()
                     : null;
@@ -232,14 +230,12 @@
         window._playlistActionsClickBound = true;
     }
 
-    // Run on initial load
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
         init();
     }
 
-    // Re-run after PJAX content swap
     document.addEventListener('pjax:complete', init);
 
 })();

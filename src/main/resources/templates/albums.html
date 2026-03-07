@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head('Albums')}"></head>
+<body>
+<div th:replace="~{layout :: page(~{::#albums-content})}">
+
+    <div id="albums-content">
+
+        <!-- ═══ Page Header ═══ -->
+        <div class="library-header">
+            <h1>Albums</h1>
+            <p class="library-subtitle">Browse albums from all artists</p>
+        </div>
+
+        <!-- ═══ Albums Grid ═══ -->
+        <div class="album-grid" th:if="${albums != null && albums.totalElements > 0}">
+            <div th:each="album : ${albums.content}" class="album-card">
+                <a th:href="@{'/albums/' + ${album.id}}" class="album-card-link">
+                    <img th:src="${album.coverImageUrl != null ? album.coverImageUrl : 'https://placehold.co/200x200/1a1a2e/ffffff?text=💿'}"
+                         alt="Album Cover" class="album-cover">
+                    <div class="album-card-name" th:text="${album.name}">Album Name</div>
+                    <div class="album-card-meta">
+                        <span th:text="${album.artistName}">Artist</span>
+                        <span th:if="${album.releaseDate != null}" th:text="' • ' + ${album.releaseDate.year}"> • 2026</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- ═══ Empty State ═══ -->
+        <div class="empty-state" th:if="${albums == null || albums.totalElements == 0}">
+            <div class="empty-icon">💿</div>
+            <h2>No albums yet</h2>
+            <p>Albums will appear here once artists create them</p>
+        </div>
+
+        <!-- ═══ Pagination ═══ -->
+        <div class="pagination" th:if="${albums != null && albums.totalPages > 1}">
+            <a th:if="${albums.hasPrevious()}"
+               th:href="@{/albums(page=${albums.number - 1}, size=${albums.size})}"
+               class="page-link">← Previous</a>
+            <span th:if="${!albums.hasPrevious()}" class="page-link disabled">← Previous</span>
+
+            <div class="page-numbers">
+                <th:block th:each="i : ${#numbers.sequence(0, albums.totalPages - 1)}">
+                    <a th:if="${i != albums.number}"
+                       th:href="@{/albums(page=${i}, size=${albums.size})}"
+                       th:text="${i + 1}" class="page-num"></a>
+                    <span th:if="${i == albums.number}" th:text="${i + 1}" class="page-num active"></span>
+                </th:block>
+            </div>
+
+            <a th:if="${albums.hasNext()}"
+               th:href="@{/albums(page=${albums.number + 1}, size=${albums.size})}"
+               class="page-link">Next →</a>
+            <span th:if="${!albums.hasNext()}" class="page-link disabled">Next →</span>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

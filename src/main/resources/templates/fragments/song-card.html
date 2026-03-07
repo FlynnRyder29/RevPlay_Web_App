@@ -23,7 +23,9 @@
                     type="button">+</button>
           </div>
 
-          <div class="song-title" th:text="${song?.title != null ? song.title : 'Unknown Title'}">Song Title</div>
+          <a th:href="@{'/songs/' + ${song?.id}}" class="song-title song-title-link"
+             th:text="${song?.title != null ? song.title : 'Unknown Title'}"
+             onclick="event.stopPropagation();">Song Title</a>
           <div class="song-artist" th:text="${song?.artistName != null ? song.artistName : 'Unknown Artist'}">Artist
                Name</div>
      </div>

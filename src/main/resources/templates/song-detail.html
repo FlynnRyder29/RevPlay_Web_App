@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head('Song Detail')}"></head>
+<body>
+<div th:replace="~{layout :: page(~{::#song-detail-content})}">
+
+    <div id="song-detail-content">
+
+        <!-- ═══ Song Detail Card ═══ -->
+        <div class="song-detail-card">
+
+            <!-- Left: Cover Art -->
+            <div class="song-detail-cover">
+                <img th:src="${song.coverImageUrl != null ? song.coverImageUrl : 'https://www.shutterstock.com/shutterstock/photos/2626947211/display_1500/stock-vector-jazz-music-poster-design-template-2626947211.jpg'}"
+                     alt="Cover Art" class="song-detail-cover-img" id="song-detail-cover-img">
+                <button class="song-detail-play-overlay"
+                        id="song-detail-cover-play"
+                        th:data-id="${song.id}"
+                        th:data-url="${song.audioUrl}"
+                        th:data-title="${song.title}"
+                        th:data-artist="${song.artistName}"
+                        th:data-cover="${song.coverImageUrl}"
+                        title="Play">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                        <polygon points="5,3 19,12 5,21"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Right: Info -->
+            <div class="song-detail-info">
+                <span class="song-detail-type">SONG</span>
+                <h1 class="song-detail-title" th:text="${song.title}">Song Title</h1>
+
+                <div class="song-detail-artist-row">
+                    <a th:if="${song.artistId != null}"
+                       th:href="@{'/artist/' + ${song.artistId}}"
+                       class="song-detail-artist-link"
+                       th:text="${song.artistName}">Artist Name</a>
+                    <span th:if="${song.artistId == null}"
+                          th:text="${song.artistName != null ? song.artistName : 'Unknown Artist'}">Artist</span>
+                </div>
+
+                <!-- ═══ Metadata ═══ -->
+                <div class="song-detail-metadata">
+                    <div class="sd-meta-item" th:if="${song.albumName != null}">
+                        <span class="sd-meta-label">Album</span>
+                        <a th:href="@{'/albums/' + ${song.albumId}}" class="sd-meta-value sd-meta-link"
+                           th:text="${song.albumName}">Album</a>
+                    </div>
+                    <div class="sd-meta-item" th:if="${song.genre != null}">
+                        <span class="sd-meta-label">Genre</span>
+                        <a th:href="@{/library(genre=${song.genre})}" class="sd-meta-value sd-meta-link"
+                           th:text="${song.genre}">Pop</a>
+                    </div>
+                    <div class="sd-meta-item" th:if="${formattedDuration != null}">
+                        <span class="sd-meta-label">Duration</span>
+                        <span class="sd-meta-value" th:text="${formattedDuration}">3:45</span>
+                    </div>
+                    <div class="sd-meta-item" th:if="${song.releaseDate != null}">
+                        <span class="sd-meta-label">Released</span>
+                        <span class="sd-meta-value" th:text="${song.releaseDate}">2026-01-01</span>
+                    </div>
+                    <div class="sd-meta-item" th:if="${song.playCount != null}">
+                        <span class="sd-meta-label">Plays</span>
+                        <span class="sd-meta-value" th:text="${#numbers.formatInteger(song.playCount, 1, 'COMMA')}">0</span>
+                    </div>
+                </div>
+
+                <!-- ═══ Action Buttons ═══ -->
+                <div class="song-detail-actions" sec:authorize="isAuthenticated()">
+                    <button class="sd-btn sd-btn-play"
+                            id="song-detail-play"
+                            th:data-id="${song.id}"
+                            th:data-url="${song.audioUrl}"
+                            th:data-title="${song.title}"
+                            th:data-artist="${song.artistName}"
+                            th:data-cover="${song.coverImageUrl}">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="white" style="margin-right: 8px;">
+                            <polygon points="5,3 19,12 5,21"/>
+                        </svg>
+                        Play Now
+                    </button>
+                    <button class="sd-btn sd-btn-secondary song-card-fav-btn"
+                            th:data-song-id="${song.id}">
+                        ♡ Favorite
+                    </button>
+                    <button class="sd-btn sd-btn-secondary song-card-add-playlist-btn"
+                            th:data-song-id="${song.id}">
+                        + Playlist
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Navigation Links ═══ -->
+        <div class="song-detail-nav">
+            <a th:href="@{/library}" class="sd-nav-link">← Library</a>
+            <a th:if="${song.artistId != null}" th:href="@{'/artist/' + ${song.artistId}}" class="sd-nav-link">View Artist</a>
+            <a th:if="${song.albumId != null}" th:href="@{'/albums/' + ${song.albumId}}" class="sd-nav-link">View Album</a>
+        </div>
+
+        <!-- ═══ Play Script ═══ -->
+        <script>
+            (function () {
+                'use strict';
+
+                function playSong(el) {
+                    if (!el) return;
+                    var song = {
+                        id: el.getAttribute('data-id'),
+                        url: el.getAttribute('data-url'),
+                        title: el.getAttribute('data-title'),
+                        artist: el.getAttribute('data-artist'),
+                        cover: el.getAttribute('data-cover'),
+                        coverImageUrl: el.getAttribute('data-cover')
+                    };
+                    if (song.url && window.RevPlay) {
+                        if (window.RevPlay.playQueue) {
+                            window.RevPlay.playQueue([song], 0);
+                        } else if (window.RevPlay.playSong) {
+                            window.RevPlay.playSong(song);
+                        }
+                    }
+                }
+
+                var playBtn = document.getElementById('song-detail-play');
+                var coverBtn = document.getElementById('song-detail-cover-play');
+
+                if (playBtn) playBtn.onclick = function () { playSong(this); };
+                if (coverBtn) coverBtn.onclick = function () { playSong(this); };
+            })();
+        </script>
+
+    </div>
+</div>
+</body>
+</html>

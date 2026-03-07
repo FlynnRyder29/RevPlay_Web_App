@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head('Artists')}"></head>
+<body>
+<div th:replace="~{layout :: page(~{::#artists-content})}">
+
+    <div id="artists-content">
+
+        <!-- ═══ Page Header ═══ -->
+        <div class="library-header">
+            <h1>Artists</h1>
+            <p class="library-subtitle">Discover talented artists on RevPlay</p>
+        </div>
+
+        <!-- ═══ Artists Grid ═══ -->
+        <div class="artist-results-grid" th:if="${artists != null && artists.totalElements > 0}">
+            <div th:each="artist : ${artists.content}" class="artist-result-card">
+                <a th:href="@{'/artist/' + ${artist.id}}" class="artist-result-link">
+                    <div class="artist-result-avatar">
+                        <img th:if="${artist.profilePictureUrl != null}"
+                             th:src="${artist.profilePictureUrl}"
+                             alt="Artist" class="artist-result-img">
+                        <div th:if="${artist.profilePictureUrl == null}" class="artist-result-fallback">
+                            <span th:text="${artist.artistName != null ? artist.artistName.substring(0,1).toUpperCase() : '?'}">A</span>
+                        </div>
+                    </div>
+                    <div class="artist-result-name" th:text="${artist.artistName}">Artist Name</div>
+                    <div class="artist-result-genre" th:if="${artist.genre}" th:text="${artist.genre}">Genre</div>
+                </a>
+            </div>
+        </div>
+
+        <!-- ═══ Empty State ═══ -->
+        <div class="empty-state" th:if="${artists == null || artists.totalElements == 0}">
+            <div class="empty-icon">🎤</div>
+            <h2>No artists yet</h2>
+            <p>Artists will appear here once they register on RevPlay</p>
+        </div>
+
+        <!-- ═══ Pagination ═══ -->
+        <div class="pagination" th:if="${artists != null && artists.totalPages > 1}">
+            <a th:if="${artists.hasPrevious()}"
+               th:href="@{/artists(page=${artists.number - 1}, size=${artists.size})}"
+               class="page-link">← Previous</a>
+            <span th:if="${!artists.hasPrevious()}" class="page-link disabled">← Previous</span>
+
+            <div class="page-numbers">
+                <th:block th:each="i : ${#numbers.sequence(0, artists.totalPages - 1)}">
+                    <a th:if="${i != artists.number}"
+                       th:href="@{/artists(page=${i}, size=${artists.size})}"
+                       th:text="${i + 1}" class="page-num"></a>
+                    <span th:if="${i == artists.number}" th:text="${i + 1}" class="page-num active"></span>
+                </th:block>
+            </div>
+
+            <a th:if="${artists.hasNext()}"
+               th:href="@{/artists(page=${artists.number + 1}, size=${artists.size})}"
+               class="page-link">Next →</a>
+            <span th:if="${!artists.hasNext()}" class="page-link disabled">Next →</span>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>
