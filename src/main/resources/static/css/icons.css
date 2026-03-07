@@ -1,0 +1,297 @@
+/* ═══════════════════════════════════════════════════════
+   ICONS — Global icon system, brand, sidebar, player,
+           song card, footer icons
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Global Icon System ──────────────────────────── */
+
+.icon-wrapper {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    filter: brightness(0.7);
+    transition: filter 0.25s ease, transform 0.2s ease;
+}
+
+.icon-fallback {
+    font-size: 18px;
+    line-height: 1;
+}
+
+/* ── Brand Icon (Navbar) ─────────────────────────── */
+
+.brand-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+}
+
+.brand-icon-img {
+    width: 26px;
+    height: 26px;
+    object-fit: contain;
+    filter: brightness(1) sepia(1) saturate(5) hue-rotate(350deg);
+    transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.nav-brand:hover .brand-icon-img {
+    transform: rotate(-10deg) scale(1.1);
+    filter: brightness(1.2) sepia(1) saturate(5) hue-rotate(350deg);
+}
+
+/* ── Search Icon (Navbar) ────────────────────────── */
+
+.nav-search-icon-img {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    filter: brightness(0.6);
+    transition: filter 0.2s ease;
+}
+
+.nav-search-input:focus~.nav-search-icon .nav-search-icon-img,
+.nav-search-form:focus-within .nav-search-icon-img {
+    filter: brightness(1);
+}
+
+/* ── Sidebar Icon Images ─────────────────────────── */
+
+.sidebar-icon-img {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    filter: brightness(0.7);
+    transition: filter 0.25s ease,
+    transform 0.2s ease;
+}
+
+.sidebar-item:hover .sidebar-icon-img {
+    filter: brightness(1);
+}
+
+.sidebar-item--active .sidebar-icon-img {
+    filter: brightness(1) sepia(1) saturate(5) hue-rotate(350deg);
+}
+
+.sidebar-icon-img--cta {
+    filter: brightness(1) sepia(1) saturate(5) hue-rotate(350deg);
+}
+
+.sidebar-logout-btn:hover .sidebar-icon-img {
+    filter: brightness(1) sepia(1) saturate(10) hue-rotate(320deg);
+}
+
+.sidebar-icon-fallback {
+    font-size: 20px;
+    line-height: 1;
+}
+
+/* ── Player Bar Icons ────────────────────────────── */
+
+.player-icon-img {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    display: block;
+    filter: brightness(0.7);
+    transition: filter 0.2s ease, transform 0.15s ease;
+    pointer-events: none;
+}
+
+.control-btn:hover .player-icon-img {
+    filter: brightness(1);
+    transform: scale(1.1);
+}
+
+/* Play/Pause button — larger icon */
+.control-play .player-icon-img {
+    width: 36px;
+    height: 36px;
+    display: block;
+    filter: none;
+    pointer-events: none;
+    object-fit: contain;
+    transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.control-play:hover .player-icon-img {
+    filter: brightness(1.1);
+    transform: none;
+}
+
+/* Emoji fallback inside play circle */
+.control-play .icon-fallback,
+.control-play .play-fallback {
+    font-size: 16px;
+    line-height: 1;
+    color: var(--text-main);
+    display: none;
+}
+
+/* Active state for shuffle/repeat (when toggled on) */
+.control-btn.active .player-icon-img {
+    filter: brightness(1) sepia(1) saturate(5) hue-rotate(350deg);
+}
+
+/* Favorite button in player */
+.player-fav-btn .player-icon-img {
+    width: 18px;
+    height: 18px;
+    filter: brightness(0.7);
+}
+
+.player-fav-btn:hover .player-icon-img {
+    filter: brightness(1);
+}
+
+.player-fav-btn.favorited .player-icon-img {
+    filter: brightness(1) sepia(1) saturate(10) hue-rotate(320deg);
+}
+
+/* Volume icon */
+.volume-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+}
+
+.volume-icon .player-icon-img {
+    width: 18px;
+    height: 18px;
+    filter: brightness(0.7);
+}
+
+.volume-icon:hover .player-icon-img {
+    filter: brightness(1);
+}
+
+/* ── Song Card Play Icon ─────────────────────────── */
+
+.card-play-icon {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    display: block;
+    filter: none;
+    pointer-events: none;
+    border-radius: 50%;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+    transition: transform 0.2s ease, filter 0.15s ease;
+}
+
+.song-card:hover .card-play-icon {
+    filter: brightness(1.05);
+    transform: scale(1.05);
+}
+
+.card-play-fallback {
+    font-size: 20px;
+    line-height: 1;
+    color: #000;
+    width: 48px;
+    height: 48px;
+    background-color: var(--primary-color);
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* ── Dedicated Player Page Control Icons ─────────── */
+
+.page-ctrl-icon {
+    width: 22px;
+    height: 22px;
+    display: block;
+    object-fit: contain;
+    filter: brightness(0.7);
+    transition: filter 0.2s ease, transform 0.15s ease;
+    pointer-events: none;
+}
+
+.page-ctrl-icon-lg {
+    width: 30px;
+    height: 30px;
+}
+
+.page-ctrl-secondary:hover .page-ctrl-icon,
+.page-ctrl-lg:hover .page-ctrl-icon {
+    filter: brightness(1);
+    transform: scale(1.1);
+}
+
+.page-ctrl-secondary.active .page-ctrl-icon {
+    filter: brightness(1) sepia(1) saturate(5) hue-rotate(350deg);
+}
+
+/* Page Play/Pause gradient icon */
+.page-play-icon {
+    width: 64px !important;
+    height: 64px !important;
+    filter: none !important;
+    display: block;
+    border-radius: 50%;
+    box-shadow: 0 4px 20px rgba(215, 82, 9, 0.3);
+    transition: filter 0.15s ease, box-shadow 0.2s ease;
+}
+
+.page-ctrl-play:hover .page-play-icon {
+    filter: brightness(1.1) !important;
+    box-shadow: 0 6px 30px rgba(215, 82, 9, 0.5);
+    transform: none;
+}
+
+/* Emoji fallback for page play button */
+.page-ctrl-play .play-fallback {
+    font-size: 28px;
+    color: var(--text-main);
+    width: 64px;
+    height: 64px;
+    background-color: var(--primary-color);
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    line-height: 64px;
+    text-align: center;
+}
+
+/* ── Footer Icons ────────────────────────────────── */
+
+.footer-logo-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.footer-logo-img {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    filter: brightness(1) sepia(1) saturate(5) hue-rotate(350deg);
+}
+
+.social-icon-img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    filter: brightness(0.6);
+    transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+.social-link:hover .social-icon-img {
+    filter: brightness(1);
+    transform: scale(1.15);
+}

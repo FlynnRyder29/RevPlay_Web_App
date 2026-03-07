@@ -41,7 +41,7 @@ public class PlaylistFollowService {
                         new ResourceNotFoundException("Playlist", "id", playlistId));
 
         // ✅ FIXED: Guard 1 — cannot follow a private playlist
-        if (!playlist.isPublic()) {
+        if (!playlist.isPublicPlaylist()) {
             throw new BadRequestException("Cannot follow a private playlist");
         }
 

@@ -1,8 +1,24 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Log in - RevPlay</title>
-    <link rel="stylesheet" th:href="@{/css/styles.css}">
+
+    <!-- Theme init (prevents FOUC) -->
+    <script>
+        (function () {
+            var t = localStorage.getItem('revplay-theme');
+            if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+        })();
+    </script>
+
+    <!-- Modular CSS -->
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/auth.css}">
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
+    <link rel="stylesheet" th:href="@{/css/responsive.css}">
 </head>
 <body>
 <div class="auth-container">
@@ -12,23 +28,25 @@
     <div th:if="${param.logout}" class="alert alert-success">You have been logged out successfully.</div>
     <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
 
-    <!-- Note: action must be /auth/login exactly so Spring Security intercepts it -->
     <form th:action="@{/auth/login}" method="post">
         <div class="form-group">
             <label for="emailOrUsername">Email or Username</label>
-            <input type="text" id="emailOrUsername" name="emailOrUsername" class="form-control" placeholder="Email or username" required autofocus/>
+            <input type="text" id="emailOrUsername" name="emailOrUsername" class="form-control"
+                   placeholder="Email or username" required autofocus/>
         </div>
 
         <div class="form-group">
             <label for="password">Password</label>
-            <input type="password" id="password" name="password" class="form-control" placeholder="Password" required/>
+            <input type="password" id="password" name="password" class="form-control"
+                   placeholder="Password" required/>
         </div>
 
         <button type="submit" class="btn-primary" style="margin-top: 20px;">Log In</button>
     </form>
 
     <div class="auth-links">
-        <p>Don't have an account? <a th:href="@{/auth/register}" style="color: white; text-decoration: underline;">Sign up for RevPlay</a>.</p>
+        <p>Don't have an account? <a th:href="@{/auth/register}"
+                                     style="color: var(--primary-color); text-decoration: underline;">Sign up for RevPlay</a>.</p>
     </div>
 </div>
 </body>

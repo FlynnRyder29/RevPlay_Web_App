@@ -14,7 +14,14 @@ public class ArtistDTO {
     private String profilePictureUrl;
     private String bannerImageUrl;
 
-    // Only populated for /api/artists/{id}
+    // Social links (added)
+    private String instagram;
+    private String twitter;
+    private String youtube;
+    private String spotify;
+    private String website;
+
+    // Only populated for detail views
     private List<SongDTO> songs;
     private List<AlbumDTO> albums;
 }

@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head('Admin Panel')}"></head>
+<body>
+<div th:replace="~{layout :: page(~{::#admin-content})}">
+
+    <div id="admin-content">
+
+        <!-- Hero -->
+        <div class="hero-section" style="background: linear-gradient(135deg, #1c1c1c 0%, #3e3e3e 100%);">
+            <h1 class="hero-title" style="color: #fff;">Admin Dashboard</h1>
+            <p class="hero-subtitle" style="color: rgba(255,255,255,0.7);">Platform management & analytics</p>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="admin-tabs" id="admin-tabs">
+            <button class="admin-tab admin-tab--active" data-tab="overview">📊 Overview</button>
+            <button class="admin-tab" data-tab="requests">
+                🎤 Artist Requests
+                <span class="admin-tab-badge" id="tab-badge-requests" style="display:none;">0</span>
+            </button>
+            <button class="admin-tab" data-tab="users">👥 Users</button>
+            <button class="admin-tab" data-tab="content">🎵 Content</button>
+            <button class="admin-tab" data-tab="reports">📈 Reports</button>
+        </div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- TAB: OVERVIEW                           -->
+        <!-- ═══════════════════════════════════════ -->
+        <div class="admin-panel" id="tab-overview">
+            <div class="admin-stats-grid" id="stats-grid">
+                <div class="admin-stat-card">
+                    <div class="admin-stat-icon">👥</div>
+                    <div class="admin-stat-label">Total Users</div>
+                    <div class="admin-stat-value" id="stat-total-users">—</div>
+                </div>
+                <div class="admin-stat-card">
+                    <div class="admin-stat-icon">🎤</div>
+                    <div class="admin-stat-label">Artists</div>
+                    <div class="admin-stat-value" id="stat-total-artists">—</div>
+                </div>
+                <div class="admin-stat-card">
+                    <div class="admin-stat-icon">🎧</div>
+                    <div class="admin-stat-label">Listeners</div>
+                    <div class="admin-stat-value" id="stat-total-listeners">—</div>
+                </div>
+                <div class="admin-stat-card">
+                    <div class="admin-stat-icon">🎵</div>
+                    <div class="admin-stat-label">Total Songs</div>
+                    <div class="admin-stat-value" id="stat-total-songs">—</div>
+                </div>
+                <div class="admin-stat-card">
+                    <div class="admin-stat-icon">📋</div>
+                    <div class="admin-stat-label">Playlists</div>
+                    <div class="admin-stat-value" id="stat-total-playlists">—</div>
+                </div>
+                <div class="admin-stat-card admin-stat-card--highlight">
+                    <div class="admin-stat-icon">📈</div>
+                    <div class="admin-stat-label">New This Week</div>
+                    <div class="admin-stat-value" id="stat-new-week">—</div>
+                </div>
+                <div class="admin-stat-card admin-stat-card--warning" id="stat-pending-card">
+                    <div class="admin-stat-icon">⏳</div>
+                    <div class="admin-stat-label">Pending Requests</div>
+                    <div class="admin-stat-value" id="stat-pending-requests">—</div>
+                </div>
+            </div>
+
+            <div class="admin-section">
+                <h3 class="admin-section-title">System Health</h3>
+                <div class="admin-health-card">
+                    <span class="health-dot health-dot--ok"></span>
+                    <span>All Systems Operational</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- TAB: ARTIST REQUESTS                    -->
+        <!-- ═══════════════════════════════════════ -->
+        <div class="admin-panel" id="tab-requests" style="display:none;">
+
+            <div class="admin-section">
+                <h3 class="admin-section-title">Artist Upgrade Requests</h3>
+
+                <!-- Request Stats -->
+                <div class="admin-request-stats" id="request-stats">
+                    <div class="admin-request-stat admin-request-stat--pending">
+                        <span class="admin-request-stat-count" id="req-stat-pending">0</span>
+                        <span class="admin-request-stat-label">Pending</span>
+                    </div>
+                    <div class="admin-request-stat admin-request-stat--approved">
+                        <span class="admin-request-stat-count" id="req-stat-approved">0</span>
+                        <span class="admin-request-stat-label">Approved</span>
+                    </div>
+                    <div class="admin-request-stat admin-request-stat--rejected">
+                        <span class="admin-request-stat-count" id="req-stat-rejected">0</span>
+                        <span class="admin-request-stat-label">Rejected</span>
+                    </div>
+                </div>
+
+                <!-- Filter -->
+                <div class="admin-controls" style="margin-bottom: 16px;">
+                    <select id="request-status-filter" class="admin-select">
+                        <option value="">All Requests</option>
+                        <option value="PENDING" selected>Pending</option>
+                        <option value="APPROVED">Approved</option>
+                        <option value="REJECTED">Rejected</option>
+                    </select>
+                    <button class="pl-btn pl-btn--primary" id="btn-filter-requests">Filter</button>
+                </div>
+
+                <!-- Requests Table -->
+                <div class="admin-table-wrap">
+                    <table class="admin-table" id="requests-table">
+                        <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Artist Name</th>
+                            <th>Genre</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            <th>Requested</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="requests-tbody">
+                        <tr><td colspan="7" class="admin-loading">Loading requests...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="admin-pagination" id="requests-pagination"></div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- TAB: USERS                              -->
+        <!-- ═══════════════════════════════════════ -->
+        <div class="admin-panel" id="tab-users" style="display:none;">
+
+            <div class="admin-section">
+                <h3 class="admin-section-title">User Management</h3>
+
+                <div class="admin-controls">
+                    <div class="admin-search-bar">
+                        <input type="text" id="user-search" class="admin-input"
+                               placeholder="Search by username, email, or display name...">
+                    </div>
+                    <select id="user-role-filter" class="admin-select">
+                        <option value="">All Roles</option>
+                        <option value="LISTENER">Listeners</option>
+                        <option value="ARTIST">Artists</option>
+                        <option value="ADMIN">Admins</option>
+                    </select>
+                    <button class="pl-btn pl-btn--primary" id="btn-search-users">Search</button>
+                </div>
+
+                <div class="admin-table-wrap">
+                    <table class="admin-table" id="users-table">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Display Name</th>
+                            <th>Role</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="users-tbody">
+                        <tr><td colspan="7" class="admin-loading">Loading users...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="admin-pagination" id="users-pagination"></div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- TAB: CONTENT                            -->
+        <!-- ═══════════════════════════════════════ -->
+        <div class="admin-panel" id="tab-content" style="display:none;">
+            <div class="admin-section">
+                <h3 class="admin-section-title">Top Songs (by Play Count)</h3>
+                <div class="admin-table-wrap">
+                    <table class="admin-table" id="songs-table">
+                        <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Title</th>
+                            <th>Artist</th>
+                            <th>Genre</th>
+                            <th>Plays</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="songs-tbody">
+                        <tr><td colspan="6" class="admin-loading">Loading songs...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- TAB: REPORTS                            -->
+        <!-- ═══════════════════════════════════════ -->
+        <div class="admin-panel" id="tab-reports" style="display:none;">
+            <div class="admin-section">
+                <h3 class="admin-section-title">Role Distribution</h3>
+                <div class="admin-role-bars" id="role-bars"></div>
+            </div>
+            <div class="admin-section">
+                <h3 class="admin-section-title">User Growth (Last 30 Days)</h3>
+                <div class="admin-growth-chart" id="growth-chart">
+                    <div class="admin-loading">Loading growth data...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- CHANGE ROLE MODAL                       -->
+        <!-- ═══════════════════════════════════════ -->
+        <div id="role-modal" class="modal-overlay" style="display:none;">
+            <div class="modal-content" style="max-width: 400px;">
+                <div class="modal-header">
+                    <h2>Change User Role</h2>
+                    <button class="modal-close" onclick="document.getElementById('role-modal').style.display='none'">✕</button>
+                </div>
+                <div style="padding: 20px;">
+                    <p id="role-modal-user" style="margin-bottom: 15px; color: var(--text-muted);"></p>
+                    <select id="role-modal-select" class="admin-select" style="width: 100%; margin-bottom: 20px;">
+                        <option value="LISTENER">Listener</option>
+                        <option value="ARTIST">Artist</option>
+                        <option value="ADMIN">Admin</option>
+                    </select>
+                    <input type="hidden" id="role-modal-user-id">
+                    <button class="pl-btn pl-btn--primary" id="btn-confirm-role" style="width: 100%;">
+                        Confirm Change
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- REJECT REQUEST MODAL                    -->
+        <!-- ═══════════════════════════════════════ -->
+        <div id="reject-modal" class="modal-overlay" style="display:none;">
+            <div class="modal-content" style="max-width: 440px;">
+                <div class="modal-header">
+                    <h2>Reject Artist Request</h2>
+                    <button class="modal-close" onclick="document.getElementById('reject-modal').style.display='none'">✕</button>
+                </div>
+                <div style="padding: 20px;">
+                    <p id="reject-modal-user" style="margin-bottom: 15px; color: var(--text-muted);"></p>
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label class="profile-form-label" for="reject-note">Reason for Rejection</label>
+                        <textarea id="reject-note" class="profile-form-input profile-form-textarea"
+                                  rows="3" placeholder="Explain why this request is being declined..."></textarea>
+                    </div>
+                    <input type="hidden" id="reject-modal-request-id">
+                    <div style="display: flex; gap: 10px;">
+                        <button class="pl-btn" style="flex:1;" onclick="document.getElementById('reject-modal').style.display='none'">
+                            Cancel
+                        </button>
+                        <button class="pl-btn pl-btn--danger" id="btn-confirm-reject" style="flex:1;">
+                            Confirm Rejection
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- ADMIN JAVASCRIPT                        -->
+        <!-- ═══════════════════════════════════════ -->
+        <!-- ═══════════════════════════════════════ -->
+        <!-- ADMIN JAVASCRIPT                        -->
+        <!-- ═══════════════════════════════════════ -->
+        <script>
+            (function () {
+                'use strict';
+
+                var csrfToken = (document.querySelector('meta[name="_csrf"]') || {}).content || '';
+                var currentPage = 0;
+                var currentSearch = '';
+                var currentRoleFilter = '';
+                var currentRequestPage = 0;
+                var currentRequestStatus = 'PENDING';
+
+                // ══════════════════════════════════════════════════════════
+                // TABS
+                // ══════════════════════════════════════════════════════════
+
+                document.querySelectorAll('.admin-tab').forEach(function (tab) {
+                    tab.addEventListener('click', function () {
+                        var target = this.getAttribute('data-tab');
+
+                        document.querySelectorAll('.admin-tab').forEach(function (t) {
+                            t.classList.remove('admin-tab--active');
+                        });
+                        this.classList.add('admin-tab--active');
+
+                        document.querySelectorAll('.admin-panel').forEach(function (p) {
+                            p.style.display = 'none';
+                        });
+                        var panel = document.getElementById('tab-' + target);
+                        if (panel) panel.style.display = 'block';
+
+                        if (target === 'requests') loadArtistRequests();
+                        if (target === 'users') loadUsers();
+                        if (target === 'content') loadTopSongs();
+                        if (target === 'reports') loadReports();
+                    });
+                });
+
+                // ══════════════════════════════════════════════════════════
+                // OVERVIEW — Load Stats
+                // ══════════════════════════════════════════════════════════
+
+                function loadStats() {
+                    fetch('/api/admin/stats', {
+                        headers: { 'Accept': 'application/json' }
+                    })
+                        .then(function (res) { return res.json(); })
+                        .then(function (data) {
+                            setStatText('stat-total-users', data.totalUsers);
+                            setStatText('stat-total-artists', data.totalArtists);
+                            setStatText('stat-total-listeners', data.totalListeners);
+                            setStatText('stat-total-songs', data.totalSongs);
+                            setStatText('stat-total-playlists', data.totalPlaylists);
+                            setStatText('stat-new-week', data.newUsersThisWeek);
+
+                            var pending = data.pendingArtistRequests || 0;
+                            setStatText('stat-pending-requests', pending);
+
+                            var badge = document.getElementById('tab-badge-requests');
+                            if (badge) {
+                                if (pending > 0) {
+                                    badge.textContent = pending;
+                                    badge.style.display = 'inline-block';
+                                } else {
+                                    badge.style.display = 'none';
+                                }
+                            }
+
+                            var pendingCard = document.getElementById('stat-pending-card');
+                            if (pendingCard) {
+                                if (pending > 0) {
+                                    pendingCard.classList.add('admin-stat-card--warning');
+                                } else {
+                                    pendingCard.classList.remove('admin-stat-card--warning');
+                                }
+                            }
+                        })
+                        .catch(function () {
+                            console.warn('Failed to load admin stats');
+                        });
+                }
+
+                function setStatText(id, value) {
+                    var el = document.getElementById(id);
+                    if (el) el.textContent = value != null ? value : '—';
+                }
+
+                loadStats();
+
+                // ══════════════════════════════════════════════════════════
+                // ARTIST REQUESTS TAB
+                // ══════════════════════════════════════════════════════════
+
+                var filterRequestsBtn = document.getElementById('btn-filter-requests');
+                var requestStatusFilter = document.getElementById('request-status-filter');
+
+                if (filterRequestsBtn) {
+                    filterRequestsBtn.addEventListener('click', function () {
+                        currentRequestPage = 0;
+                        currentRequestStatus = requestStatusFilter ? requestStatusFilter.value : '';
+                        loadArtistRequests();
+                    });
+                }
+
+                function loadArtistRequests() {
+                    loadRequestStats();
+
+                    var tbody = document.getElementById('requests-tbody');
+                    if (!tbody) return;
+                    tbody.innerHTML = '<tr><td colspan="7" class="admin-loading">Loading requests...</td></tr>';
+
+                    var url = '/api/admin/artist-requests?page=' + currentRequestPage + '&size=15';
+                    if (currentRequestStatus) url += '&status=' + currentRequestStatus;
+
+                    fetch(url, { headers: { 'Accept': 'application/json' } })
+                        .then(function (res) { return res.json(); })
+                        .then(function (data) {
+                            var requests = data.content || [];
+                            tbody.innerHTML = '';
+
+                            if (requests.length === 0) {
+                                tbody.innerHTML = '<tr><td colspan="7" class="admin-loading">No requests found</td></tr>';
+                                renderRequestPagination(0, 0);
+                                return;
+                            }
+
+                            requests.forEach(function (req) {
+                                var tr = document.createElement('tr');
+
+                                var userCell =
+                                    '<div class="admin-request-user">' +
+                                    (req.profilePictureUrl
+                                        ? '<img src="' + req.profilePictureUrl + '" class="admin-request-avatar">'
+                                        : '<div class="admin-request-avatar-fallback">' + (req.username ? req.username.charAt(0).toUpperCase() : '?') + '</div>') +
+                                    '<div>' +
+                                    '<div class="admin-request-username">' + escapeHtml(req.username) + '</div>' +
+                                    '<div class="admin-request-email">' + escapeHtml(req.email) + '</div>' +
+                                    '</div>' +
+                                    '</div>';
+
+                                var statusBadge = '<span class="admin-request-badge admin-request-badge--' + req.status.toLowerCase() + '">' + req.status + '</span>';
+
+                                var actions = '';
+                                if (req.status === 'PENDING') {
+                                    actions =
+                                        '<button class="admin-action-btn admin-action-btn--approve" ' +
+                                        'data-id="' + req.id + '" data-username="' + escapeHtml(req.username) + '" ' +
+                                        'data-artist="' + escapeHtml(req.artistName) + '" title="Approve">✅</button>' +
+                                        '<button class="admin-action-btn admin-action-btn--reject" ' +
+                                        'data-id="' + req.id + '" data-username="' + escapeHtml(req.username) + '" ' +
+                                        'data-artist="' + escapeHtml(req.artistName) + '" title="Reject">❌</button>';
+                                } else if (req.status === 'APPROVED') {
+                                    actions = '<span style="color: var(--text-muted); font-size: 12px;">Approved</span>';
+                                } else if (req.status === 'REJECTED') {
+                                    actions = '<span style="color: var(--text-muted); font-size: 12px;" title="' + escapeHtml(req.adminNote || '') + '">Rejected</span>';
+                                }
+
+                                var reasonText = req.reason ? (req.reason.length > 60 ? req.reason.substring(0, 60) + '...' : req.reason) : '—';
+
+                                tr.innerHTML =
+                                    '<td>' + userCell + '</td>' +
+                                    '<td><strong>' + escapeHtml(req.artistName) + '</strong></td>' +
+                                    '<td>' + escapeHtml(req.genre || '—') + '</td>' +
+                                    '<td class="admin-request-reason" title="' + escapeHtml(req.reason || '') + '">' + escapeHtml(reasonText) + '</td>' +
+                                    '<td>' + statusBadge + '</td>' +
+                                    '<td>' + formatDate(req.createdAt) + '</td>' +
+                                    '<td class="admin-actions-cell">' + actions + '</td>';
+
+                                tbody.appendChild(tr);
+                            });
+
+                            attachRequestActions();
+                            renderRequestPagination(data.totalPages, data.number);
+                        })
+                        .catch(function () {
+                            tbody.innerHTML = '<tr><td colspan="7" class="admin-loading" style="color: var(--error-color);">Error loading requests</td></tr>';
+                        });
+                }
+
+                function loadRequestStats() {
+                    fetch('/api/admin/artist-requests/stats', {
+                        headers: { 'Accept': 'application/json' }
+                    })
+                        .then(function (res) { return res.json(); })
+                        .then(function (data) {
+                            setStatText('req-stat-pending', data.pending || 0);
+                            setStatText('req-stat-approved', data.approved || 0);
+                            setStatText('req-stat-rejected', data.rejected || 0);
+                        })
+                        .catch(function () {});
+                }
+
+                function attachRequestActions() {
+                    // Approve buttons
+                    document.querySelectorAll('.admin-action-btn--approve').forEach(function (btn) {
+                        btn.addEventListener('click', function () {
+                            var requestId = this.getAttribute('data-id');
+                            var username = this.getAttribute('data-username');
+                            var artistName = this.getAttribute('data-artist');
+
+                            RevPlay.confirm({
+                                title: 'Approve Artist Request',
+                                message: 'Approve "' + username + '" as artist "' + artistName + '"?\n\nThis will change their role to ARTIST and create their artist profile.',
+                                type: 'success',
+                                confirmText: 'Approve',
+                                cancelText: 'Cancel'
+                            }).then(function (confirmed) {
+                                if (!confirmed) return;
+
+                                btn.disabled = true;
+                                btn.textContent = '⏳';
+
+                                fetch('/api/admin/artist-requests/' + requestId + '/approve', {
+                                    method: 'PUT',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': csrfToken
+                                    },
+                                    body: JSON.stringify({ note: 'Approved by admin' })
+                                })
+                                    .then(function (res) {
+                                        if (res.status >= 200 && res.status < 300) return res.json();
+                                        return res.json().then(function (d) { throw new Error(d.error || 'Failed'); });
+                                    })
+                                    .then(function () {
+                                        RevPlay.toast({ type: 'success', message: '"' + username + '" approved as artist!' });
+                                        loadArtistRequests();
+                                        loadStats();
+                                    })
+                                    .catch(function (err) {
+                                        RevPlay.toast({ type: 'error', message: err.message });
+                                        btn.disabled = false;
+                                        btn.textContent = '✅';
+                                    });
+                            });
+                        });
+                    });
+
+                    // Reject buttons — open modal
+                    document.querySelectorAll('.admin-action-btn--reject').forEach(function (btn) {
+                        btn.addEventListener('click', function () {
+                            var requestId = this.getAttribute('data-id');
+                            var username = this.getAttribute('data-username');
+                            var artistName = this.getAttribute('data-artist');
+
+                            document.getElementById('reject-modal-request-id').value = requestId;
+                            document.getElementById('reject-modal-user').textContent =
+                                'Reject request from "' + username + '" (wants to be "' + artistName + '")';
+                            document.getElementById('reject-note').value = '';
+                            document.getElementById('reject-modal').style.display = 'flex';
+                        });
+                    });
+                }
+
+                // Confirm rejection
+                var confirmRejectBtn = document.getElementById('btn-confirm-reject');
+                if (confirmRejectBtn) {
+                    confirmRejectBtn.addEventListener('click', function () {
+                        var requestId = document.getElementById('reject-modal-request-id').value;
+                        var note = document.getElementById('reject-note').value.trim();
+
+                        confirmRejectBtn.disabled = true;
+                        confirmRejectBtn.textContent = 'Rejecting...';
+
+                        fetch('/api/admin/artist-requests/' + requestId + '/reject', {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken
+                            },
+                            body: JSON.stringify({ note: note })
+                        })
+                            .then(function (res) {
+                                if (res.status >= 200 && res.status < 300) return res.json();
+                                return res.json().then(function (d) { throw new Error(d.error || 'Failed'); });
+                            })
+                            .then(function () {
+                                document.getElementById('reject-modal').style.display = 'none';
+                                RevPlay.toast({ type: 'success', message: 'Request rejected' });
+                                loadArtistRequests();
+                                loadStats();
+                            })
+                            .catch(function (err) {
+                                RevPlay.toast({ type: 'error', message: err.message });
+                            })
+                            .finally(function () {
+                                confirmRejectBtn.disabled = false;
+                                confirmRejectBtn.textContent = 'Confirm Rejection';
+                            });
+                    });
+                }
+
+                function renderRequestPagination(totalPages, currentPageNum) {
+                    var container = document.getElementById('requests-pagination');
+                    if (!container) return;
+                    container.innerHTML = '';
+                    if (totalPages <= 1) return;
+
+                    for (var i = 0; i < totalPages; i++) {
+                        var btn = document.createElement('button');
+                        btn.className = 'admin-page-btn' + (i === currentPageNum ? ' admin-page-btn--active' : '');
+                        btn.textContent = i + 1;
+                        btn.setAttribute('data-page', i);
+                        btn.addEventListener('click', function () {
+                            currentRequestPage = parseInt(this.getAttribute('data-page'));
+                            loadArtistRequests();
+                        });
+                        container.appendChild(btn);
+                    }
+                }
+
+                // ══════════════════════════════════════════════════════════
+                // USERS TAB
+                // ══════════════════════════════════════════════════════════
+
+                var searchBtn = document.getElementById('btn-search-users');
+                var searchInput = document.getElementById('user-search');
+                var roleFilter = document.getElementById('user-role-filter');
+
+                if (searchBtn) {
+                    searchBtn.addEventListener('click', function () {
+                        currentPage = 0;
+                        currentSearch = searchInput ? searchInput.value : '';
+                        currentRoleFilter = roleFilter ? roleFilter.value : '';
+                        loadUsers();
+                    });
+                }
+
+                if (searchInput) {
+                    searchInput.addEventListener('keydown', function (e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            if (searchBtn) searchBtn.click();
+                        }
+                    });
+                }
+
+                function loadUsers() {
+                    var tbody = document.getElementById('users-tbody');
+                    if (!tbody) return;
+                    tbody.innerHTML = '<tr><td colspan="7" class="admin-loading">Loading...</td></tr>';
+
+                    var url = '/api/admin/users?page=' + currentPage + '&size=15';
+                    if (currentSearch) url += '&search=' + encodeURIComponent(currentSearch);
+                    if (currentRoleFilter) url += '&role=' + currentRoleFilter;
+
+                    fetch(url, { headers: { 'Accept': 'application/json' } })
+                        .then(function (res) { return res.json(); })
+                        .then(function (data) {
+                            var users = data.content || [];
+                            tbody.innerHTML = '';
+
+                            if (users.length === 0) {
+                                tbody.innerHTML = '<tr><td colspan="7" class="admin-loading">No users found</td></tr>';
+                                return;
+                            }
+
+                            users.forEach(function (u) {
+                                var tr = document.createElement('tr');
+                                tr.innerHTML =
+                                    '<td>' + u.id + '</td>' +
+                                    '<td><strong>' + escapeHtml(u.username) + '</strong></td>' +
+                                    '<td>' + escapeHtml(u.email) + '</td>' +
+                                    '<td>' + escapeHtml(u.displayName || '—') + '</td>' +
+                                    '<td><span class="admin-role-badge admin-role-badge--' + u.role.toLowerCase() + '">' + u.role + '</span></td>' +
+                                    '<td>' + formatDate(u.createdAt) + '</td>' +
+                                    '<td class="admin-actions-cell">' +
+                                    '<button class="admin-action-btn admin-action-btn--role" data-id="' + u.id + '" data-username="' + escapeHtml(u.username) + '" data-role="' + u.role + '" title="Change Role">🔄</button>' +
+                                    '<button class="admin-action-btn admin-action-btn--delete" data-id="' + u.id + '" data-username="' + escapeHtml(u.username) + '" title="Delete User">🗑️</button>' +
+                                    '</td>';
+                                tbody.appendChild(tr);
+                            });
+
+                            attachUserActions();
+                            renderPagination(data.totalPages, data.number);
+                        })
+                        .catch(function () {
+                            tbody.innerHTML = '<tr><td colspan="7" class="admin-loading" style="color: var(--error-color);">Error loading users</td></tr>';
+                        });
+                }
+
+                function attachUserActions() {
+                    document.querySelectorAll('.admin-action-btn--role').forEach(function (btn) {
+                        btn.addEventListener('click', function () {
+                            var userId = this.getAttribute('data-id');
+                            var username = this.getAttribute('data-username');
+                            var currentRole = this.getAttribute('data-role');
+
+                            document.getElementById('role-modal-user-id').value = userId;
+                            document.getElementById('role-modal-user').textContent =
+                                'Change role for: ' + username + ' (currently ' + currentRole + ')';
+                            document.getElementById('role-modal-select').value = currentRole;
+                            document.getElementById('role-modal').style.display = 'flex';
+                        });
+                    });
+
+                    document.querySelectorAll('#users-tbody .admin-action-btn--delete').forEach(function (btn) {
+                        btn.addEventListener('click', function () {
+                            var userId = this.getAttribute('data-id');
+                            var username = this.getAttribute('data-username');
+
+                            RevPlay.confirm({
+                                title: 'Delete User',
+                                message: 'Delete user "' + username + '"? This will remove all their data and cannot be undone.',
+                                type: 'danger',
+                                confirmText: 'Delete User',
+                                cancelText: 'Cancel'
+                            }).then(function (confirmed) {
+                                if (!confirmed) return;
+
+                                fetch('/api/admin/users/' + userId, {
+                                    method: 'DELETE',
+                                    headers: { 'X-CSRF-TOKEN': csrfToken }
+                                })
+                                    .then(function (res) {
+                                        if (res.status >= 200 && res.status < 300) {
+                                            RevPlay.toast({ type: 'success', message: 'User "' + username + '" deleted' });
+                                            loadUsers();
+                                            loadStats();
+                                        } else {
+                                            return res.json().then(function (d) { throw new Error(d.error || 'Failed'); });
+                                        }
+                                    })
+                                    .catch(function (err) {
+                                        RevPlay.toast({ type: 'error', message: err.message });
+                                    });
+                            });
+                        });
+                    });
+                }
+
+                // Confirm role change
+                var confirmRoleBtn = document.getElementById('btn-confirm-role');
+                if (confirmRoleBtn) {
+                    confirmRoleBtn.addEventListener('click', function () {
+                        var userId = document.getElementById('role-modal-user-id').value;
+                        var newRole = document.getElementById('role-modal-select').value;
+
+                        confirmRoleBtn.disabled = true;
+                        confirmRoleBtn.textContent = 'Updating...';
+
+                        fetch('/api/admin/users/' + userId + '/role', {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken
+                            },
+                            body: JSON.stringify({ role: newRole })
+                        })
+                            .then(function (res) {
+                                if (!res.ok) return res.json().then(function (d) { throw new Error(d.error || 'Failed'); });
+                                return res.json();
+                            })
+                            .then(function () {
+                                document.getElementById('role-modal').style.display = 'none';
+                                RevPlay.toast({ type: 'success', message: 'Role updated to ' + newRole });
+                                loadUsers();
+                                loadStats();
+                            })
+                            .catch(function (err) {
+                                RevPlay.toast({ type: 'error', message: err.message });
+                            })
+                            .finally(function () {
+                                confirmRoleBtn.disabled = false;
+                                confirmRoleBtn.textContent = 'Confirm Change';
+                            });
+                    });
+                }
+
+                function renderPagination(totalPages, currentPageNum) {
+                    var container = document.getElementById('users-pagination');
+                    if (!container) return;
+                    container.innerHTML = '';
+                    if (totalPages <= 1) return;
+
+                    for (var i = 0; i < totalPages; i++) {
+                        var btn = document.createElement('button');
+                        btn.className = 'admin-page-btn' + (i === currentPageNum ? ' admin-page-btn--active' : '');
+                        btn.textContent = i + 1;
+                        btn.setAttribute('data-page', i);
+                        btn.addEventListener('click', function () {
+                            currentPage = parseInt(this.getAttribute('data-page'));
+                            loadUsers();
+                        });
+                        container.appendChild(btn);
+                    }
+                }
+
+                // ══════════════════════════════════════════════════════════
+                // CONTENT TAB — Top Songs
+                // ══════════════════════════════════════════════════════════
+
+                function loadTopSongs() {
+                    var tbody = document.getElementById('songs-tbody');
+                    if (!tbody) return;
+                    tbody.innerHTML = '<tr><td colspan="6" class="admin-loading">Loading...</td></tr>';
+
+                    fetch('/api/admin/stats/top-songs?limit=20', {
+                        headers: { 'Accept': 'application/json' }
+                    })
+                        .then(function (res) { return res.json(); })
+                        .then(function (songs) {
+                            tbody.innerHTML = '';
+
+                            if (songs.length === 0) {
+                                tbody.innerHTML = '<tr><td colspan="6" class="admin-loading">No songs found</td></tr>';
+                                return;
+                            }
+
+                            songs.forEach(function (s, idx) {
+                                var tr = document.createElement('tr');
+                                tr.innerHTML =
+                                    '<td>' + (idx + 1) + '</td>' +
+                                    '<td><strong>' + escapeHtml(s.title) + '</strong></td>' +
+                                    '<td>' + escapeHtml(s.artist) + '</td>' +
+                                    '<td>' + escapeHtml(s.genre || '—') + '</td>' +
+                                    '<td>' + (s.playCount || 0) + '</td>' +
+                                    '<td><button class="admin-action-btn admin-action-btn--delete" data-song-id="' + s.id + '" data-title="' + escapeHtml(s.title) + '" title="Remove Song">🗑️</button></td>';
+                                tbody.appendChild(tr);
+                            });
+
+                            tbody.querySelectorAll('.admin-action-btn--delete').forEach(function (btn) {
+                                btn.addEventListener('click', function () {
+                                    var songId = this.getAttribute('data-song-id');
+                                    var title = this.getAttribute('data-title');
+
+                                    RevPlay.confirm({
+                                        title: 'Remove Song',
+                                        message: 'Remove "' + title + '" from the platform? This cannot be undone.',
+                                        type: 'danger',
+                                        confirmText: 'Remove',
+                                        cancelText: 'Cancel'
+                                    }).then(function (confirmed) {
+                                        if (!confirmed) return;
+
+                                        fetch('/api/admin/songs/' + songId, {
+                                            method: 'DELETE',
+                                            headers: { 'X-CSRF-TOKEN': csrfToken }
+                                        })
+                                            .then(function (res) {
+                                                if (res.status >= 200 && res.status < 300) {
+                                                    RevPlay.toast({ type: 'success', message: '"' + title + '" removed' });
+                                                    loadTopSongs();
+                                                    loadStats();
+                                                } else {
+                                                    RevPlay.toast({ type: 'error', message: 'Failed to delete song' });
+                                                }
+                                            })
+                                            .catch(function () {
+                                                RevPlay.toast({ type: 'error', message: 'Error deleting song' });
+                                            });
+                                    });
+                                });
+                            });
+                        })
+                        .catch(function () {
+                            tbody.innerHTML = '<tr><td colspan="6" class="admin-loading" style="color: var(--error-color);">Error loading songs</td></tr>';
+                        });
+                }
+
+                // ══════════════════════════════════════════════════════════
+                // REPORTS TAB
+                // ══════════════════════════════════════════════════════════
+
+                function loadReports() {
+                    loadRoleDistribution();
+                    loadGrowthChart();
+                }
+
+                function loadRoleDistribution() {
+                    var container = document.getElementById('role-bars');
+                    if (!container) return;
+                    container.innerHTML = '<div class="admin-loading">Loading...</div>';
+
+                    fetch('/api/admin/stats/roles', {
+                        headers: { 'Accept': 'application/json' }
+                    })
+                        .then(function (res) { return res.json(); })
+                        .then(function (data) {
+                            container.innerHTML = '';
+                            var total = 0;
+                            Object.values(data).forEach(function (v) { total += v; });
+
+                            Object.keys(data).forEach(function (role) {
+                                var count = data[role];
+                                var pct = total > 0 ? Math.round((count / total) * 100) : 0;
+
+                                var bar = document.createElement('div');
+                                bar.className = 'admin-role-bar';
+                                bar.innerHTML =
+                                    '<div class="admin-role-bar-label">' +
+                                    '<span class="admin-role-badge admin-role-badge--' + role.toLowerCase() + '">' + role + '</span>' +
+                                    '<span>' + count + ' users (' + pct + '%)</span>' +
+                                    '</div>' +
+                                    '<div class="admin-role-bar-track">' +
+                                    '<div class="admin-role-bar-fill admin-role-bar-fill--' + role.toLowerCase() + '" style="width: ' + pct + '%;"></div>' +
+                                    '</div>';
+                                container.appendChild(bar);
+                            });
+                        })
+                        .catch(function () {
+                            container.innerHTML = '<div class="admin-loading" style="color: var(--error-color);">Error loading data</div>';
+                        });
+                }
+
+                function loadGrowthChart() {
+                    var container = document.getElementById('growth-chart');
+                    if (!container) return;
+                    container.innerHTML = '<div class="admin-loading">Loading...</div>';
+
+                    fetch('/api/admin/stats/growth?days=30', {
+                        headers: { 'Accept': 'application/json' }
+                    })
+                        .then(function (res) { return res.json(); })
+                        .then(function (data) {
+                            container.innerHTML = '';
+
+                            if (!data || data.length === 0) {
+                                container.innerHTML = '<div class="admin-loading">No growth data available</div>';
+                                return;
+                            }
+
+                            var maxCount = 0;
+                            data.forEach(function (d) {
+                                if (d[1] > maxCount) maxCount = d[1];
+                            });
+
+                            var chartHtml = '<div class="admin-growth-bars">';
+                            data.forEach(function (d) {
+                                var date = d[0];
+                                var count = d[1];
+                                var pct = maxCount > 0 ? Math.round((count / maxCount) * 100) : 0;
+
+                                chartHtml +=
+                                    '<div class="admin-growth-bar-item" title="' + date + ': ' + count + ' new users">' +
+                                    '<div class="admin-growth-bar-col">' +
+                                    '<div class="admin-growth-bar-fill" style="height: ' + Math.max(pct, 4) + '%;"></div>' +
+                                    '</div>' +
+                                    '<div class="admin-growth-bar-label">' + formatShortDate(date) + '</div>' +
+                                    '</div>';
+                            });
+                            chartHtml += '</div>';
+                            container.innerHTML = chartHtml;
+                        })
+                        .catch(function () {
+                            container.innerHTML = '<div class="admin-loading" style="color: var(--error-color);">Error loading growth data</div>';
+                        });
+                }
+
+                // ══════════════════════════════════════════════════════════
+                // HELPERS
+                // ══════════════════════════════════════════════════════════
+
+                function escapeHtml(text) {
+                    if (!text) return '';
+                    var div = document.createElement('div');
+                    div.textContent = text;
+                    return div.innerHTML;
+                }
+
+                function formatDate(dateStr) {
+                    if (!dateStr) return '—';
+                    var d = new Date(dateStr);
+                    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                }
+
+                function formatShortDate(dateStr) {
+                    if (!dateStr) return '';
+                    var parts = dateStr.split('-');
+                    return parts[1] + '/' + parts[2];
+                }
+
+                // Close modals on overlay click
+                document.querySelectorAll('.modal-overlay').forEach(function (m) {
+                    m.addEventListener('click', function (e) {
+                        if (e.target === m) m.style.display = 'none';
+                    });
+                });
+
+            })();
+        </script>
+
+    </div>
+</div>
+</body>
+</html>

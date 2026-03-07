@@ -9,95 +9,672 @@
 
         <!-- ═══ Dashboard Header ═══ -->
         <div class="dashboard-header">
-            <div class="dashboard-header-info">
-                <span class="dashboard-label">ARTIST DASHBOARD</span>
-                <h1 th:text="${profile.artistName}">Artist Name</h1>
-                <p class="dashboard-subtitle" th:if="${profile.genre}" th:text="${profile.genre}">Genre</p>
+            <div class="dashboard-header-left">
+                <div class="dashboard-avatar">
+                    <img th:if="${profile.profilePictureUrl != null}"
+                         th:src="${profile.profilePictureUrl}" alt="Artist">
+                    <div th:if="${profile.profilePictureUrl == null}" class="avatar-fallback-lg">
+                        <span th:text="${profile.artistName != null ? profile.artistName.substring(0,1).toUpperCase() : '?'}">A</span>
+                    </div>
+                </div>
+                <div class="dashboard-header-info">
+                    <span class="dashboard-label">ARTIST DASHBOARD</span>
+                    <h1 th:text="${profile.artistName}">Artist Name</h1>
+                    <p class="dashboard-subtitle" th:if="${profile.genre}" th:text="${profile.genre}">Genre</p>
+                </div>
+            </div>
+            <div class="dashboard-actions">
+                <a href="/artist/songs" class="btn-secondary dash-action-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+                    </svg>
+                    My Songs
+                </a>
+                <a href="/artist/albums" class="btn-secondary dash-action-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    My Albums
+                </a>
             </div>
         </div>
 
-        <!-- ═══ Stats Cards ═══ -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon">🎵</div>
-                <div class="stat-value" th:text="${totalSongs != null ? totalSongs : 0}">0</div>
-                <div class="stat-label">Total Songs</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">💿</div>
-                <div class="stat-value" th:text="${totalAlbums != null ? totalAlbums : 0}">0</div>
-                <div class="stat-label">Albums</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">▶️</div>
-                <div class="stat-value" th:text="${totalPlays != null ? totalPlays : 0}">0</div>
-                <div class="stat-label">Total Plays</div>
-            </div>
+        <!-- ═══ Dashboard Tabs ═══ -->
+        <div class="dash-tabs">
+            <button class="dash-tab active" data-tab="overview">Overview</button>
+            <button class="dash-tab" data-tab="analytics">Analytics</button>
+            <button class="dash-tab" data-tab="settings">Profile Settings</button>
         </div>
 
-        <!-- ═══ My Songs Table ═══ -->
-        <section class="dashboard-section">
-            <div class="section-header">
-                <h2 class="section-title">My Songs</h2>
+        <!-- ═══════════════════════════════════════════
+             TAB 1: OVERVIEW
+             ═══════════════════════════════════════════ -->
+        <div class="dash-tab-content active" id="tab-overview">
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon-svg">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round">
+                            <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+                        </svg>
+                    </div>
+                    <div class="stat-value" th:text="${totalSongs != null ? totalSongs : 0}">0</div>
+                    <div class="stat-label">Total Songs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon-svg">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round">
+                            <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </div>
+                    <div class="stat-value" th:text="${totalAlbums != null ? totalAlbums : 0}">0</div>
+                    <div class="stat-label">Albums</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon-svg">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round">
+                            <polygon points="5 3 19 12 5 21 5 3"/>
+                        </svg>
+                    </div>
+                    <div class="stat-value" th:text="${totalPlays != null ? totalPlays : 0}">0</div>
+                    <div class="stat-label">Total Plays</div>
+                </div>
+                <div class="stat-card stat-card-accent">
+                    <div class="stat-icon-svg">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                        </svg>
+                    </div>
+                    <div class="stat-value" id="total-favorites">—</div>
+                    <div class="stat-label">Total Favorites</div>
+                </div>
             </div>
 
-            <div class="dashboard-table-wrapper" th:if="${songs != null && !songs.isEmpty()}">
-                <table class="dashboard-table">
-                    <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Cover</th>
-                        <th>Title</th>
-                        <th>Album</th>
-                        <th>Plays</th>
-                        <th>Visibility</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="song, iter : ${songs}">
-                        <td th:text="${iter.index + 1}">1</td>
-                        <td>
-                            <img th:src="${song.coverImageUrl != null ? song.coverImageUrl : 'https://www.shutterstock.com/shutterstock/photos/2626947211/display_1500/stock-vector-jazz-music-poster-design-template-2626947211.jpg'}"
-                                 alt="Cover" class="table-cover-img">
-                        </td>
-                        <td class="table-song-title" th:text="${song.title}">Song Title</td>
-                        <td class="table-muted" th:text="${song.albumName != null ? song.albumName : '—'}">Album</td>
-                        <td th:text="${song.playCount != null ? song.playCount : 0}">0</td>
-                        <td>
+            <!-- Recent Songs Table -->
+            <section class="dashboard-section">
+                <div class="section-header">
+                    <h2 class="section-title">Recent Songs</h2>
+                    <a href="/artist/songs" class="section-link">View All →</a>
+                </div>
+
+                <div class="dashboard-table-wrapper" th:if="${allSongs != null && !allSongs.isEmpty()}">
+                    <table class="dashboard-table">
+                        <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Cover</th>
+                            <th>Title</th>
+                            <th>Album</th>
+                            <th>Plays</th>
+                            <th>Visibility</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="song, iter : ${allSongs}" th:if="${iter.index < 10}">
+                            <td th:text="${iter.index + 1}">1</td>
+                            <td>
+                                <img th:src="${song.coverImageUrl != null ? song.coverImageUrl : 'https://placehold.co/40x40/1a1a2e/ffffff?text=♪'}"
+                                     alt="Cover" class="table-cover-img">
+                            </td>
+                            <td class="table-song-title" th:text="${song.title}">Song Title</td>
+                            <td class="table-muted" th:text="${song.albumName != null ? song.albumName : '—'}">—</td>
+                            <td th:text="${song.playCount != null ? song.playCount : 0}">0</td>
+                            <td>
                                 <span class="visibility-badge"
                                       th:classappend="${song.visibility == 'PUBLIC' ? 'vis-public' : (song.visibility == 'PRIVATE' ? 'vis-private' : 'vis-unlisted')}"
                                       th:text="${song.visibility != null ? song.visibility : 'PUBLIC'}">PUBLIC</span>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
 
-            <div class="empty-state" th:if="${songs == null || songs.isEmpty()}" style="padding: 40px;">
-                <div class="empty-icon">🎵</div>
-                <h2>No songs uploaded yet</h2>
-                <p>Start uploading your music to see it here</p>
-            </div>
-        </section>
+                <div class="empty-state" th:if="${allSongs == null || allSongs.isEmpty()}">
+                    <div class="empty-icon">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" opacity="0.5">
+                            <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+                        </svg>
+                    </div>
+                    <h2>No songs uploaded yet</h2>
+                    <p>Start by <a href="/artist/songs">uploading your music</a></p>
+                </div>
+            </section>
 
-        <!-- ═══ My Albums ═══ -->
-        <section class="dashboard-section" th:if="${albums != null && !albums.isEmpty()}">
-            <div class="section-header">
-                <h2 class="section-title">My Albums</h2>
-            </div>
-            <div class="album-grid">
-                <div th:each="album : ${albums}" class="album-card">
-                    <img th:src="${album.coverImageUrl != null ? album.coverImageUrl : 'https://www.shutterstock.com/shutterstock/photos/2626947211/display_1500/stock-vector-jazz-music-poster-design-template-2626947211.jpg'}"
-                         alt="Album Cover" class="album-cover">
-                    <div class="album-card-name" th:text="${album.name}">Album Name</div>
-                    <div class="album-card-meta">
-                        <span th:text="${album.songCount + ' tracks'}">0 tracks</span>
+            <!-- Albums Preview -->
+            <section class="dashboard-section" th:if="${albums != null && !albums.isEmpty()}">
+                <div class="section-header">
+                    <h2 class="section-title">My Albums</h2>
+                    <a href="/artist/albums" class="section-link">Manage →</a>
+                </div>
+                <div class="album-grid">
+                    <div th:each="album : ${albums}" class="album-card">
+                        <img th:src="${album.coverImageUrl != null ? album.coverImageUrl : 'https://placehold.co/200x200/1a1a2e/ffffff?text=💿'}"
+                             alt="Album Cover" class="album-cover">
+                        <div class="album-card-name" th:text="${album.name}">Album</div>
+                        <div class="album-card-meta" th:text="${album.songCount + ' tracks'}">0 tracks</div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
+        </div>
 
-    </div>
-</div>
-</body>
-</html>
+        <!-- ═══════════════════════════════════════════
+             TAB 2: ANALYTICS  (unchanged — keeping your JS)
+             ═══════════════════════════════════════════ -->
+        <div class="dash-tab-content" id="tab-analytics">
+
+            <section class="dashboard-section">
+                <div class="section-header">
+                    <h2 class="section-title">Song Performance</h2>
+                </div>
+                <div id="song-performance-container">
+                    <div class="loading-spinner">Loading analytics...</div>
+                </div>
+            </section>
+
+            <section class="dashboard-section">
+                <div class="section-header">
+                    <h2 class="section-title">Listening Trends</h2>
+                    <div class="trend-period-toggle">
+                        <button class="trend-btn active" data-period="daily">Daily</button>
+                        <button class="trend-btn" data-period="weekly">Weekly</button>
+                        <button class="trend-btn" data-period="monthly">Monthly</button>
+                    </div>
+                </div>
+                <div id="trends-chart-container" class="chart-container">
+                    <div class="loading-spinner">Loading trends...</div>
+                </div>
+            </section>
+
+            <section class="dashboard-section">
+                <div class="section-header">
+                    <h2 class="section-title">Top Listeners</h2>
+                </div>
+                <div id="top-listeners-container">
+                    <div class="loading-spinner">Loading...</div>
+                </div>
+            </section>
+
+            <section class="dashboard-section">
+                <div class="section-header">
+                    <h2 class="section-title">Your Fans</h2>
+                </div>
+                <div id="fans-container">
+                    <div class="loading-spinner">Loading...</div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ═══════════════════════════════════════════
+     TAB 3: PROFILE SETTINGS (continued)
+     ═══════════════════════════════════════════ -->
+        <div class="dash-tab-content" id="tab-settings">
+
+            <section class="dashboard-section">
+                <h2 class="section-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-3px;margin-right:8px;">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                    Edit Profile
+                </h2>
+
+                <div class="settings-grid">
+                    <!-- Profile Picture -->
+                    <div class="settings-card">
+                        <h3>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:6px;">
+                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                                <circle cx="12" cy="13" r="4"/>
+                            </svg>
+                            Profile Picture
+                        </h3>
+                        <div class="picture-upload-area">
+                            <img th:if="${profile.profilePictureUrl != null}"
+                                 th:src="${profile.profilePictureUrl}"
+                                 alt="Profile" class="settings-preview-img" id="picture-preview">
+                            <div th:if="${profile.profilePictureUrl == null}"
+                                 class="avatar-fallback-lg" id="picture-fallback">
+                                <span th:text="${profile.artistName != null ? profile.artistName.substring(0,1).toUpperCase() : '?'}">A</span>
+                            </div>
+                            <input type="file" id="picture-file" accept="image/*" style="display:none">
+                            <button class="btn-secondary dash-action-btn" onclick="document.getElementById('picture-file').click()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="17 8 12 3 7 8"/>
+                                    <line x1="12" y1="3" x2="12" y2="15"/>
+                                </svg>
+                                Change Picture
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Banner Image -->
+                    <div class="settings-card">
+                        <h3>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:6px;">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                <circle cx="8.5" cy="8.5" r="1.5"/>
+                                <polyline points="21 15 16 10 5 21"/>
+                            </svg>
+                            Banner Image
+                        </h3>
+                        <div class="banner-upload-area">
+                            <div class="banner-preview"
+                                 th:style="${profile.bannerImageUrl != null ? 'background-image: url(' + profile.bannerImageUrl + ')' : ''}"
+                                 id="banner-preview">
+                                <span th:if="${profile.bannerImageUrl == null}" class="banner-placeholder-text">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                                        <polyline points="21 15 16 10 5 21"/>
+                                    </svg>
+                                    No banner set
+                                </span>
+                            </div>
+                            <input type="file" id="banner-file" accept="image/*" style="display:none">
+                            <button class="btn-secondary dash-action-btn" onclick="document.getElementById('banner-file').click()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="17 8 12 3 7 8"/>
+                                    <line x1="12" y1="3" x2="12" y2="15"/>
+                                </svg>
+                                Change Banner
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Info Form -->
+                <div class="settings-card settings-card-wide">
+                    <h3>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:6px;">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        Profile Information
+                    </h3>
+                    <form id="profile-form" class="settings-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Artist Name</label>
+                                <input class="form-input" type="text" id="set-artistName"
+                                       th:value="${profile.artistName}" placeholder="Artist Name">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Genre</label>
+                                <input class="form-input" type="text" id="set-genre"
+                                       th:value="${profile.genre}" placeholder="e.g. Pop, Jazz">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Bio</label>
+                            <textarea class="form-input" id="set-bio" rows="4"
+                                      th:text="${profile.bio}" placeholder="Tell fans about yourself..."></textarea>
+                        </div>
+
+                        <h3 style="margin-top: 30px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:6px;">
+                                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+                            </svg>
+                            Social Links
+                        </h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:4px;">
+                                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                                    </svg>
+                                    Instagram
+                                </label>
+                                <input class="form-input" type="text" id="set-instagram"
+                                       th:value="${profile.instagram}" placeholder="https://instagram.com/...">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:4px;">
+                                        <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/>
+                                    </svg>
+                                    Twitter / X
+                                </label>
+                                <input class="form-input" type="text" id="set-twitter"
+                                       th:value="${profile.twitter}" placeholder="https://twitter.com/...">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:4px;">
+                                        <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19.1c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/>
+                                        <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/>
+                                    </svg>
+                                    YouTube
+                                </label>
+                                <input class="form-input" type="text" id="set-youtube"
+                                       th:value="${profile.youtube}" placeholder="https://youtube.com/...">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:4px;">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <path d="M8 12a4 4 0 0 1 8 0"/>
+                                        <circle cx="12" cy="12" r="2"/>
+                                    </svg>
+                                    Spotify
+                                </label>
+                                <input class="form-input" type="text" id="set-spotify"
+                                       th:value="${profile.spotify}" placeholder="https://open.spotify.com/...">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:4px;">
+                                    <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+                                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                                </svg>
+                                Website
+                            </label>
+                            <input class="form-input" type="text" id="set-website"
+                                   th:value="${profile.website}" placeholder="https://yoursite.com">
+                        </div>
+
+                        <button type="submit" class="btn-primary" id="btn-save-profile" style="width:auto;padding:12px 40px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:6px;">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                                <polyline points="17 21 17 13 7 13 7 21"/>
+                                <polyline points="7 3 7 8 15 8"/>
+                            </svg>
+                            Save Changes
+                        </button>
+                        <span id="profile-save-status" class="save-status"></span>
+                    </form>
+                </div>
+            </section>
+        </div>
+
+        <!-- ═══ Dashboard Scripts ═══ -->
+        <!-- ═══ Dashboard Scripts ═══ -->
+        <script th:inline="javascript">
+            (function() {
+                var csrf = document.querySelector('meta[name="_csrf"]');
+                var csrfToken = csrf ? csrf.getAttribute('content') : '';
+
+                // ── Tab Switching ──
+                document.querySelectorAll('.dash-tab').forEach(function(tab) {
+                    tab.addEventListener('click', function() {
+                        document.querySelectorAll('.dash-tab').forEach(function(t) { t.classList.remove('active'); });
+                        document.querySelectorAll('.dash-tab-content').forEach(function(c) { c.classList.remove('active'); });
+                        tab.classList.add('active');
+                        var target = document.getElementById('tab-' + tab.dataset.tab);
+                        if (target) target.classList.add('active');
+
+                        if (tab.dataset.tab === 'analytics' && !window._analyticsLoaded) {
+                            window._analyticsLoaded = true;
+                            loadAnalytics();
+                        }
+                    });
+                });
+
+                // ── ANALYTICS LOADERS ──
+
+                function loadAnalytics() {
+                    loadOverviewFavorites();
+                    loadSongPerformance();
+                    loadTrends('daily');
+                    loadTopListeners();
+                    loadFans();
+                }
+
+                function loadOverviewFavorites() {
+                    fetch('/api/artists/analytics/overview')
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            var el = document.getElementById('total-favorites');
+                            if (el) el.textContent = data.totalFavorites || 0;
+                        })
+                        .catch(function() {});
+                }
+
+                function loadSongPerformance() {
+                    var container = document.getElementById('song-performance-container');
+                    fetch('/api/artists/analytics/songs')
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            var songs = data.songPlayCounts || [];
+                            if (songs.length === 0) {
+                                container.innerHTML = '<div class="empty-state"><p>No play data yet</p></div>';
+                                return;
+                            }
+                            var maxPlays = Math.max.apply(null, songs.map(function(s) { return s.playCount; })) || 1;
+                            var html = '<div class="perf-list">';
+                            songs.forEach(function(s, i) {
+                                var pct = Math.round((s.playCount / maxPlays) * 100);
+                                html += '<div class="perf-row">' +
+                                    '<span class="perf-rank">' + (i+1) + '</span>' +
+                                    '<img class="perf-cover" src="' + (s.coverImageUrl || 'https://placehold.co/36x36/1a1a2e/ffffff?text=♪') + '">' +
+                                    '<span class="perf-title">' + s.songTitle + '</span>' +
+                                    '<div class="perf-bar-bg"><div class="perf-bar-fill" style="width:' + pct + '%"></div></div>' +
+                                    '<span class="perf-count">' + s.playCount + '</span>' +
+                                    '</div>';
+                            });
+                            html += '</div>';
+                            container.innerHTML = html;
+                        })
+                        .catch(function() { container.innerHTML = '<p class="text-muted">Failed to load</p>'; });
+                }
+
+                function loadTrends(period) {
+                    var container = document.getElementById('trends-chart-container');
+                    container.innerHTML = '<div class="loading-spinner">Loading...</div>';
+                    fetch('/api/artists/analytics/trends?period=' + period)
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            var points = data.trends || [];
+                            if (points.length === 0) {
+                                container.innerHTML = '<div class="empty-state"><p>No trend data yet</p></div>';
+                                return;
+                            }
+                            var maxVal = Math.max.apply(null, points.map(function(p) { return p.playCount; })) || 1;
+                            var html = '<div class="trend-chart">';
+                            points.forEach(function(p) {
+                                var pct = Math.round((p.playCount / maxVal) * 100);
+                                html += '<div class="trend-bar-col">' +
+                                    '<div class="trend-bar" style="height:' + Math.max(pct, 4) + '%"></div>' +
+                                    '<span class="trend-label">' + formatPeriod(p.period) + '</span>' +
+                                    '</div>';
+                            });
+                            html += '</div>';
+                            container.innerHTML = html;
+                        })
+                        .catch(function() { container.innerHTML = '<p class="text-muted">Failed to load trends</p>'; });
+                }
+
+                function formatPeriod(p) {
+                    if (!p) return '';
+                    if (p.length === 10) return p.substring(5);
+                    if (p.indexOf('W') !== -1) return p.substring(5);
+                    if (p.length === 7) return p.substring(5);
+                    return p;
+                }
+
+                document.querySelectorAll('.trend-btn').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        document.querySelectorAll('.trend-btn').forEach(function(b) { b.classList.remove('active'); });
+                        btn.classList.add('active');
+                        loadTrends(btn.dataset.period);
+                    });
+                });
+
+                function loadTopListeners() {
+                    var container = document.getElementById('top-listeners-container');
+                    fetch('/api/artists/analytics/top-listeners')
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            var listeners = data.topListeners || [];
+                            if (listeners.length === 0) {
+                                container.innerHTML = '<div class="empty-state"><p>No listener data yet</p></div>';
+                                return;
+                            }
+                            var html = '<div class="listener-list">';
+                            listeners.forEach(function(l, i) {
+                                html += '<div class="listener-row">' +
+                                    '<span class="listener-rank">#' + (i+1) + '</span>' +
+                                    '<div class="listener-info">' +
+                                    '<span class="listener-name">' + (l.displayName || l.username) + '</span>' +
+                                    '<span class="listener-username">@' + l.username + '</span>' +
+                                    '</div>' +
+                                    '<span class="listener-plays">' + l.playCount + ' plays</span>' +
+                                    '</div>';
+                            });
+                            html += '</div>';
+                            container.innerHTML = html;
+                        })
+                        .catch(function() { container.innerHTML = '<p class="text-muted">Failed to load</p>'; });
+                }
+
+                function loadFans() {
+                    var container = document.getElementById('fans-container');
+                    fetch('/api/artists/analytics/fans')
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            var fans = data.fans || [];
+                            if (fans.length === 0) {
+                                container.innerHTML = '<div class="empty-state"><p>No fans yet — keep uploading!</p></div>';
+                                return;
+                            }
+                            var html = '<div class="fan-grid">';
+                            fans.forEach(function(f) {
+                                var avatar = f.profilePictureUrl
+                                    ? '<img src="' + f.profilePictureUrl + '" class="fan-avatar">'
+                                    : '<div class="fan-avatar fan-avatar-fallback">' + (f.displayName || f.username).charAt(0).toUpperCase() + '</div>';
+                                html += '<div class="fan-card">' + avatar +
+                                    '<div class="fan-name">' + (f.displayName || f.username) + '</div>' +
+                                    '<div class="fan-count">' +
+                                    '<svg width="12" height="12" viewBox="0 0 24 24" fill="#ef4444" stroke="none" style="vertical-align:-1px;margin-right:3px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>' +
+                                    f.favoriteCount + ' songs</div>' +
+                                    '</div>';
+                            });
+                            html += '</div>';
+                            container.innerHTML = html;
+                        })
+                        .catch(function() { container.innerHTML = '<p class="text-muted">Failed to load</p>'; });
+                }
+
+                // ── PROFILE SETTINGS ──
+
+                var pictureFile = document.getElementById('picture-file');
+                if (pictureFile) {
+                    pictureFile.addEventListener('change', function() {
+                        if (!this.files[0]) return;
+                        var fd = new FormData();
+                        fd.append('file', this.files[0]);
+                        fetch('/api/artists/me/picture', {
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': csrfToken },
+                            body: fd
+                        }).then(function(r) {
+                            if (r.ok) return r.json();
+                            throw new Error('Upload failed');
+                        }).then(function(data) {
+                            var preview = document.getElementById('picture-preview');
+                            var fallback = document.getElementById('picture-fallback');
+                            if (fallback) fallback.style.display = 'none';
+                            if (preview) {
+                                preview.src = data.profilePictureUrl;
+                                preview.style.display = 'block';
+                            } else {
+                                var img = document.createElement('img');
+                                img.src = data.profilePictureUrl;
+                                img.className = 'settings-preview-img';
+                                img.id = 'picture-preview';
+                                document.querySelector('.picture-upload-area').prepend(img);
+                            }
+                            RevPlay.toast({ type: 'success', message: 'Profile picture updated!' });
+                        }).catch(function(e) {
+                            RevPlay.toast({ type: 'error', message: e.message });
+                        });
+                    });
+                }
+
+                var bannerFile = document.getElementById('banner-file');
+                if (bannerFile) {
+                    bannerFile.addEventListener('change', function() {
+                        if (!this.files[0]) return;
+                        var fd = new FormData();
+                        fd.append('file', this.files[0]);
+                        fetch('/api/artists/me/banner', {
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': csrfToken },
+                            body: fd
+                        }).then(function(r) {
+                            if (r.ok) return r.json();
+                            throw new Error('Upload failed');
+                        }).then(function(data) {
+                            var bp = document.getElementById('banner-preview');
+                            if (bp) {
+                                bp.style.backgroundImage = 'url(' + data.bannerImageUrl + ')';
+                                bp.innerHTML = '';
+                            }
+                            RevPlay.toast({ type: 'success', message: 'Banner image updated!' });
+                        }).catch(function(e) {
+                            RevPlay.toast({ type: 'error', message: e.message });
+                        });
+                    });
+                }
+
+                var profileForm = document.getElementById('profile-form');
+                if (profileForm) {
+                    profileForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        var status = document.getElementById('profile-save-status');
+                        var btn = document.getElementById('btn-save-profile');
+
+                        var payload = {
+                            artistName: document.getElementById('set-artistName').value,
+                            genre: document.getElementById('set-genre').value,
+                            bio: document.getElementById('set-bio').value,
+                            instagram: document.getElementById('set-instagram').value,
+                            twitter: document.getElementById('set-twitter').value,
+                            youtube: document.getElementById('set-youtube').value,
+                            spotify: document.getElementById('set-spotify').value,
+                            website: document.getElementById('set-website').value
+                        };
+
+                        btn.disabled = true;
+                        btn.textContent = 'Saving...';
+
+                        fetch('/api/artists/update', {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken
+                            },
+                            body: JSON.stringify(payload)
+                        }).then(function(r) {
+                            if (r.ok) return r.json();
+                            throw new Error('Save failed');
+                        }).then(function() {
+                            RevPlay.toast({ type: 'success', message: 'Profile saved successfully!' });
+                            if (status) {
+                                status.textContent = '✓ Saved';
+                                status.className = 'save-status save-success';
+                                setTimeout(function() { status.textContent = ''; }, 3000);
+                            }
+                        }).catch(function(e) {
+                            RevPlay.toast({ type: 'error', message: e.message });
+                            if (status) {
+                                status.textContent = '✗ ' + e.message;
+                                status.className = 'save-status save-error';
+                            }
+                        }).finally(function() {
+                            btn.disabled = false;
+                            btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:6px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Changes';
+                        });
+                    });
+                }
+
+                loadOverviewFavorites();
+            })();
+        </script>

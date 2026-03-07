@@ -12,6 +12,7 @@ public class HistoryDTO {
     private Long id;
     private Long songId;
     private String songTitle;
+    private String audioUrl;
     private String artistName;
     private String coverImageUrl;
     private LocalDateTime playedAt;

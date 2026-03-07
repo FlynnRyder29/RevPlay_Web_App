@@ -19,11 +19,15 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -65,6 +69,29 @@ public class SongService {
         }
 
         return mapToDTO(song);
+    }
+
+    // ── ARTIST'S OWN SONGS (all visibilities) ────────────────────────────────
+// Used by artist dashboard/songs page — shows PUBLIC + UNLISTED + PRIVATE
+    @Transactional(readOnly = true)
+    public List<SongDTO> getArtistAllSongs(Long artistId) {
+        log.debug("Fetching all songs for artistId={} (all visibilities)", artistId);
+        return songRepository.findAllByArtistId(artistId)
+                .stream()
+                .map(this::mapToDTO)
+                .toList();
+    }
+
+    // ── TRENDING SONGS (top by play count) ────────────────────────────────
+    @Transactional(readOnly = true)
+    public List<SongDTO> getTrendingSongs(int limit) {
+        log.debug("Fetching top {} trending songs", limit);
+        Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "playCount"));
+        return songRepository.findByVisibility(Song.Visibility.PUBLIC, pageable)
+                .getContent()
+                .stream()
+                .map(this::mapToDTO)
+                .toList();
     }
 
     // 🔴 FIX: Only search PUBLIC songs

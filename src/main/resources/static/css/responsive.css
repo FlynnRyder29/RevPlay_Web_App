@@ -1,0 +1,502 @@
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE — ALL Media Queries
+   Tablet (1024px), Mobile (768px), Small Mobile (480px)
+   ═══════════════════════════════════════════════════════ */
+
+
+/* ═══════════════════════════════════════════════════════
+   TABLET — max-width: 1024px
+   ═══════════════════════════════════════════════════════ */
+
+@media (max-width: 1024px) and (min-width: 769px) {
+
+    .song-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+    }
+
+    .album-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+    }
+
+    .player-bar {
+        padding: 0 15px;
+    }
+
+    .player-left { width: 28%; }
+    .player-center { width: 44%; }
+    .player-right { width: 28%; }
+
+    .artist-banner { height: 250px; }
+    .artist-name { font-size: 2.2rem; }
+
+    .artist-avatar-img,
+    .artist-avatar-fallback {
+        width: 120px;
+        height: 120px;
+        font-size: 48px;
+    }
+
+    .queue-sidebar { width: 250px; }
+
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+
+    .sidebar:hover {
+        width: 200px;
+        min-width: 200px;
+    }
+
+    .content-area { padding: 25px; }
+
+    .hero-title { font-size: 2.8rem; }
+    .hero-features { gap: 25px; }
+
+    .playlist-detail-name { font-size: 2rem; }
+
+    .playlist-detail-icon {
+        width: 140px;
+        height: 140px;
+        font-size: 60px;
+    }
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   MOBILE — max-width: 768px
+   Sidebar becomes a slide-out drawer from the left.
+   Hamburger button in navbar toggles it.
+   ═══════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+    /* ── Show hamburger ── */
+    .nav-hamburger {
+        display: flex;
+    }
+
+    /* ── Hide search in navbar ── */
+    .nav-search {
+        display: none;
+    }
+
+    /* ── Sidebar: slide-out drawer ── */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: -280px;
+        width: 280px;
+        min-width: 280px;
+        height: 100vh;
+        z-index: 100;
+        transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-right: 1px solid var(--border-color);
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    /* When open */
+    .sidebar.sidebar--open {
+        left: 0;
+    }
+
+    /* Disable hover expand on mobile */
+    .sidebar:hover {
+        width: 280px;
+        min-width: 280px;
+    }
+
+    /* Show all labels when sidebar is open on mobile */
+    .sidebar.sidebar--open .sidebar-label {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    .sidebar.sidebar--open .sidebar-section-title {
+        opacity: 1;
+    }
+
+    /* Sidebar nav: vertical scroll */
+    .sidebar.sidebar--open .sidebar-nav {
+        flex-direction: column;
+        width: 100%;
+        justify-content: flex-start;
+        padding: 70px 0 20px; /* Space for navbar height */
+    }
+
+    /* Items back to normal vertical layout */
+    .sidebar.sidebar--open .sidebar-item {
+        flex-direction: row;
+        padding: 12px 16px;
+        font-size: 14px;
+        gap: 16px;
+    }
+
+    .sidebar.sidebar--open .sidebar-item img {
+        width: 24px;
+        height: 24px;
+    }
+
+    /* ── Overlay ── */
+    .sidebar-overlay.active {
+        display: block;
+        opacity: 1;
+    }
+
+    /* ── Main content adjustments ── */
+    .content-area {
+        padding: 20px;
+        padding-bottom: 100px; /* Space for player bar */
+    }
+
+    .main-content {
+        position: relative;
+    }
+
+    /* ── Hero ── */
+    .hero-title { font-size: 2.2rem; }
+
+    .hero-features {
+        flex-direction: column;
+        gap: 15px;
+        align-items: center;
+    }
+
+    /* ── Footer ── */
+    .footer-content {
+        flex-direction: column;
+        padding: 30px 20px;
+    }
+
+    .footer-columns { gap: 30px; }
+
+    .footer-bottom {
+        flex-direction: column;
+        text-align: center;
+        padding: 15px 20px;
+    }
+
+    /* ── Song grid: 2 columns ── */
+    .song-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    /* ── Player bar: compact ── */
+    .player-bar {
+        height: 70px;
+        padding: 0 12px;
+    }
+
+    .player-left {
+        width: 40%;
+        gap: 8px;
+    }
+
+    .player-left img,
+    .player-album-art {
+        width: 42px;
+        height: 42px;
+    }
+
+    .player-track-title { font-size: 12px; }
+    .player-track-artist { font-size: 11px; }
+
+    .player-center { width: 30%; }
+    .player-controls { gap: 10px; }
+
+    .player-bar #btn-shuffle,
+    .player-bar #btn-repeat {
+        display: none;
+    }
+
+    .progress-container { display: none; }
+
+    .player-right {
+        width: 35%;
+        justify-content: flex-end;
+    }
+
+    .volume-bar {
+        display: block;
+        width: 50px;
+    }
+
+    .volume-icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* ── Library ── */
+    .library-controls { flex-direction: column; }
+    .search-form { min-width: 100%; }
+    .genre-filter-form { min-width: 100%; }
+
+    /* ── Auth ── */
+    .auth-container {
+        margin: 20px auto;
+        padding: 25px 20px;
+    }
+
+    /* ── Profile ── */
+    .profile-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 25px 20px;
+        gap: 15px;
+    }
+
+    .profile-pic,
+    .profile-avatar-img {
+        width: 100px;
+        height: 100px;
+        font-size: 36px;
+    }
+
+    .profile-info h1 { font-size: 28px; }
+    .profile-container { padding: 0 20px; }
+
+    /* ── Player page ── */
+    .player-hero-art {
+        width: 220px;
+        height: 220px;
+    }
+
+    .player-hero-title { font-size: 1.3rem; }
+    .player-page-controls { gap: 15px; }
+
+    .page-ctrl-play {
+        width: 52px;
+        height: 52px;
+        min-width: 52px;
+        min-height: 52px;
+    }
+
+    .page-play-icon {
+        width: 52px !important;
+        height: 52px !important;
+    }
+
+    /* ── Search ── */
+    .search-page-form { flex-direction: column; }
+
+    /* ── Greeting ── */
+    .greeting-text { font-size: 1.5rem; }
+
+    /* ── Albums ── */
+    .album-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    /* ── Playlist detail ── */
+    .playlist-detail-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .playlist-detail-icon {
+        width: 120px;
+        height: 120px;
+        font-size: 50px;
+    }
+
+    .playlist-detail-name { font-size: 1.8rem; }
+
+    .playlist-song-header,
+    .playlist-song-row {
+        grid-template-columns: 30px 1fr 60px;
+    }
+
+    .col-artist { display: none; }
+
+    /* ── Artist ── */
+    .artist-banner {
+        height: 220px;
+        margin: -20px -20px 0;
+        padding: 0 20px;
+    }
+
+    .artist-avatar-img,
+    .artist-avatar-fallback {
+        width: 100px;
+        height: 100px;
+        font-size: 40px;
+    }
+
+    .artist-name { font-size: 1.8rem; }
+
+    /* ── Dashboard ── */
+    .stats-grid { grid-template-columns: 1fr; }
+    .dashboard-table { font-size: 13px; }
+
+    /* ── Player page queue ── */
+    .player-page-layout { flex-direction: column; }
+
+    .queue-sidebar {
+        width: 100%;
+        max-height: 300px;
+        position: static;
+    }
+
+    .keyboard-hints { display: none; }
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   SMALL MOBILE — max-width: 480px
+   ═══════════════════════════════════════════════════════ */
+
+@media (max-width: 480px) {
+
+    .song-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .song-card { padding: 10px; }
+    .song-card img { margin-bottom: 10px; }
+    .song-title { font-size: 13px; }
+    .song-artist { font-size: 12px; }
+
+    .navbar { padding: 10px 15px; }
+    .nav-brand { font-size: 18px; }
+
+    .player-bar {
+        height: 60px;
+        padding: 0 10px;
+    }
+
+    .player-left img,
+    .player-album-art {
+        width: 36px;
+        height: 36px;
+    }
+
+    .control-play {
+        width: 30px;
+        height: 30px;
+        min-width: 30px;
+        min-height: 30px;
+    }
+
+    .control-play .player-icon-img {
+        width: 30px;
+        height: 30px;
+    }
+
+    .hero-title { font-size: 1.8rem; }
+    .hero-subtitle { font-size: 1rem; }
+
+    .hero-cta {
+        padding: 12px 32px;
+        font-size: 0.95rem;
+    }
+
+    .profile-pic,
+    .profile-avatar-img {
+        width: 80px;
+        height: 80px;
+        font-size: 28px;
+    }
+
+    .profile-info h1 { font-size: 22px; }
+
+    .player-hero-art {
+        width: 180px;
+        height: 180px;
+    }
+
+    .player-hero-title { font-size: 1.1rem; }
+
+    .page-ctrl-play {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .page-play-icon {
+        width: 44px !important;
+        height: 44px !important;
+    }
+
+    .playlist-detail-icon {
+        width: 100px;
+        height: 100px;
+        font-size: 40px;
+    }
+
+    .playlist-detail-name { font-size: 1.5rem; }
+
+    .dashboard-header h1 { font-size: 1.6rem; }
+    .stat-value { font-size: 2rem; }
+    .library-header h1 { font-size: 1.6rem; }
+
+    .auth-container {
+        margin: 10px;
+        padding: 20px 15px;
+        border-radius: 8px;
+    }
+
+    /* Sidebar drawer narrower on small screens */
+    .sidebar,
+    .sidebar:hover,
+    .sidebar.sidebar--open {
+        width: 250px;
+        min-width: 250px;
+    }
+
+    .sidebar {
+        left: -250px;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════
+   CONFIRM & TOAST — Responsive
+   ═══════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+    .rp-toast-container {
+        top: 12px;
+        right: 12px;
+        left: 12px;
+        max-width: none;
+        width: auto;
+    }
+
+    .rp-confirm-modal {
+        padding: 24px 20px;
+        margin: 0 15px;
+        max-width: calc(100% - 30px);
+    }
+
+    .rp-confirm-actions {
+        flex-direction: column-reverse;
+    }
+
+    .rp-confirm-btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .rp-toast-container {
+        top: 8px;
+        right: 8px;
+        left: 8px;
+    }
+
+    .rp-toast {
+        padding: 12px 14px;
+        gap: 10px;
+    }
+
+    .rp-confirm-modal {
+        padding: 20px 16px;
+        margin: 0 10px;
+        border-radius: 12px;
+    }
+}

@@ -22,120 +22,120 @@ import java.util.List;
 @Service
 public class HistoryService {
 
-    private static final Logger log =
-            LoggerFactory.getLogger(HistoryService.class);
+        private static final Logger log = LoggerFactory.getLogger(HistoryService.class);
 
-    private final HistoryRepository historyRepository;
-    private final SongRepository songRepository;
-    private final SecurityUtils securityUtils;
+        private final HistoryRepository historyRepository;
+        private final SongRepository songRepository;
+        private final SecurityUtils securityUtils;
 
-    public HistoryService(HistoryRepository historyRepository,
-                          SongRepository songRepository,
-                          SecurityUtils securityUtils) {
-        this.historyRepository = historyRepository;
-        this.songRepository = songRepository;
-        this.securityUtils = securityUtils;
-    }
+        public HistoryService(HistoryRepository historyRepository,
+                        SongRepository songRepository,
+                        SecurityUtils securityUtils) {
+                this.historyRepository = historyRepository;
+                this.songRepository = songRepository;
+                this.securityUtils = securityUtils;
+        }
 
-    // -------------------------
-    // ADD TO HISTORY
-    // -------------------------
+        // -------------------------
+        // ADD TO HISTORY
+        // -------------------------
 
-    @Transactional
-    public void addToHistory(Long songId) {
+        @Transactional
+        public void addToHistory(Long songId) {
 
-        User currentUser = securityUtils.getCurrentUser();
+                User currentUser = securityUtils.getCurrentUser();
 
-        Song song = songRepository.findById(songId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Song", "id", songId));
+                Song song = songRepository.findById(songId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Song", "id", songId));
 
-        ListeningHistory history = new ListeningHistory();
-        history.setUser(currentUser);
-        history.setSong(song);
-        history.setPlayedAt(LocalDateTime.now());
-        historyRepository.save(history);
+                ListeningHistory history = new ListeningHistory();
+                history.setUser(currentUser);
+                history.setSong(song);
+                history.setPlayedAt(LocalDateTime.now());
+                historyRepository.save(history);
 
-        log.debug("Added history: user={}, song={}",
-                currentUser.getId(), songId);
-    }
+                log.debug("Added history: user={}, song={}",
+                                currentUser.getId(), songId);
+        }
 
-    // -------------------------
-    // GET MY HISTORY (PAGINATED / LIMITED)
-    // -------------------------
+        // -------------------------
+        // GET MY HISTORY (PAGINATED / LIMITED)
+        // -------------------------
 
-    @Transactional(readOnly = true)
-    public Page<HistoryDTO> getMyHistory(int limit) {
+        @Transactional(readOnly = true)
+        public Page<HistoryDTO> getMyHistory(int limit) {
 
-        User currentUser = securityUtils.getCurrentUser();
+                User currentUser = securityUtils.getCurrentUser();
 
-        // Safety guard: clamp limit to valid range
-        if (limit <= 0) limit = 50;
-        if (limit > 200) limit = 200;
+                // Safety guard: clamp limit to valid range
+                if (limit <= 0)
+                        limit = 50;
+                if (limit > 200)
+                        limit = 200;
 
-        Pageable pageable = PageRequest.of(0, limit);
+                Pageable pageable = PageRequest.of(0, limit);
 
-        log.debug("Fetching history for user {} with limit {}",
-                currentUser.getId(), limit);
+                log.debug("Fetching history for user {} with limit {}",
+                                currentUser.getId(), limit);
 
-        return historyRepository
-                .findByUser_IdOrderByPlayedAtDesc(
-                        currentUser.getId(),
-                        pageable
-                )
-                .map(this::toDTO);
-    }
+                return historyRepository
+                                .findByUser_IdOrderByPlayedAtDesc(
+                                                currentUser.getId(),
+                                                pageable)
+                                .map(this::toDTO);
+        }
 
-    // -------------------------
-    // GET ALL HISTORY (complete, unpaginated)
-    // -------------------------
+        // -------------------------
+        // GET ALL HISTORY (complete, unpaginated)
+        // -------------------------
 
-    @Transactional(readOnly = true)
-    public List<HistoryDTO> getAllHistory() {
+        @Transactional(readOnly = true)
+        public List<HistoryDTO> getAllHistory() {
 
-        User currentUser = securityUtils.getCurrentUser();
+                User currentUser = securityUtils.getCurrentUser();
 
-        log.debug("Fetching full history for user {}",
-                currentUser.getId());
+                log.debug("Fetching full history for user {}",
+                                currentUser.getId());
 
-        return historyRepository
-                .findAllByUser_IdOrderByPlayedAtDesc(currentUser.getId())
-                .stream()
-                .map(this::toDTO)
-                .toList();
-    }
+                return historyRepository
+                                .findAllByUser_IdOrderByPlayedAtDesc(currentUser.getId())
+                                .stream()
+                                .map(this::toDTO)
+                                .toList();
+        }
 
-    // -------------------------
-    // CLEAR HISTORY
-    // -------------------------
+        // -------------------------
+        // CLEAR HISTORY
+        // -------------------------
 
-    @Transactional
-    public void clearHistory() {
+        @Transactional
+        public void clearHistory() {
 
-        User currentUser = securityUtils.getCurrentUser();
+                User currentUser = securityUtils.getCurrentUser();
 
-        historyRepository.deleteByUser_Id(currentUser.getId());
+                historyRepository.deleteByUser_Id(currentUser.getId());
 
-        log.debug("Cleared history for user {}",
-                currentUser.getId());
-    }
+                log.debug("Cleared history for user {}",
+                                currentUser.getId());
+        }
 
-    // -------------------------
-    // MAPPER
-    // -------------------------
+        // -------------------------
+        // MAPPER
+        // -------------------------
 
-    private HistoryDTO toDTO(ListeningHistory h) {
+        private HistoryDTO toDTO(ListeningHistory h) {
 
-        HistoryDTO dto = new HistoryDTO();
+                HistoryDTO dto = new HistoryDTO();
 
-        dto.setId(h.getId());
-        dto.setSongId(h.getSong().getId());
-        dto.setSongTitle(h.getSong().getTitle());
-        dto.setArtistName(h.getSong().getArtist().getArtistName());
-        dto.setCoverImageUrl(h.getSong().getCoverImageUrl());
-        dto.setPlayedAt(h.getPlayedAt());
+                dto.setId(h.getId());
+                dto.setSongId(h.getSong().getId());
+                dto.setSongTitle(h.getSong().getTitle());
+                dto.setAudioUrl(h.getSong().getAudioUrl());
+                dto.setArtistName(h.getSong().getArtist().getArtistName());
+                dto.setCoverImageUrl(h.getSong().getCoverImageUrl());
+                dto.setPlayedAt(h.getPlayedAt());
 
-        return dto;
-    }
+                return dto;
+        }
 }

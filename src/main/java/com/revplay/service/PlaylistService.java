@@ -45,12 +45,13 @@ public class PlaylistService {
 
         User currentUser = securityUtils.getCurrentUser();
 
-        log.debug("Creating playlist for userId: {}", currentUser.getId());
+        log.debug("Creating playlist for userId: {}, isPublic: {}",
+                currentUser.getId(), dto.isPublicPlaylist());
 
         Playlist playlist = new Playlist();
         playlist.setName(dto.getName());
         playlist.setDescription(dto.getDescription());
-        playlist.setPublic(dto.isPublic());
+        playlist.setPublicPlaylist(dto.isPublicPlaylist());  // FIX
         playlist.setUser(currentUser);
 
         return toDTO(playlistRepository.save(playlist));
@@ -74,11 +75,7 @@ public class PlaylistService {
     }
 
     // -------------------------
-    // GET PUBLIC PLAYLISTS (browse)
-    // Returns all public playlists sorted newest-first.
-    // If a keyword is provided, filters by playlist name (case-insensitive).
-    // GET /api/playlists/public
-    // GET /api/playlists/public?search=chill
+    // GET PUBLIC PLAYLISTS
     // -------------------------
 
     @Transactional(readOnly = true)
@@ -91,7 +88,7 @@ public class PlaylistService {
         if (search != null && !search.isBlank()) {
             results = playlistRepository.searchPublicByName(search.trim());
         } else {
-            results = playlistRepository.findByIsPublicTrueOrderByCreatedAtDesc();
+            results = playlistRepository.findByPublicPlaylistTrueOrderByCreatedAtDesc();  // FIX
         }
 
         return results.stream()
@@ -112,7 +109,7 @@ public class PlaylistService {
 
         User currentUser = securityUtils.getCurrentUser();
 
-        if (!playlist.isPublic()
+        if (!playlist.isPublicPlaylist()  // FIX
                 && !playlist.getUser().getId().equals(currentUser.getId())) {
             throw new UnauthorizedAccessException(
                     "Access denied to playlist: " + id);
@@ -140,18 +137,15 @@ public class PlaylistService {
 
         playlist.setName(dto.getName());
         playlist.setDescription(dto.getDescription());
-        playlist.setPublic(dto.isPublic());
+        playlist.setPublicPlaylist(dto.isPublicPlaylist());  // FIX
 
-        log.debug("Updated playlist: {}", id);
+        log.debug("Updated playlist: {}, isPublic: {}", id, dto.isPublicPlaylist());
 
         return toDTO(playlistRepository.save(playlist));
     }
 
     // -------------------------
     // DELETE
-    // Edge case: playlist_song and playlist_follow rows hold FK references to
-    // playlist.id. They must be deleted first or the DB throws a constraint
-    // violation. Enforced order: songs → follows → playlist.
     // -------------------------
 
     @Transactional
@@ -167,13 +161,8 @@ public class PlaylistService {
             throw new UnauthorizedAccessException("You don't own this playlist");
         }
 
-        // Step 1 — remove all songs from the playlist first
         playlistSongRepository.deleteByPlaylist_Id(id);
-
-        // Step 2 — remove all follow relationships for this playlist
         playlistFollowRepository.deleteByPlaylist_Id(id);
-
-        // Step 3 — now safe to delete the playlist itself
         playlistRepository.delete(playlist);
 
         log.debug("Deleted playlist {} (songs and follows cleaned up first)", id);
@@ -196,7 +185,6 @@ public class PlaylistService {
             throw new UnauthorizedAccessException("You don't own this playlist");
         }
 
-        // Idempotent — prevent duplicates silently
         if (playlistSongRepository.existsByPlaylist_IdAndSong_Id(playlistId, songId)) {
             log.debug("Song {} already in playlist {}", songId, playlistId);
             return;
@@ -206,19 +194,18 @@ public class PlaylistService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Song", "id", songId));
 
-        // Position = current count so new song goes to the end
         List<PlaylistSong> existing = playlistSongRepository
                 .findByPlaylist_IdOrderByPosition(playlistId);
 
         PlaylistSong playlistSong = new PlaylistSong();
         playlistSong.setPlaylist(playlist);
         playlistSong.setSong(song);
-        playlistSong.setPosition(existing.size()+1);
+        playlistSong.setPosition(existing.size() + 1);
 
         playlistSongRepository.save(playlistSong);
 
         log.debug("Added song {} to playlist {} at position {}",
-                songId, playlistId, existing.size()+1);
+                songId, playlistId, existing.size() + 1);
     }
 
     // -------------------------
@@ -249,10 +236,6 @@ public class PlaylistService {
 
     // -------------------------
     // REORDER SONGS
-    // orderedSongIds: full list of songIds in the desired new order.
-    // e.g. [3, 1, 5, 2] → song 3 gets position 1, song 1 gets position 2, etc.
-    // The list must contain exactly the same song IDs as the playlist —
-    // no additions, no omissions, checked via size + containsAll.
     // -------------------------
 
     @Transactional
@@ -292,7 +275,7 @@ public class PlaylistService {
 
         for (int i = 0; i < orderedSongIds.size(); i++) {
             PlaylistSong ps = songMap.get(orderedSongIds.get(i));
-            ps.setPosition(i + 1); // 1-based positioning
+            ps.setPosition(i + 1);
         }
 
         playlistSongRepository.saveAll(currentSongs);
@@ -312,7 +295,7 @@ public class PlaylistService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Playlist", "id", playlistId));
 
-        if (!playlist.isPublic()) {
+        if (!playlist.isPublicPlaylist()) {  // FIX
             throw new BadRequestException("Cannot follow a private playlist");
         }
 
@@ -367,10 +350,16 @@ public class PlaylistService {
         dto.setId(playlist.getId());
         dto.setName(playlist.getName());
         dto.setDescription(playlist.getDescription());
-        dto.setPublic(playlist.isPublic());
+        dto.setPublicPlaylist(playlist.isPublicPlaylist());  // FIX
         dto.setUserId(playlist.getUser().getId());
         dto.setCreatedAt(playlist.getCreatedAt());
         dto.setUpdatedAt(playlist.getUpdatedAt());
+
+        dto.setSongCount((int) playlistSongRepository.countByPlaylist_Id(playlist.getId()));
+
+        dto.setOwnerName(playlist.getUser().getDisplayName() != null
+                ? playlist.getUser().getDisplayName()
+                : playlist.getUser().getUsername());
 
         return dto;
     }

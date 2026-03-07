@@ -1,0 +1,70 @@
+/* ═══════════════════════════════════════════════════════
+   BASE — Variables, Reset, Typography, Global Utilities
+   ═══════════════════════════════════════════════════════ */
+
+:root {
+    --bg-dark: #121212;
+    --bg-surface: #282828;
+    --bg-surface-hover: #3E3E3E;
+    --primary-color: #d75209;
+    --primary-hover: #fd8106;
+    --text-main: #FFFFFF;
+    --text-muted: #B3B3B3;
+    --border-color: #333333;
+    --error-color: #e22134;
+
+    /* Structural backgrounds (previously hardcoded) */
+    --bg-navbar: #000000;
+    --bg-sidebar: #000000;
+    --bg-player: #181818;
+    --bg-footer: #000000;
+    --bg-input: var(--bg-dark);
+    --bg-gradient-start: #1a1a1a;
+
+    /* UI elements */
+    --progress-bg: #535353;
+    --shadow-color: rgba(0, 0, 0, 0.5);
+    --divider-subtle: rgba(255, 255, 255, 0.06);
+
+    /* Control play button */
+    --control-play-bg: var(--text-main);
+    --control-play-color: #000000;
+
+    /* Icon filter presets (dark mode defaults) */
+    --icon-filter: brightness(0.7);
+    --icon-filter-hover: brightness(1);
+    --icon-filter-active: brightness(1) sepia(1) saturate(5) hue-rotate(350deg);
+    --icon-filter-cta: brightness(1) sepia(1) saturate(5) hue-rotate(350deg);
+    --icon-filter-danger: brightness(1) sepia(1) saturate(10) hue-rotate(320deg);
+
+    /* Scrollbar */
+    --scrollbar-thumb: #535353;
+    --scrollbar-track: transparent;
+}
+
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+a {
+    color: var(--text-main);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+a:hover {
+    color: var(--primary-color);
+}
+
+.text-danger {
+    color: #ff4d4d;
+    font-size: 12px;
+    margin-top: 5px;
+    display: block;
+}

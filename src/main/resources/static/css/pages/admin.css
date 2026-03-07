@@ -1,0 +1,681 @@
+/* ═══════════════════════════════════════════════════
+   ADMIN DASHBOARD
+   ═══════════════════════════════════════════════════ */
+
+/* ── Tabs ── */
+
+.admin-tabs {
+    display: flex;
+    gap: 4px;
+    margin: 20px 0;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0;
+    overflow-x: auto;
+}
+
+.admin-tab {
+    padding: 12px 20px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 0.2s, border-color 0.2s;
+    font-family: inherit;
+}
+
+.admin-tab:hover {
+    color: var(--text-main);
+}
+
+.admin-tab--active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+/* ── Panels ── */
+
+.admin-panel {
+    margin-top: 10px;
+}
+
+.admin-section {
+    margin-bottom: 30px;
+}
+
+.admin-section-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 15px;
+}
+
+/* ── Stats Grid ── */
+
+.admin-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 16px;
+    margin-bottom: 30px;
+}
+
+.admin-stat-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.admin-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.admin-stat-card--highlight {
+    border-color: var(--primary-color);
+    background: linear-gradient(135deg, var(--bg-surface) 0%, rgba(29, 185, 84, 0.05) 100%);
+}
+
+.admin-stat-icon {
+    font-size: 28px;
+    margin-bottom: 8px;
+}
+
+.admin-stat-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+.admin-stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+/* ── Health ── */
+
+.admin-health-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-main);
+}
+
+.health-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.health-dot--ok {
+    background-color: #4CAF50;
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
+}
+
+/* ── Controls ── */
+
+.admin-controls {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.admin-search-bar {
+    flex: 1;
+    min-width: 200px;
+}
+
+.admin-input {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-main);
+    font-size: 14px;
+    font-family: inherit;
+}
+
+.admin-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.admin-select {
+    padding: 10px 14px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-main);
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+    min-width: 140px;
+}
+
+.admin-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+/* ── Table ── */
+
+.admin-table-wrap {
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.admin-table thead {
+    background: var(--bg-surface);
+}
+
+.admin-table th {
+    padding: 12px 14px;
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
+}
+
+.admin-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    color: var(--text-main);
+    vertical-align: middle;
+}
+
+.admin-table tbody tr:hover {
+    background: var(--bg-surface-hover, rgba(255, 255, 255, 0.03));
+}
+
+.admin-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.admin-loading {
+    text-align: center;
+    padding: 30px;
+    color: var(--text-muted);
+}
+
+/* ── Role Badges ── */
+
+.admin-role-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.admin-role-badge--listener {
+    background: rgba(33, 150, 243, 0.15);
+    color: #42A5F5;
+}
+
+.admin-role-badge--artist {
+    background: rgba(156, 39, 176, 0.15);
+    color: #CE93D8;
+}
+
+.admin-role-badge--admin {
+    background: rgba(255, 152, 0, 0.15);
+    color: #FFB74D;
+}
+
+/* ── Action Buttons ── */
+
+.admin-actions-cell {
+    display: flex;
+    gap: 6px;
+}
+
+.admin-action-btn {
+    background: none;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.15s, transform 0.15s;
+}
+
+.admin-action-btn:hover {
+    transform: scale(1.1);
+}
+
+.admin-action-btn--role:hover {
+    background-color: rgba(33, 150, 243, 0.1);
+}
+
+.admin-action-btn--delete:hover {
+    background-color: rgba(244, 67, 54, 0.1);
+}
+
+/* ── Pagination ── */
+
+.admin-pagination {
+    display: flex;
+    gap: 6px;
+    margin-top: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.admin-page-btn {
+    padding: 6px 12px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-muted);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+}
+
+.admin-page-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--text-main);
+}
+
+.admin-page-btn--active {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #000;
+    font-weight: 600;
+}
+
+/* ── Role Distribution Bars ── */
+
+.admin-role-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.admin-role-bar-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.admin-role-bar-track {
+    height: 10px;
+    background: var(--bg-surface);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.admin-role-bar-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.5s ease;
+}
+
+.admin-role-bar-fill--listener { background: #42A5F5; }
+.admin-role-bar-fill--artist { background: #CE93D8; }
+.admin-role-bar-fill--admin { background: #FFB74D; }
+
+/* ── Growth Chart (Simple Bar) ── */
+
+.admin-growth-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 200px;
+    padding: 10px 0;
+    overflow-x: auto;
+}
+
+.admin-growth-bar-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    min-width: 24px;
+}
+
+.admin-growth-bar-col {
+    width: 100%;
+    height: 160px;
+    display: flex;
+    align-items: flex-end;
+}
+
+.admin-growth-bar-fill {
+    width: 100%;
+    background: var(--primary-color);
+    border-radius: 3px 3px 0 0;
+    min-height: 4px;
+    transition: height 0.3s ease;
+}
+
+.admin-growth-bar-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    margin-top: 6px;
+    white-space: nowrap;
+}
+
+/* ── Light Theme ── */
+
+[data-theme="light"] .admin-stat-card {
+    background: #fff;
+}
+
+[data-theme="light"] .admin-table thead {
+    background: #f5f5f5;
+}
+
+[data-theme="light"] .admin-table td {
+    border-bottom-color: #eee;
+}
+
+[data-theme="light"] .admin-table tbody tr:hover {
+    background: #f9f9f9;
+}
+
+[data-theme="light"] .admin-input,
+[data-theme="light"] .admin-select {
+    background: #fff;
+    border-color: #ddd;
+}
+
+[data-theme="light"] .admin-health-card {
+    background: #fff;
+}
+
+[data-theme="light"] .admin-role-bar-track {
+    background: #eee;
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 768px) {
+    .admin-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .admin-stat-card {
+        padding: 15px;
+    }
+
+    .admin-stat-value {
+        font-size: 22px;
+    }
+
+    .admin-controls {
+        flex-direction: column;
+    }
+
+    .admin-table {
+        font-size: 12px;
+    }
+
+    .admin-table th,
+    .admin-table td {
+        padding: 8px 10px;
+    }
+
+    .admin-tabs {
+        gap: 0;
+    }
+
+    .admin-tab {
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+
+    .admin-growth-bars {
+        height: 150px;
+    }
+
+    .admin-growth-bar-col {
+        height: 120px;
+    }
+}
+
+@media (max-width: 480px) {
+    .admin-stats-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .admin-stat-icon {
+        font-size: 22px;
+    }
+
+    .admin-stat-value {
+        font-size: 20px;
+    }
+}
+
+/* ═══════════════════════════════════════════════════
+   ARTIST REQUESTS — Admin Panel
+   ═══════════════════════════════════════════════════ */
+
+/* ── Tab Badge (pending count) ── */
+
+.admin-tab-badge {
+    display: inline-block;
+    background: #F44336;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: 6px;
+    vertical-align: middle;
+    min-width: 18px;
+    text-align: center;
+    line-height: 1.4;
+}
+
+/* ── Warning stat card (pending requests) ── */
+
+.admin-stat-card--warning {
+    border-color: #FFB74D;
+    background: linear-gradient(135deg, var(--bg-surface) 0%, rgba(255, 183, 77, 0.08) 100%);
+    animation: admin-pulse-warning 2s ease-in-out infinite;
+}
+
+@keyframes admin-pulse-warning {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 183, 77, 0); }
+    50% { box-shadow: 0 0 0 4px rgba(255, 183, 77, 0.15); }
+}
+
+/* ── Request Stats Row ── */
+
+.admin-request-stats {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.admin-request-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+}
+
+.admin-request-stat-count {
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.admin-request-stat-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.admin-request-stat--pending .admin-request-stat-count { color: #FFB74D; }
+.admin-request-stat--approved .admin-request-stat-count { color: #4CAF50; }
+.admin-request-stat--rejected .admin-request-stat-count { color: #F44336; }
+
+/* ── Request Table — User Cell ── */
+
+.admin-request-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.admin-request-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.admin-request-avatar-fallback {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: #000;
+    flex-shrink: 0;
+}
+
+.admin-request-username {
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.admin-request-email {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.admin-request-reason {
+    max-width: 200px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* ── Request Status Badges ── */
+
+.admin-request-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.admin-request-badge--pending {
+    background: rgba(255, 183, 77, 0.15);
+    color: #FFB74D;
+}
+
+.admin-request-badge--approved {
+    background: rgba(76, 175, 80, 0.15);
+    color: #4CAF50;
+}
+
+.admin-request-badge--rejected {
+    background: rgba(244, 67, 54, 0.15);
+    color: #F44336;
+}
+
+/* ── Approve/Reject Action Buttons ── */
+
+.admin-action-btn--approve:hover {
+    background-color: rgba(76, 175, 80, 0.15);
+}
+
+.admin-action-btn--reject:hover {
+    background-color: rgba(244, 67, 54, 0.15);
+}
+
+/* ── Danger Button (for reject modal) ── */
+
+.pl-btn--danger {
+    background-color: #F44336;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.pl-btn--danger:hover {
+    background-color: #D32F2F;
+}
+
+/* ── Light Theme ── */
+
+[data-theme="light"] .admin-request-stat {
+    background: #fff;
+}
+
+[data-theme="light"] .admin-request-avatar-fallback {
+    color: #fff;
+}
+
+[data-theme="light"] .admin-stat-card--warning {
+    background: linear-gradient(135deg, #fff 0%, rgba(255, 183, 77, 0.08) 100%);
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 768px) {
+    .admin-request-stats {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .admin-request-reason {
+        max-width: 120px;
+    }
+
+    .admin-request-user {
+        min-width: 140px;
+    }
+}

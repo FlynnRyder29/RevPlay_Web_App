@@ -60,4 +60,6 @@ public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
             "WHERE f.song.id = :songId " +
             "ORDER BY f.createdAt DESC")
     List<Object[]> findFansBySongId(@Param("songId") Long songId);
+
+    void deleteByUser_Id(Long userId);
 }

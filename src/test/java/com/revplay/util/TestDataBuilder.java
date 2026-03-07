@@ -206,7 +206,7 @@ public class TestDataBuilder {
     }
 
     // ── Playlist Builder ──────────────────────────────────────────
-    // NOTE: Lombok generates setPublic() (not setIsPublic()) for a boolean field named isPublic.
+    // NOTE: Lombok generates setPublicPlaylist() (not setIsPublic()) for a boolean field named isPublic.
     // Verify Playlist entity uses @Getter/@Setter (not @Data) and the field is named isPublic.
 
     public static PlaylistBuilder aPlaylist() { return new PlaylistBuilder(); }
@@ -232,7 +232,7 @@ public class TestDataBuilder {
             playlist.setId(id);
             playlist.setName(name);
             playlist.setDescription(description);
-            playlist.setPublic(isPublic);
+            playlist.setPublicPlaylist(isPublic);
             playlist.setUser(user);
             playlist.setCreatedAt(createdAt);
             playlist.setUpdatedAt(updatedAt);

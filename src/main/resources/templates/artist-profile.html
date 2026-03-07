@@ -35,7 +35,37 @@
         </div>
 
         <!-- ═══ Social Links ═══ -->
-        <!-- Note: ArtistDTO doesn't have social fields, so we skip this or use them if available -->
+        <div class="artist-social-links"
+             th:if="${artist.instagram != null || artist.twitter != null || artist.youtube != null || artist.spotify != null || artist.website != null}">
+            <h2 class="section-title">Connect</h2>
+            <div class="social-links-grid">
+                <a th:if="${artist.instagram != null && !artist.instagram.isEmpty()}"
+                   th:href="${artist.instagram}" target="_blank" class="social-link-card">
+                    <span class="social-icon">📸</span>
+                    <span class="social-name">Instagram</span>
+                </a>
+                <a th:if="${artist.twitter != null && !artist.twitter.isEmpty()}"
+                   th:href="${artist.twitter}" target="_blank" class="social-link-card">
+                    <span class="social-icon">🐦</span>
+                    <span class="social-name">Twitter / X</span>
+                </a>
+                <a th:if="${artist.youtube != null && !artist.youtube.isEmpty()}"
+                   th:href="${artist.youtube}" target="_blank" class="social-link-card">
+                    <span class="social-icon">▶️</span>
+                    <span class="social-name">YouTube</span>
+                </a>
+                <a th:if="${artist.spotify != null && !artist.spotify.isEmpty()}"
+                   th:href="${artist.spotify}" target="_blank" class="social-link-card">
+                    <span class="social-icon">🎧</span>
+                    <span class="social-name">Spotify</span>
+                </a>
+                <a th:if="${artist.website != null && !artist.website.isEmpty()}"
+                   th:href="${artist.website}" target="_blank" class="social-link-card">
+                    <span class="social-icon">🌐</span>
+                    <span class="social-name">Website</span>
+                </a>
+            </div>
+        </div>
 
         <!-- ═══ Songs Section ═══ -->
         <section class="home-section" th:if="${artist.songs != null && !artist.songs.isEmpty()}">
@@ -58,7 +88,7 @@
             </div>
             <div class="album-grid">
                 <div th:each="album : ${artist.albums}" class="album-card">
-                    <img th:src="${album.coverImageUrl != null ? album.coverImageUrl : 'https://www.shutterstock.com/shutterstock/photos/2626947211/display_1500/stock-vector-jazz-music-poster-design-template-2626947211.jpg'}"
+                    <img th:src="${album.coverImageUrl != null ? album.coverImageUrl : 'https://placehold.co/200x200/1a1a2e/ffffff?text=💿'}"
                          alt="Album Cover" class="album-cover">
                     <div class="album-card-name" th:text="${album.name}">Album Name</div>
                     <div class="album-card-meta">

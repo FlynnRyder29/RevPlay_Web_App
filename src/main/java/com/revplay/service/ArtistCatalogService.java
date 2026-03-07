@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +35,18 @@ public class ArtistCatalogService {
     public Page<ArtistDTO> getAllArtists(Pageable pageable) {
         log.info("Fetching all artists, page={}", pageable.getPageNumber());
         return artistRepository.findAll(pageable).map(this::mapToDTO);
+    }
+
+    // ── FEATURED ARTISTS (for home page) ──────────────────────────────────
+    @Transactional(readOnly = true)
+    public List<ArtistDTO> getFeaturedArtists(int limit) {
+        log.info("Fetching top {} featured artists", limit);
+        Pageable pageable = PageRequest.of(0, limit);
+        return artistRepository.findAll(pageable)
+                .getContent()
+                .stream()
+                .map(this::mapToDTO)
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -67,6 +80,11 @@ public class ArtistCatalogService {
                 .genre(artist.getGenre())
                 .profilePictureUrl(artist.getProfilePictureUrl())
                 .bannerImageUrl(artist.getBannerImageUrl())
+                .instagram(artist.getInstagram())
+                .twitter(artist.getTwitter())
+                .youtube(artist.getYoutube())
+                .spotify(artist.getSpotify())
+                .website(artist.getWebsite())
                 .build();
     }
 

@@ -3,31 +3,27 @@
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
 
-<aside th:fragment="sidebar" class="sidebar">
+<aside th:fragment="sidebar" class="sidebar" id="sidebar">
     <nav class="sidebar-nav">
 
         <!-- ═══ Main Navigation ═══ -->
         <div class="sidebar-section">
-            <a th:href="@{/}" class="sidebar-item" title="Home">
+            <a th:href="@{/}" class="sidebar-item" data-nav="primary" title="Home">
                 <span class="sidebar-icon">
-                    <img th:src="@{/images/icons/home.png}"
-                         alt="🏠"
-                         class="sidebar-icon-img"
+                    <img th:src="@{/images/icons/home.png}" alt="🏠" class="sidebar-icon-img"
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
                     <span class="sidebar-icon-fallback" style="display:none;">🏠</span>
                 </span>
                 <span class="sidebar-label">Home</span>
             </a>
 
-            <a th:href="@{/library}" class="sidebar-item" title="Browse Music">
+            <a th:href="@{/library}" class="sidebar-item" data-nav="primary" title="Browse Music">
                 <span class="sidebar-icon">
-                    <img th:src="@{/images/icons/music-book.png}"
-                         alt="📚"
-                         class="sidebar-icon-img"
+                    <img th:src="@{/images/icons/music-book.png}" alt="📚" class="sidebar-icon-img"
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
                     <span class="sidebar-icon-fallback" style="display:none;">📚</span>
                 </span>
-                <span class="sidebar-label">Browse Music</span>
+                <span class="sidebar-label">Library</span>
             </a>
         </div>
 
@@ -35,33 +31,27 @@
         <div sec:authorize="isAuthenticated()" class="sidebar-section">
             <div class="sidebar-section-title">Your Music</div>
 
-            <a th:href="@{/playlists}" class="sidebar-item" title="Playlists">
+            <a th:href="@{/playlists}" class="sidebar-item" data-nav="primary" title="Playlists">
                 <span class="sidebar-icon">
-                    <img th:src="@{/images/icons/playlist.png}"
-                         alt="📋"
-                         class="sidebar-icon-img"
+                    <img th:src="@{/images/icons/playlist.png}" alt="📋" class="sidebar-icon-img"
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
                     <span class="sidebar-icon-fallback" style="display:none;">📋</span>
                 </span>
                 <span class="sidebar-label">Playlists</span>
             </a>
 
-            <a th:href="@{/favorites}" class="sidebar-item" title="Favorites">
+            <a th:href="@{/favorites}" class="sidebar-item" data-nav="secondary" title="Favorites">
                 <span class="sidebar-icon">
-                    <img th:src="@{/images/icons/favourite.png}"
-                         alt="❤️"
-                         class="sidebar-icon-img"
+                    <img th:src="@{/images/icons/favourite.png}" alt="❤️" class="sidebar-icon-img"
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
                     <span class="sidebar-icon-fallback" style="display:none;">❤️</span>
                 </span>
                 <span class="sidebar-label">Favorites</span>
             </a>
 
-            <a th:href="@{/history}" class="sidebar-item" title="History">
+            <a th:href="@{/history}" class="sidebar-item" data-nav="secondary" title="History">
                 <span class="sidebar-icon">
-                    <img th:src="@{/images/icons/history.png}"
-                         alt="🕐"
-                         class="sidebar-icon-img"
+                    <img th:src="@{/images/icons/history.png}" alt="🕐" class="sidebar-icon-img"
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
                     <span class="sidebar-icon-fallback" style="display:none;">🕐</span>
                 </span>
@@ -69,37 +59,31 @@
             </a>
         </div>
 
-        <!-- ═══ Artist Section (ARTIST role only) ═══ -->
+        <!-- ═══ Artist Section ═══ -->
         <div sec:authorize="hasRole('ARTIST')" class="sidebar-section">
             <div class="sidebar-section-title">Artist</div>
 
-            <a th:href="@{/artist/dashboard}" class="sidebar-item" title="Dashboard">
+            <a th:href="@{/artist/dashboard}" class="sidebar-item" data-nav="secondary" title="Dashboard">
                 <span class="sidebar-icon">
-                    <img th:src="@{/images/icons/layout.png}"
-                         alt="📊"
-                         class="sidebar-icon-img"
+                    <img th:src="@{/images/icons/layout.png}" alt="📊" class="sidebar-icon-img"
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
                     <span class="sidebar-icon-fallback" style="display:none;">📊</span>
                 </span>
                 <span class="sidebar-label">Dashboard</span>
             </a>
 
-            <a th:href="@{/artist/songs}" class="sidebar-item" title="My Songs">
+            <a th:href="@{/artist/songs}" class="sidebar-item" data-nav="secondary" title="My Songs">
                 <span class="sidebar-icon">
-                    <img th:src="@{/images/icons/musical.png}"
-                         alt="🎵"
-                         class="sidebar-icon-img"
+                    <img th:src="@{/images/icons/musical.png}" alt="🎵" class="sidebar-icon-img"
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
                     <span class="sidebar-icon-fallback" style="display:none;">🎵</span>
                 </span>
                 <span class="sidebar-label">My Songs</span>
             </a>
 
-            <a th:href="@{/artist/albums}" class="sidebar-item" title="My Albums">
+            <a th:href="@{/artist/albums}" class="sidebar-item" data-nav="secondary" title="My Albums">
                 <span class="sidebar-icon">
-                    <img th:src="@{/images/icons/vynil.png}"
-                         alt="💿"
-                         class="sidebar-icon-img"
+                    <img th:src="@{/images/icons/vynil.png}" alt="💿" class="sidebar-icon-img"
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
                     <span class="sidebar-icon-fallback" style="display:none;">💿</span>
                 </span>
@@ -107,15 +91,13 @@
             </a>
         </div>
 
-        <!-- ═══ Admin Section (ADMIN role only) ═══ -->
+        <!-- ═══ Admin Section ═══ -->
         <div sec:authorize="hasRole('ADMIN')" class="sidebar-section">
             <div class="sidebar-section-title">Admin</div>
 
-            <a th:href="@{/admin}" class="sidebar-item" title="Admin Panel">
+            <a th:href="@{/admin}" class="sidebar-item" data-nav="secondary" title="Admin Panel">
                 <span class="sidebar-icon">
-                    <img th:src="@{/images/icons/settings.png}"
-                         alt="⚙️"
-                         class="sidebar-icon-img"
+                    <img th:src="@{/images/icons/settings.png}" alt="⚙️" class="sidebar-icon-img"
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
                     <span class="sidebar-icon-fallback" style="display:none;">⚙️</span>
                 </span>
@@ -126,13 +108,11 @@
         <!-- ═══ Spacer ═══ -->
         <div class="sidebar-spacer"></div>
 
-        <!-- ═══ Account Section (Authenticated) ═══ -->
+        <!-- ═══ Account Section ═══ -->
         <div sec:authorize="isAuthenticated()" class="sidebar-section sidebar-bottom">
-            <a th:href="@{/user/profile}" class="sidebar-item" title="Profile">
+            <a th:href="@{/user/profile}" class="sidebar-item" data-nav="secondary" title="Profile">
                 <span class="sidebar-icon">
-                    <img th:src="@{/images/icons/user.png}"
-                         alt="👤"
-                         class="sidebar-icon-img"
+                    <img th:src="@{/images/icons/user.png}" alt="👤" class="sidebar-icon-img"
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
                     <span class="sidebar-icon-fallback" style="display:none;">👤</span>
                 </span>
@@ -142,11 +122,9 @@
             </a>
 
             <form th:action="@{/auth/logout}" method="post" class="sidebar-logout-form">
-                <button type="submit" class="sidebar-item sidebar-logout-btn" title="Logout">
+                <button type="submit" class="sidebar-item sidebar-logout-btn" data-nav="secondary" title="Logout">
                     <span class="sidebar-icon">
-                        <img th:src="@{/images/icons/switch.png}"
-                             alt="🚪"
-                             class="sidebar-icon-img"
+                        <img th:src="@{/images/icons/switch.png}" alt="🚪" class="sidebar-icon-img"
                              onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
                         <span class="sidebar-icon-fallback" style="display:none;">🚪</span>
                     </span>
@@ -157,22 +135,18 @@
 
         <!-- ═══ Guest Links ═══ -->
         <div sec:authorize="!isAuthenticated()" class="sidebar-section sidebar-bottom">
-            <a th:href="@{/auth/register}" class="sidebar-item sidebar-cta" title="Sign Up">
+            <a th:href="@{/auth/register}" class="sidebar-item sidebar-cta" data-nav="secondary" title="Sign Up">
                 <span class="sidebar-icon">
-                    <img th:src="@{/images/icons/signup.png}"
-                         alt="✏️"
-                         class="sidebar-icon-img sidebar-icon-img--cta"
+                    <img th:src="@{/images/icons/signup.png}" alt="✏️" class="sidebar-icon-img sidebar-icon-img--cta"
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
                     <span class="sidebar-icon-fallback" style="display:none;">✏️</span>
                 </span>
                 <span class="sidebar-label">Sign Up</span>
             </a>
 
-            <a th:href="@{/auth/login}" class="sidebar-item" title="Log In">
+            <a th:href="@{/auth/login}" class="sidebar-item" data-nav="secondary" title="Log In">
                 <span class="sidebar-icon">
-                    <img th:src="@{/images/icons/login.png}"
-                         alt="🔑"
-                         class="sidebar-icon-img"
+                    <img th:src="@{/images/icons/login.png}" alt="🔑" class="sidebar-icon-img"
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
                     <span class="sidebar-icon-fallback" style="display:none;">🔑</span>
                 </span>
@@ -182,6 +156,9 @@
 
     </nav>
 </aside>
+
+<!-- Mobile sidebar overlay (backdrop) -->
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
 
 </body>
 </html>
