@@ -14,29 +14,29 @@
 
         <!-- ============ Search & Filter Bar ============ -->
         <div class="library-controls">
-            <!-- Search Form -->
-            <form th:action="@{/library}" method="get" class="search-form">
+            <!-- Search (no form — JS handles it) -->
+            <div class="search-form">
                 <div class="search-input-wrapper">
                     <span class="search-icon">🔍</span>
                     <input type="text"
-                           name="q"
+                           id="library-search-input"
                            class="search-input"
                            placeholder="Search songs, artists..."
                            th:value="${currentQuery}">
                 </div>
-                <button type="submit" class="btn-search">Search</button>
-            </form>
+                <button type="button" id="library-search-btn" class="btn-search">Search</button>
+            </div>
 
-            <!-- Genre Filter -->
-            <form th:action="@{/library}" method="get" class="genre-filter-form">
-                <select name="genre" class="genre-select" onchange="this.form.submit()">
+            <!-- Genre Filter (no form — JS handles it) -->
+            <div class="genre-filter-form">
+                <select id="library-genre-select" class="genre-select">
                     <option value="">All Genres</option>
                     <option th:each="g : ${genres}"
                             th:value="${g.name}"
                             th:text="${g.name}"
                             th:selected="${g.name == currentGenre}">Genre</option>
                 </select>
-            </form>
+            </div>
         </div>
 
         <!-- Active Filter Indicator -->
@@ -95,6 +95,86 @@
         <div class="song-count" th:if="${songs != null && songs.totalElements > 0}">
             <span th:text="'Showing ' + ${songs.numberOfElements} + ' of ' + ${songs.totalElements} + ' songs'"></span>
         </div>
+
+        <!-- ============ Library Script (PJAX-aware) ============ -->
+        <script>
+            (function () {
+                'use strict';
+
+                var searchInput = document.getElementById('library-search-input');
+                var searchBtn = document.getElementById('library-search-btn');
+                var genreSelect = document.getElementById('library-genre-select');
+
+                /**
+                 * Build the /library URL with current search + genre params.
+                 */
+                function buildLibraryUrl(query, genre) {
+                    var params = [];
+                    if (query) params.push('q=' + encodeURIComponent(query));
+                    if (genre) params.push('genre=' + encodeURIComponent(genre));
+                    return '/library' + (params.length ? '?' + params.join('&') : '');
+                }
+
+                /**
+                 * Navigate via PJAX (keeps music playing) or fallback to full reload.
+                 */
+                function navigate(url) {
+                    if (window.PjaxRouter && window.PjaxRouter.navigate) {
+                        window.PjaxRouter.navigate(url);
+                    } else {
+                        window.location.href = url;
+                    }
+                }
+
+                /**
+                 * Get current genre from the select (if it still exists after re-render).
+                 */
+                function getCurrentGenre() {
+                    var sel = document.getElementById('library-genre-select');
+                    return sel ? sel.value : '';
+                }
+
+                /**
+                 * Get current query from the input (if it still exists after re-render).
+                 */
+                function getCurrentQuery() {
+                    var inp = document.getElementById('library-search-input');
+                    return inp ? inp.value.trim() : '';
+                }
+
+                // ── Search button click ──
+                if (searchBtn) {
+                    searchBtn.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        var query = getCurrentQuery();
+                        var genre = getCurrentGenre();
+                        navigate(buildLibraryUrl(query, genre));
+                    });
+                }
+
+                // ── Enter key in search input ──
+                if (searchInput) {
+                    searchInput.addEventListener('keydown', function (e) {
+                        if (e.key === 'Enter' || e.keyCode === 13) {
+                            e.preventDefault();
+                            var query = getCurrentQuery();
+                            var genre = getCurrentGenre();
+                            navigate(buildLibraryUrl(query, genre));
+                        }
+                    });
+                }
+
+                // ── Genre dropdown change ──
+                if (genreSelect) {
+                    genreSelect.addEventListener('change', function () {
+                        var query = getCurrentQuery();
+                        var genre = this.value;
+                        navigate(buildLibraryUrl(query, genre));
+                    });
+                }
+
+            })();
+        </script>
 
     </div>
 </div>

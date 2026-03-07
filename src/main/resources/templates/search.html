@@ -14,18 +14,18 @@
         </div>
 
         <!-- ═══ Search Bar ═══ -->
-        <form th:action="@{/search}" method="get" class="search-page-form">
+        <div class="search-page-form">
             <div class="search-input-wrapper" style="max-width: 600px;">
                 <span class="search-icon">🔍</span>
                 <input type="text"
-                       name="q"
+                       id="search-input"
                        class="search-input"
                        placeholder="What do you want to listen to?"
                        th:value="${query}"
                        autofocus>
             </div>
-            <button type="submit" class="btn-search">Search</button>
-        </form>
+            <button type="button" id="search-btn" class="btn-search">Search</button>
+        </div>
 
         <!-- ═══ Results Summary ═══ -->
         <div class="search-results-summary" th:if="${query != null && !query.isEmpty()}">
@@ -84,6 +84,47 @@
                 Browse Library
             </a>
         </div>
+
+        <!-- ═══ Search Script (PJAX-aware) ═══ -->
+        <script>
+            (function () {
+                'use strict';
+
+                var searchInput = document.getElementById('search-input');
+                var searchBtn = document.getElementById('search-btn');
+                if (!searchInput || !searchBtn) return;
+
+                function doSearch() {
+                    var query = searchInput.value.trim();
+                    if (!query) return;
+
+                    var url = '/search?q=' + encodeURIComponent(query);
+
+                    // Use PJAX if available — keeps music playing
+                    if (window.PjaxRouter && window.PjaxRouter.navigate) {
+                        window.PjaxRouter.navigate(url);
+                    } else {
+                        // Fallback: full page navigation
+                        window.location.href = url;
+                    }
+                }
+
+                // Click search button
+                searchBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    doSearch();
+                });
+
+                // Press Enter in input
+                searchInput.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter' || e.keyCode === 13) {
+                        e.preventDefault();
+                        doSearch();
+                    }
+                });
+
+            })();
+        </script>
 
     </div>
 </div>
