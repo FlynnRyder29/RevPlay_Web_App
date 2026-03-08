@@ -6,6 +6,7 @@ import com.revplay.exception.BadRequestException;
 import com.revplay.exception.ResourceNotFoundException;
 import com.revplay.exception.RevPlayAccessDeniedHandler;
 import com.revplay.exception.RevPlayAuthenticationEntryPoint;
+import com.revplay.repository.UserRepository;
 import com.revplay.service.CustomUserDetailsService;
 import com.revplay.service.FavoriteService;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,6 +44,7 @@ class FavoriteControllerIntegrationTest {
     @MockitoBean private CustomUserDetailsService     customUserDetailsService;
     @MockitoBean private RevPlayAuthenticationEntryPoint authEntryPoint;
     @MockitoBean private RevPlayAccessDeniedHandler   accessDeniedHandler;
+    @MockitoBean private UserRepository userRepository;
 
     @BeforeEach
     void configureSecurityHandlers() throws Exception {

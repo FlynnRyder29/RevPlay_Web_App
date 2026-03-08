@@ -5,6 +5,7 @@ import com.revplay.dto.SongDTO;
 import com.revplay.exception.ResourceNotFoundException;
 import com.revplay.exception.RevPlayAccessDeniedHandler;
 import com.revplay.exception.RevPlayAuthenticationEntryPoint;
+import com.revplay.repository.UserRepository;
 import com.revplay.service.AlbumCatalogService;
 import com.revplay.service.CustomUserDetailsService;
 import org.junit.jupiter.api.DisplayName;
@@ -48,7 +49,7 @@ class AlbumControllerIntegrationTest {
     @MockitoBean private CustomUserDetailsService customUserDetailsService;
     @MockitoBean private RevPlayAuthenticationEntryPoint authEntryPoint;
     @MockitoBean private RevPlayAccessDeniedHandler accessDeniedHandler;
-
+    @MockitoBean private UserRepository userRepository;
 
 
     @org.junit.jupiter.api.BeforeEach

@@ -5,6 +5,7 @@ import com.revplay.dto.HistoryDTO;
 import com.revplay.dto.HistoryRequest;
 import com.revplay.exception.RevPlayAccessDeniedHandler;
 import com.revplay.exception.RevPlayAuthenticationEntryPoint;
+import com.revplay.repository.UserRepository;
 import com.revplay.service.CustomUserDetailsService;
 import com.revplay.service.HistoryService;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,6 +46,7 @@ class HistoryControllerIntegrationTest {
     @MockitoBean private CustomUserDetailsService        customUserDetailsService;
     @MockitoBean private RevPlayAuthenticationEntryPoint authEntryPoint;
     @MockitoBean private RevPlayAccessDeniedHandler      accessDeniedHandler;
+    @MockitoBean private UserRepository userRepository;
 
     @BeforeEach
     void configureSecurityHandlers() throws Exception {

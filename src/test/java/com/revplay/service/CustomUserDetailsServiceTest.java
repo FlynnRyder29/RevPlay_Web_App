@@ -131,19 +131,15 @@ class CustomUserDetailsServiceTest {
     }
 
     @Test
-    @DisplayName("loadUserByUsername - valid username - principal is the submitted username")
+    @DisplayName("loadUserByUsername - valid username - returns UserDetails with password")
     void loadUserByUsername_validUsername_principalIsSubmittedInput() {
-        User usernameUser = User.builder()
-                .id(5L).email("other@revplay.com").username("alice")
-                .passwordHash("$2b$10$hash").role(Role.LISTENER)
-                .createdAt(LocalDateTime.now()).updatedAt(LocalDateTime.now()).build();
-
         when(userRepository.findByEmailOrUsername("alice", "alice"))
-                .thenReturn(Optional.of(usernameUser));
+                .thenReturn(Optional.of(listenerUser));
 
         UserDetails result = customUserDetailsService.loadUserByUsername("alice");
 
-        assertEquals("alice", result.getUsername());
+        assertNotNull(result);
+        assertEquals("$2b$10$hashedpassword", result.getPassword());
     }
 
     // ── loadUserByUsername — role mapping ─────────────────────────

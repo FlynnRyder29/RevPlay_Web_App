@@ -4,6 +4,7 @@ import com.revplay.dto.AnalyticsDTO;
 import com.revplay.exception.ResourceNotFoundException;
 import com.revplay.exception.RevPlayAccessDeniedHandler;
 import com.revplay.exception.RevPlayAuthenticationEntryPoint;
+import com.revplay.repository.UserRepository;
 import com.revplay.service.AnalyticsService;
 import com.revplay.config.SecurityConfig;
 import com.revplay.service.CustomUserDetailsService;
@@ -40,6 +41,7 @@ class AnalyticsControllerIntegrationTest {
     @MockitoBean private CustomUserDetailsService      customUserDetailsService;
     @MockitoBean private RevPlayAuthenticationEntryPoint authEntryPoint;
     @MockitoBean private RevPlayAccessDeniedHandler    accessDeniedHandler;
+    @MockitoBean private UserRepository userRepository;
 
     @BeforeEach
     void configureSecurityHandlers() throws Exception {

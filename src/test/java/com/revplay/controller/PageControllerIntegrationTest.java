@@ -1,16 +1,19 @@
 package com.revplay.controller;
 
+import com.revplay.dto.AlbumDTO;
 import com.revplay.dto.ArtistDTO;
 import com.revplay.dto.PlaylistDTO;
 import com.revplay.dto.SongDTO;
 import com.revplay.exception.RevPlayAccessDeniedHandler;
 import com.revplay.exception.RevPlayAuthenticationEntryPoint;
 import com.revplay.model.Artist;
+import com.revplay.model.Playlist;
 import com.revplay.model.PlaylistSong;
 import com.revplay.model.Song;
 import com.revplay.model.User;
 import com.revplay.model.Role;
 import com.revplay.repository.ArtistRepository;
+import com.revplay.repository.PlaylistRepository;
 import com.revplay.repository.PlaylistSongRepository;
 import com.revplay.repository.UserRepository;
 import com.revplay.service.*;
@@ -51,6 +54,8 @@ class PageControllerIntegrationTest {
     @MockitoBean private PlaylistService playlistService;
     @MockitoBean private PlaylistFollowService playlistFollowService;
     @MockitoBean private PlaylistSongRepository playlistSongRepository;
+    @MockitoBean private PlaylistRepository playlistRepository;
+    @MockitoBean private AlbumCatalogService albumCatalogService;
     @MockitoBean private SongService songService;
     @MockitoBean private ArtistCatalogService artistCatalogService;
     @MockitoBean private ArtistService artistService;
@@ -97,9 +102,11 @@ class PageControllerIntegrationTest {
                 .id(TEST_SONG_ID).title(TEST_SONG_TITLE)
                 .genre(TEST_SONG_GENRE).artistName(TEST_ARTIST_NAME).build();
 
-        testPlaylist = PlaylistDTO.builder()
-                .id(TEST_PLAYLIST_ID).name(TEST_PLAYLIST_NAME)
-                .userId(TEST_USER_ID).publicPlaylist(true).build();
+        testPlaylist = new PlaylistDTO();
+        testPlaylist.setId(TEST_PLAYLIST_ID);
+        testPlaylist.setName(TEST_PLAYLIST_NAME);
+        testPlaylist.setUserId(TEST_USER_ID);
+        testPlaylist.setPublicPlaylist(true);
 
         testArtist = ArtistDTO.builder()
                 .id(TEST_ARTIST_ID).artistName(TEST_ARTIST_NAME)
@@ -217,13 +224,20 @@ class PageControllerIntegrationTest {
     @DisplayName("GET /search - with query - returns search view with results")
     @WithMockUser(username = TEST_USER_EMAIL, roles = "LISTENER")
     void getSearch_withQuery_returnsSearchResults() throws Exception {
-        Page<SongDTO> page = new PageImpl<>(List.of(testSong));
-        when(songService.searchSongs(eq("test"), any(Pageable.class))).thenReturn(page);
+        Page<SongDTO> songPage = new PageImpl<>(List.of(testSong));
+        Page<ArtistDTO> artistPage = new PageImpl<>(Collections.emptyList());
+        Page<AlbumDTO> albumPage = new PageImpl<>(Collections.emptyList());
+        Page<Playlist> playlistPage = new PageImpl<>(Collections.emptyList());
+
+        when(songService.searchSongs(eq("test"), any(Pageable.class))).thenReturn(songPage);
+        when(artistCatalogService.searchArtists(eq("test"), any(Pageable.class))).thenReturn(artistPage);
+        when(albumCatalogService.searchAlbums(eq("test"), any(Pageable.class))).thenReturn(albumPage);
+        when(playlistRepository.searchPublicByKeyword(eq("test"), any(Pageable.class))).thenReturn(playlistPage);
 
         mockMvc.perform(get("/search").param("q", "test"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("search"))
-                .andExpect(model().attributeExists("results", "query"));
+                .andExpect(model().attributeExists("songResults", "query"));
     }
 
     @Test
@@ -239,8 +253,19 @@ class PageControllerIntegrationTest {
     @Test
     @DisplayName("GET /search - unauthenticated - returns 200 (public endpoint)")
     void getSearch_unauthenticated_redirectsToLogin() throws Exception {
+        Page<SongDTO> songPage = new PageImpl<>(Collections.emptyList());
+        Page<ArtistDTO> artistPage = new PageImpl<>(Collections.emptyList());
+        Page<AlbumDTO> albumPage = new PageImpl<>(Collections.emptyList());
+        Page<Playlist> playlistPage = new PageImpl<>(Collections.emptyList());
+
+        when(songService.searchSongs(eq("test"), any(Pageable.class))).thenReturn(songPage);
+        when(artistCatalogService.searchArtists(eq("test"), any(Pageable.class))).thenReturn(artistPage);
+        when(albumCatalogService.searchAlbums(eq("test"), any(Pageable.class))).thenReturn(albumPage);
+        when(playlistRepository.searchPublicByKeyword(eq("test"), any(Pageable.class))).thenReturn(playlistPage);
+
         mockMvc.perform(get("/search").param("q", "test"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(view().name("search"));
     }
 
     // ── GET /artist/{id} ──────────────────────────────────────────
