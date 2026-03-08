@@ -1,0 +1,871 @@
+package com.revplay.service;
+
+import com.revplay.dto.PlaylistDTO;
+import com.revplay.exception.BadRequestException;
+import com.revplay.exception.ResourceNotFoundException;
+import com.revplay.exception.UnauthorizedAccessException;
+import com.revplay.model.*;
+import com.revplay.repository.*;
+import com.revplay.util.SecurityUtils;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class PlaylistServiceTest {
+
+    @Mock private PlaylistRepository       playlistRepository;
+    @Mock private PlaylistSongRepository   playlistSongRepository;
+    @Mock private PlaylistFollowRepository playlistFollowRepository;
+    @Mock private SongRepository           songRepository;
+    @Mock private SecurityUtils            securityUtils;
+    @Mock private FileStorageService       fileStorageService;
+
+    @InjectMocks
+    private PlaylistService playlistService;
+
+    // ── Test data ──
+    private User     currentUser;
+    private User     otherUser;
+    private Playlist ownedPlaylist;
+    private Playlist otherPublicPlaylist;
+    private Playlist otherPrivatePlaylist;
+    private Song     testSong;
+    private Artist   testArtist;
+
+    @BeforeEach
+    void setUp() {
+        currentUser = User.builder()
+                .id(1L)
+                .username("alice")
+                .email("alice@revplay.com")
+                .passwordHash("hash")
+                .role(Role.LISTENER)
+                .build();
+
+        otherUser = User.builder()
+                .id(2L)
+                .username("bob")
+                .email("bob@revplay.com")
+                .passwordHash("hash")
+                .role(Role.LISTENER)
+                .build();
+
+        testArtist = new Artist();
+        testArtist.setId(1L);
+        testArtist.setArtistName("Test Artist");
+
+        testSong = Song.builder()
+                .id(10L)
+                .title("Test Song")
+                .duration(210)
+                .artist(testArtist)
+                .visibility(Song.Visibility.PUBLIC)
+                .build();
+
+        ownedPlaylist = new Playlist();
+        ownedPlaylist.setId(1L);
+        ownedPlaylist.setName("My Playlist");
+        ownedPlaylist.setDescription("My description");
+        ownedPlaylist.setPublicPlaylist(true);
+        ownedPlaylist.setUser(currentUser);
+        ownedPlaylist.setCreatedAt(LocalDateTime.of(2024, 6, 10, 10, 0));
+        ownedPlaylist.setUpdatedAt(LocalDateTime.of(2024, 6, 10, 10, 0));
+
+        otherPublicPlaylist = new Playlist();
+        otherPublicPlaylist.setId(2L);
+        otherPublicPlaylist.setName("Bob's Public");
+        otherPublicPlaylist.setPublicPlaylist(true);
+        otherPublicPlaylist.setUser(otherUser);
+        otherPublicPlaylist.setCreatedAt(LocalDateTime.of(2024, 6, 15, 10, 0));
+        otherPublicPlaylist.setUpdatedAt(LocalDateTime.of(2024, 6, 15, 10, 0));
+
+        otherPrivatePlaylist = new Playlist();
+        otherPrivatePlaylist.setId(3L);
+        otherPrivatePlaylist.setName("Bob's Private");
+        otherPrivatePlaylist.setPublicPlaylist(false);
+        otherPrivatePlaylist.setUser(otherUser);
+        otherPrivatePlaylist.setCreatedAt(LocalDateTime.of(2024, 6, 15, 10, 0));
+        otherPrivatePlaylist.setUpdatedAt(LocalDateTime.of(2024, 6, 15, 10, 0));
+
+        lenient().when(securityUtils.getCurrentUser())
+                .thenReturn(currentUser);
+    }
+
+    // ══════════════════════════════════════════════════════════
+    //  createPlaylist
+    // ══════════════════════════════════════════════════════════
+
+    @Nested
+    @DisplayName("createPlaylist")
+    class CreatePlaylist {
+
+        @Test
+        @DisplayName("valid input — playlist saved with current user as owner")
+        void createPlaylist_validInput_savedWithCurrentUser() {
+            PlaylistDTO dto = new PlaylistDTO();
+            dto.setName("Road Trip");
+            dto.setDescription("Highway tunes");
+            dto.setPublicPlaylist(true);
+
+            when(playlistRepository.save(any(Playlist.class)))
+                    .thenAnswer(invocation -> {
+                        Playlist saved = invocation.getArgument(0);
+                        saved.setId(99L);
+                        saved.setCreatedAt(LocalDateTime.now());
+                        saved.setUpdatedAt(LocalDateTime.now());
+                        return saved;
+                    });
+
+            PlaylistDTO result = playlistService.createPlaylist(dto, null);
+
+            assertNotNull(result);
+            assertEquals("Road Trip", result.getName());
+
+            verify(playlistRepository).save(argThat(p ->
+                    p.getUser().getId().equals(1L)
+                            && p.getName().equals("Road Trip")
+                            && p.isPublicPlaylist()
+            ));
+        }
+
+        @Test
+        @DisplayName("private playlist — isPublic set to false")
+        void createPlaylist_privatePlaylist_isPublicFalse() {
+            PlaylistDTO dto = new PlaylistDTO();
+            dto.setName("Secret Jams");
+            dto.setPublicPlaylist(false);
+
+            when(playlistRepository.save(any(Playlist.class)))
+                    .thenAnswer(invocation -> {
+                        Playlist saved = invocation.getArgument(0);
+                        saved.setId(99L);
+                        saved.setCreatedAt(LocalDateTime.now());
+                        saved.setUpdatedAt(LocalDateTime.now());
+                        return saved;
+                    });
+
+            playlistService.createPlaylist(dto, null);
+
+            verify(playlistRepository).save(argThat(p -> !p.isPublicPlaylist()));
+        }
+
+        @Test
+        @DisplayName("repository save called exactly once")
+        void createPlaylist_repositorySaveCalledOnce() {
+            PlaylistDTO dto = new PlaylistDTO();
+            dto.setName("Test");
+
+            when(playlistRepository.save(any(Playlist.class)))
+                    .thenAnswer(invocation -> {
+                        Playlist saved = invocation.getArgument(0);
+                        saved.setId(99L);
+                        saved.setCreatedAt(LocalDateTime.now());
+                        saved.setUpdatedAt(LocalDateTime.now());
+                        return saved;
+                    });
+
+            playlistService.createPlaylist(dto, null);
+
+            verify(playlistRepository, times(1)).save(any(Playlist.class));
+        }
+
+        @Test
+        @DisplayName("with cover image — stores file and sets coverImageUrl")
+        void createPlaylist_withCoverImage_storesFile() {
+            PlaylistDTO dto = new PlaylistDTO();
+            dto.setName("Cover Test");
+
+            org.springframework.mock.web.MockMultipartFile coverImage =
+                    new org.springframework.mock.web.MockMultipartFile(
+                            "coverImage", "cover.jpg", "image/jpeg", new byte[]{1, 2, 3});
+
+            when(fileStorageService.storeFile(any(), eq("playlist-covers")))
+                    .thenReturn("playlist-covers/123_cover.jpg");
+
+            when(playlistRepository.save(any(Playlist.class)))
+                    .thenAnswer(invocation -> {
+                        Playlist saved = invocation.getArgument(0);
+                        saved.setId(99L);
+                        saved.setCreatedAt(LocalDateTime.now());
+                        saved.setUpdatedAt(LocalDateTime.now());
+                        return saved;
+                    });
+
+            PlaylistDTO result = playlistService.createPlaylist(dto, coverImage);
+
+            assertNotNull(result);
+            verify(fileStorageService).storeFile(any(), eq("playlist-covers"));
+            verify(playlistRepository).save(argThat(p ->
+                    p.getCoverImageUrl() != null
+                            && p.getCoverImageUrl().contains("playlist-covers")
+            ));
+        }
+
+        @Test
+        @DisplayName("without cover image — coverImageUrl remains null")
+        void createPlaylist_withoutCoverImage_noCoverUrl() {
+            PlaylistDTO dto = new PlaylistDTO();
+            dto.setName("No Cover");
+
+            when(playlistRepository.save(any(Playlist.class)))
+                    .thenAnswer(invocation -> {
+                        Playlist saved = invocation.getArgument(0);
+                        saved.setId(99L);
+                        saved.setCreatedAt(LocalDateTime.now());
+                        saved.setUpdatedAt(LocalDateTime.now());
+                        return saved;
+                    });
+
+            playlistService.createPlaylist(dto, null);
+
+            verify(fileStorageService, never()).storeFile(any(), any());
+            verify(playlistRepository).save(argThat(p ->
+                    p.getCoverImageUrl() == null
+            ));
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════
+    //  getMyPlaylists
+    // ══════════════════════════════════════════════════════════
+
+    @Nested
+    @DisplayName("getMyPlaylists")
+    class GetMyPlaylists {
+
+        @Test
+        @DisplayName("returns playlists owned by current user")
+        void getMyPlaylists_returnsOwnedPlaylists() {
+            when(playlistRepository.findByUser_Id(1L))
+                    .thenReturn(List.of(ownedPlaylist));
+
+            List<PlaylistDTO> result = playlistService.getMyPlaylists();
+
+            assertEquals(1, result.size());
+            assertEquals("My Playlist", result.get(0).getName());
+        }
+
+        @Test
+        @DisplayName("empty list when user has no playlists")
+        void getMyPlaylists_noPlaylists_returnsEmpty() {
+            when(playlistRepository.findByUser_Id(1L))
+                    .thenReturn(List.of());
+
+            List<PlaylistDTO> result = playlistService.getMyPlaylists();
+
+            assertTrue(result.isEmpty());
+        }
+
+        @Test
+        @DisplayName("queries with current user ID only")
+        void getMyPlaylists_queriesCurrentUserOnly() {
+            when(playlistRepository.findByUser_Id(1L))
+                    .thenReturn(List.of());
+
+            playlistService.getMyPlaylists();
+
+            verify(playlistRepository).findByUser_Id(1L);
+            verify(playlistRepository, never()).findByUser_Id(2L);
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════
+    //  getPublicPlaylists
+    // ══════════════════════════════════════════════════════════
+
+    @Nested
+    @DisplayName("getPublicPlaylists")
+    class GetPublicPlaylists {
+
+        @Test
+        @DisplayName("no search term — empty result when none exist")
+        void getPublicPlaylists_noneExist_returnsEmpty() {
+            when(playlistRepository.findByPublicPlaylistTrueOrderByCreatedAtDesc())
+                    .thenReturn(List.of());
+
+            List<PlaylistDTO> result = playlistService.getPublicPlaylists(null);
+
+            assertTrue(result.isEmpty());
+        }
+
+        @Test
+        @DisplayName("no search term — uses sorted query (newest first)")
+        void getPublicPlaylists_noSearch_usesSortedQuery() {
+            when(playlistRepository.findByPublicPlaylistTrueOrderByCreatedAtDesc())
+                    .thenReturn(List.of(otherPublicPlaylist, ownedPlaylist));
+
+            List<PlaylistDTO> result = playlistService.getPublicPlaylists(null);
+
+            assertEquals(2, result.size());
+            verify(playlistRepository).findByPublicPlaylistTrueOrderByCreatedAtDesc();
+            verify(playlistRepository, never()).searchPublicByName(any());
+        }
+
+        @Test
+        @DisplayName("search keyword provided — uses name search query")
+        void getPublicPlaylists_withSearch_usesSearchQuery() {
+            when(playlistRepository.searchPublicByName("chill"))
+                    .thenReturn(List.of(ownedPlaylist));
+
+            List<PlaylistDTO> result = playlistService.getPublicPlaylists("chill");
+
+            assertEquals(1, result.size());
+            verify(playlistRepository).searchPublicByName("chill");
+            verify(playlistRepository, never()).findByPublicPlaylistTrueOrderByCreatedAtDesc();
+        }
+
+        @Test
+        @DisplayName("blank search term — treated as no search, uses sorted query")
+        void getPublicPlaylists_blankSearch_usesDefaultQuery() {
+            when(playlistRepository.findByPublicPlaylistTrueOrderByCreatedAtDesc())
+                    .thenReturn(List.of());
+
+            playlistService.getPublicPlaylists("   ");
+
+            verify(playlistRepository).findByPublicPlaylistTrueOrderByCreatedAtDesc();
+            verify(playlistRepository, never()).searchPublicByName(any());
+        }
+
+        @Test
+        @DisplayName("search keyword — no matches returns empty list")
+        void getPublicPlaylists_searchNoMatch_returnsEmpty() {
+            when(playlistRepository.searchPublicByName("zzznomatch"))
+                    .thenReturn(List.of());
+
+            List<PlaylistDTO> result = playlistService.getPublicPlaylists("zzznomatch");
+
+            assertTrue(result.isEmpty());
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════
+    //  getPlaylistById
+    // ══════════════════════════════════════════════════════════
+
+    @Nested
+    @DisplayName("getPlaylistById")
+    class GetPlaylistById {
+
+        @Test
+        @DisplayName("own playlist — returns successfully")
+        void getById_ownPlaylist_returnsDTO() {
+            when(playlistRepository.findById(1L))
+                    .thenReturn(java.util.Optional.of(ownedPlaylist));
+
+            PlaylistDTO result = playlistService.getPlaylistById(1L);
+
+            assertNotNull(result);
+            assertEquals("My Playlist", result.getName());
+        }
+
+        @Test
+        @DisplayName("other user's public playlist — returns successfully")
+        void getById_otherPublicPlaylist_returnsDTO() {
+            when(playlistRepository.findById(2L))
+                    .thenReturn(java.util.Optional.of(otherPublicPlaylist));
+
+            PlaylistDTO result = playlistService.getPlaylistById(2L);
+
+            assertNotNull(result);
+            assertEquals("Bob's Public", result.getName());
+        }
+
+        @Test
+        @DisplayName("other user's private playlist — throws UnauthorizedAccessException")
+        void getById_otherPrivatePlaylist_throwsUnauthorized() {
+            when(playlistRepository.findById(3L))
+                    .thenReturn(java.util.Optional.of(otherPrivatePlaylist));
+
+            assertThrows(UnauthorizedAccessException.class,
+                    () -> playlistService.getPlaylistById(3L));
+        }
+
+        @Test
+        @DisplayName("playlist not found — throws ResourceNotFoundException")
+        void getById_notFound_throwsResourceNotFound() {
+            when(playlistRepository.findById(99L))
+                    .thenReturn(java.util.Optional.empty());
+
+            assertThrows(ResourceNotFoundException.class,
+                    () -> playlistService.getPlaylistById(99L));
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════
+    //  updatePlaylist
+    // ══════════════════════════════════════════════════════════
+
+    @Nested
+    @DisplayName("updatePlaylist")
+    class UpdatePlaylist {
+
+        @Test
+        @DisplayName("own playlist — updates name and description")
+        void update_ownPlaylist_updatesFields() {
+            when(playlistRepository.findById(1L))
+                    .thenReturn(java.util.Optional.of(ownedPlaylist));
+            when(playlistRepository.save(any(Playlist.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+
+            PlaylistDTO dto = new PlaylistDTO();
+            dto.setName("Updated Name");
+            dto.setDescription("Updated Desc");
+            dto.setPublicPlaylist(false);
+
+            PlaylistDTO result = playlistService.updatePlaylist(1L, dto, null);
+
+            assertEquals("Updated Name", result.getName());
+            verify(playlistRepository).save(argThat(p ->
+                    p.getName().equals("Updated Name")
+                            && p.getDescription().equals("Updated Desc")
+                            && !p.isPublicPlaylist()
+            ));
+        }
+
+        @Test
+        @DisplayName("own playlist with cover image — stores file and updates URL")
+        void update_withCoverImage_storesFile() {
+            when(playlistRepository.findById(1L))
+                    .thenReturn(java.util.Optional.of(ownedPlaylist));
+            when(playlistRepository.save(any(Playlist.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+            when(fileStorageService.storeFile(any(), eq("playlist-covers")))
+                    .thenReturn("playlist-covers/456_new-cover.png");
+
+            PlaylistDTO dto = new PlaylistDTO();
+            dto.setName("Cover Update");
+
+            org.springframework.mock.web.MockMultipartFile coverImage =
+                    new org.springframework.mock.web.MockMultipartFile(
+                            "coverImage", "new-cover.png", "image/png", new byte[]{1, 2, 3});
+
+            PlaylistDTO result = playlistService.updatePlaylist(1L, dto, coverImage);
+
+            assertNotNull(result);
+            verify(fileStorageService).storeFile(any(), eq("playlist-covers"));
+            verify(playlistRepository).save(argThat(p ->
+                    p.getCoverImageUrl() != null
+                            && p.getCoverImageUrl().contains("playlist-covers")
+            ));
+        }
+
+        @Test
+        @DisplayName("other user's playlist — throws UnauthorizedAccessException")
+        void update_otherPlaylist_throwsUnauthorized() {
+            when(playlistRepository.findById(2L))
+                    .thenReturn(java.util.Optional.of(otherPublicPlaylist));
+
+            PlaylistDTO dto = new PlaylistDTO();
+            dto.setName("Hacked");
+
+            assertThrows(UnauthorizedAccessException.class,
+                    () -> playlistService.updatePlaylist(2L, dto, null));
+
+            verify(playlistRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("playlist not found — throws ResourceNotFoundException")
+        void update_notFound_throwsResourceNotFound() {
+            when(playlistRepository.findById(99L))
+                    .thenReturn(java.util.Optional.empty());
+
+            assertThrows(ResourceNotFoundException.class,
+                    () -> playlistService.updatePlaylist(99L, new PlaylistDTO(), null));
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════
+    //  removeCoverImage
+    // ══════════════════════════════════════════════════════════
+
+    @Nested
+    @DisplayName("removeCoverImage")
+    class RemoveCoverImage {
+
+        @Test
+        @DisplayName("own playlist — cover image URL set to null")
+        void removeCover_ownPlaylist_setsNull() {
+            ownedPlaylist.setCoverImageUrl("/uploads/playlist-covers/123_cover.jpg");
+
+            when(playlistRepository.findById(1L))
+                    .thenReturn(java.util.Optional.of(ownedPlaylist));
+            when(playlistRepository.save(any(Playlist.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+
+            PlaylistDTO result = playlistService.removeCoverImage(1L);
+
+            assertNull(result.getCoverImageUrl());
+            verify(playlistRepository).save(argThat(p ->
+                    p.getCoverImageUrl() == null
+            ));
+        }
+
+        @Test
+        @DisplayName("not owner — throws UnauthorizedAccessException")
+        void removeCover_notOwner_throwsUnauthorized() {
+            when(playlistRepository.findById(2L))
+                    .thenReturn(java.util.Optional.of(otherPublicPlaylist));
+
+            assertThrows(UnauthorizedAccessException.class,
+                    () -> playlistService.removeCoverImage(2L));
+
+            verify(playlistRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("playlist not found — throws ResourceNotFoundException")
+        void removeCover_notFound_throwsResourceNotFound() {
+            when(playlistRepository.findById(99L))
+                    .thenReturn(java.util.Optional.empty());
+
+            assertThrows(ResourceNotFoundException.class,
+                    () -> playlistService.removeCoverImage(99L));
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════
+    //  deletePlaylist
+    // ══════════════════════════════════════════════════════════
+
+    @Nested
+    @DisplayName("deletePlaylist")
+    class DeletePlaylist {
+
+        @Test
+        @DisplayName("own playlist — songs and follows cleaned up, then playlist deleted")
+        void delete_ownPlaylist_deletesSuccessfully() {
+            when(playlistRepository.findById(1L))
+                    .thenReturn(java.util.Optional.of(ownedPlaylist));
+
+            playlistService.deletePlaylist(1L);
+
+            verify(playlistSongRepository).deleteByPlaylist_Id(1L);
+            verify(playlistFollowRepository).deleteByPlaylist_Id(1L);
+            verify(playlistRepository).delete(ownedPlaylist);
+        }
+
+        @Test
+        @DisplayName("other user's playlist — throws UnauthorizedAccessException")
+        void delete_otherPlaylist_throwsUnauthorized() {
+            when(playlistRepository.findById(2L))
+                    .thenReturn(java.util.Optional.of(otherPublicPlaylist));
+
+            assertThrows(UnauthorizedAccessException.class,
+                    () -> playlistService.deletePlaylist(2L));
+
+            verify(playlistRepository, never()).delete(any());
+        }
+
+        @Test
+        @DisplayName("playlist not found — throws ResourceNotFoundException")
+        void delete_notFound_throwsResourceNotFound() {
+            when(playlistRepository.findById(99L))
+                    .thenReturn(java.util.Optional.empty());
+
+            assertThrows(ResourceNotFoundException.class,
+                    () -> playlistService.deletePlaylist(99L));
+        }
+
+        @Test
+        @DisplayName("playlist with songs — songs deleted before playlist (edge case)")
+        void delete_playlistWithSongs_deletesSongsFirst() {
+            when(playlistRepository.findById(1L))
+                    .thenReturn(java.util.Optional.of(ownedPlaylist));
+
+            playlistService.deletePlaylist(1L);
+
+            InOrder order = inOrder(
+                    playlistSongRepository,
+                    playlistFollowRepository,
+                    playlistRepository
+            );
+            order.verify(playlistSongRepository).deleteByPlaylist_Id(1L);
+            order.verify(playlistFollowRepository).deleteByPlaylist_Id(1L);
+            order.verify(playlistRepository).delete(ownedPlaylist);
+        }
+
+        @Test
+        @DisplayName("playlist with followers — follows deleted before playlist (edge case)")
+        void delete_playlistWithFollowers_deletesFollowsBeforePlaylist() {
+            when(playlistRepository.findById(1L))
+                    .thenReturn(java.util.Optional.of(ownedPlaylist));
+
+            playlistService.deletePlaylist(1L);
+
+            verify(playlistFollowRepository).deleteByPlaylist_Id(1L);
+            verify(playlistRepository).delete(ownedPlaylist);
+        }
+
+        @Test
+        @DisplayName("empty playlist — cleanup still called (safe no-op on empty tables)")
+        void delete_emptyPlaylist_cleanupStillCalled() {
+            when(playlistRepository.findById(1L))
+                    .thenReturn(java.util.Optional.of(ownedPlaylist));
+
+            playlistService.deletePlaylist(1L);
+
+            verify(playlistSongRepository).deleteByPlaylist_Id(1L);
+            verify(playlistFollowRepository).deleteByPlaylist_Id(1L);
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════
+    //  addSongToPlaylist
+    // ══════════════════════════════════════════════════════════
+
+    @Nested
+    @DisplayName("addSongToPlaylist")
+    class AddSongToPlaylist {
+
+        @Test
+        @DisplayName("valid song + own playlist — PlaylistSong saved with correct position")
+        void addSong_validInput_savedWithPosition() {
+            when(playlistRepository.findById(1L))
+                    .thenReturn(java.util.Optional.of(ownedPlaylist));
+            when(playlistSongRepository.existsByPlaylist_IdAndSong_Id(1L, 10L))
+                    .thenReturn(false);
+            when(songRepository.findById(10L))
+                    .thenReturn(java.util.Optional.of(testSong));
+
+            PlaylistSong ps1 = new PlaylistSong();
+            PlaylistSong ps2 = new PlaylistSong();
+            PlaylistSong ps3 = new PlaylistSong();
+            when(playlistSongRepository.findByPlaylist_IdOrderByPosition(1L))
+                    .thenReturn(List.of(ps1, ps2, ps3));
+
+            playlistService.addSongToPlaylist(1L, 10L);
+
+            verify(playlistSongRepository).save(argThat(ps ->
+                    ps.getPlaylist().getId().equals(1L)
+                            && ps.getSong().getId().equals(10L)
+                            && ps.getPosition() == 4
+            ));
+        }
+
+        @Test
+        @DisplayName("song already in playlist — silently returns (no exception)")
+        void addSong_alreadyInPlaylist_silentReturn() {
+            when(playlistRepository.findById(1L))
+                    .thenReturn(java.util.Optional.of(ownedPlaylist));
+            when(playlistSongRepository.existsByPlaylist_IdAndSong_Id(1L, 10L))
+                    .thenReturn(true);
+
+            assertDoesNotThrow(
+                    () -> playlistService.addSongToPlaylist(1L, 10L));
+
+            verify(playlistSongRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("song not found — throws ResourceNotFoundException")
+        void addSong_songNotFound_throwsResourceNotFound() {
+            when(playlistRepository.findById(1L))
+                    .thenReturn(java.util.Optional.of(ownedPlaylist));
+            when(playlistSongRepository.existsByPlaylist_IdAndSong_Id(1L, 99L))
+                    .thenReturn(false);
+            when(songRepository.findById(99L))
+                    .thenReturn(java.util.Optional.empty());
+
+            assertThrows(ResourceNotFoundException.class,
+                    () -> playlistService.addSongToPlaylist(1L, 99L));
+        }
+
+        @Test
+        @DisplayName("not owner — throws UnauthorizedAccessException")
+        void addSong_notOwner_throwsUnauthorized() {
+            when(playlistRepository.findById(2L))
+                    .thenReturn(java.util.Optional.of(otherPublicPlaylist));
+
+            assertThrows(UnauthorizedAccessException.class,
+                    () -> playlistService.addSongToPlaylist(2L, 10L));
+
+            verify(playlistSongRepository, never()).save(any());
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════
+    //  removeSongFromPlaylist
+    // ══════════════════════════════════════════════════════════
+
+    @Nested
+    @DisplayName("removeSongFromPlaylist")
+    class RemoveSongFromPlaylist {
+
+        @Test
+        @DisplayName("song in playlist — removed successfully via deleteBy")
+        void removeSong_songInPlaylist_deleted() {
+            when(playlistRepository.findById(1L))
+                    .thenReturn(java.util.Optional.of(ownedPlaylist));
+            when(playlistSongRepository.existsByPlaylist_IdAndSong_Id(1L, 10L))
+                    .thenReturn(true);
+
+            playlistService.removeSongFromPlaylist(1L, 10L);
+
+            verify(playlistSongRepository)
+                    .deleteByPlaylist_IdAndSong_Id(1L, 10L);
+        }
+
+        @Test
+        @DisplayName("song not in playlist — throws ResourceNotFoundException")
+        void removeSong_songNotInPlaylist_throwsResourceNotFound() {
+            when(playlistRepository.findById(1L))
+                    .thenReturn(java.util.Optional.of(ownedPlaylist));
+            when(playlistSongRepository.existsByPlaylist_IdAndSong_Id(1L, 99L))
+                    .thenReturn(false);
+
+            assertThrows(ResourceNotFoundException.class,
+                    () -> playlistService.removeSongFromPlaylist(1L, 99L));
+
+            verify(playlistSongRepository, never())
+                    .deleteByPlaylist_IdAndSong_Id(anyLong(), anyLong());
+        }
+
+        @Test
+        @DisplayName("not owner — throws UnauthorizedAccessException")
+        void removeSong_notOwner_throwsUnauthorized() {
+            when(playlistRepository.findById(2L))
+                    .thenReturn(java.util.Optional.of(otherPublicPlaylist));
+
+            assertThrows(UnauthorizedAccessException.class,
+                    () -> playlistService.removeSongFromPlaylist(2L, 10L));
+
+            verify(playlistSongRepository, never())
+                    .deleteByPlaylist_IdAndSong_Id(anyLong(), anyLong());
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════
+    //  reorderSongs
+    // ══════════════════════════════════════════════════════════
+
+    @Nested
+    @DisplayName("reorderSongs")
+    class ReorderSongs {
+
+        @Test
+        @DisplayName("valid reorder — positions updated correctly")
+        void reorder_validInput_positionsUpdated() {
+            PlaylistSong ps1 = new PlaylistSong();
+            ps1.setId(1L);
+            ps1.setPlaylist(ownedPlaylist);
+            ps1.setSong(Song.builder().id(10L).build());
+            ps1.setPosition(1);
+
+            PlaylistSong ps2 = new PlaylistSong();
+            ps2.setId(2L);
+            ps2.setPlaylist(ownedPlaylist);
+            ps2.setSong(Song.builder().id(20L).build());
+            ps2.setPosition(2);
+
+            PlaylistSong ps3 = new PlaylistSong();
+            ps3.setId(3L);
+            ps3.setPlaylist(ownedPlaylist);
+            ps3.setSong(Song.builder().id(30L).build());
+            ps3.setPosition(3);
+
+            when(playlistRepository.findById(1L))
+                    .thenReturn(java.util.Optional.of(ownedPlaylist));
+            when(playlistSongRepository.findByPlaylist_IdOrderByPositionAsc(1L))
+                    .thenReturn(List.of(ps1, ps2, ps3));
+
+            playlistService.reorderSongs(1L, List.of(30L, 20L, 10L));
+
+            verify(playlistSongRepository).saveAll(argThat(songs -> {
+                List<PlaylistSong> list = new ArrayList<>();
+                songs.forEach(list::add);
+                return list.size() == 3;
+            }));
+        }
+
+        @Test
+        @DisplayName("valid reorder — verify new positions are 1-based")
+        void reorder_validInput_positionsAreOneBased() {
+            PlaylistSong ps1 = new PlaylistSong();
+            ps1.setId(1L);
+            ps1.setPlaylist(ownedPlaylist);
+            ps1.setSong(Song.builder().id(10L).build());
+            ps1.setPosition(1);
+
+            PlaylistSong ps2 = new PlaylistSong();
+            ps2.setId(2L);
+            ps2.setPlaylist(ownedPlaylist);
+            ps2.setSong(Song.builder().id(20L).build());
+            ps2.setPosition(2);
+
+            when(playlistRepository.findById(1L))
+                    .thenReturn(java.util.Optional.of(ownedPlaylist));
+            when(playlistSongRepository.findByPlaylist_IdOrderByPositionAsc(1L))
+                    .thenReturn(List.of(ps1, ps2));
+
+            playlistService.reorderSongs(1L, List.of(20L, 10L));
+
+            verify(playlistSongRepository).saveAll(argThat(songs -> {
+                List<PlaylistSong> list = new ArrayList<>();
+                songs.forEach(list::add);
+
+                PlaylistSong forSong20 = list.stream()
+                        .filter(ps -> ps.getSong().getId().equals(20L))
+                        .findFirst().orElse(null);
+                PlaylistSong forSong10 = list.stream()
+                        .filter(ps -> ps.getSong().getId().equals(10L))
+                        .findFirst().orElse(null);
+
+                return forSong20 != null && forSong20.getPosition() == 1
+                        && forSong10 != null && forSong10.getPosition() == 2;
+            }));
+        }
+
+        @Test
+        @DisplayName("mismatched song IDs — throws BadRequestException")
+        void reorder_mismatchedIds_throwsBadRequest() {
+            PlaylistSong ps1 = new PlaylistSong();
+            ps1.setPlaylist(ownedPlaylist);
+            ps1.setSong(Song.builder().id(10L).build());
+
+            when(playlistRepository.findById(1L))
+                    .thenReturn(java.util.Optional.of(ownedPlaylist));
+            when(playlistSongRepository.findByPlaylist_IdOrderByPositionAsc(1L))
+                    .thenReturn(List.of(ps1));
+
+            assertThrows(BadRequestException.class,
+                    () -> playlistService.reorderSongs(1L, List.of(99L, 88L)));
+
+            verify(playlistSongRepository, never()).saveAll(any());
+        }
+
+        @Test
+        @DisplayName("not owner — throws UnauthorizedAccessException")
+        void reorder_notOwner_throwsUnauthorized() {
+            when(playlistRepository.findById(2L))
+                    .thenReturn(java.util.Optional.of(otherPublicPlaylist));
+
+            assertThrows(UnauthorizedAccessException.class,
+                    () -> playlistService.reorderSongs(2L, List.of(10L)));
+
+            verify(playlistSongRepository, never()).saveAll(any());
+        }
+
+        @Test
+        @DisplayName("playlist not found — throws ResourceNotFoundException")
+        void reorder_notFound_throwsResourceNotFound() {
+            when(playlistRepository.findById(99L))
+                    .thenReturn(java.util.Optional.empty());
+
+            assertThrows(ResourceNotFoundException.class,
+                    () -> playlistService.reorderSongs(99L, List.of()));
+        }
+    }
+}

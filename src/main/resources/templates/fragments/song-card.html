@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<body>
+
+<div th:fragment="card(song)" class="song-card" th:data-id="${song?.id}" th:data-url="${song?.audioUrl}"
+     th:data-title="${song?.title}" th:data-artist="${song?.artistName}">
+
+     <img th:src="${song?.coverImageUrl != null ? song.coverImageUrl : 'https://www.shutterstock.com/shutterstock/photos/2626947211/display_1500/stock-vector-jazz-music-poster-design-template-2626947211.jpg'}"
+          alt="Cover">
+
+     <div class="play-button-overlay">
+          <img th:src="@{/images/icons/play.png}" alt="▶" class="card-play-icon"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+          <span class="icon-fallback card-play-fallback" style="display:none;">▶</span>
+     </div>
+
+     <!-- Action buttons (Favorite, Add to Playlist, Add to Queue) -->
+     <div class="song-card-actions" sec:authorize="isAuthenticated()">
+          <button class="song-card-fav-btn" th:data-song-id="${song?.id}" title="Add to Favorites"
+                  type="button">♡</button>
+          <button class="song-card-add-playlist-btn" th:data-song-id="${song?.id}" title="Add to Playlist"
+                  type="button">+</button>
+          <button class="add-to-queue-btn" th:data-song-id="${song?.id}" title="Add to Queue"
+                  type="button">
+               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round">
+                    <line x1="3" y1="6" x2="17" y2="6"/><line x1="3" y1="12" x2="17" y2="12"/>
+                    <line x1="3" y1="18" x2="11" y2="18"/>
+                    <line x1="16" y1="16" x2="16" y2="22"/><line x1="13" y1="19" x2="19" y2="19"/>
+               </svg>
+          </button>
+     </div>
+
+     <a th:href="@{'/songs/' + ${song?.id}}" class="song-title song-title-link"
+        th:text="${song?.title != null ? song.title : 'Unknown Title'}">Song Title</a>
+     <div class="song-artist" th:text="${song?.artistName != null ? song.artistName : 'Unknown Artist'}">Artist
+          Name</div>
+</div>
+
+</body>
+
+</html>

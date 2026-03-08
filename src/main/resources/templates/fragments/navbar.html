@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+
+<nav th:fragment="mainNav" class="navbar">
+
+    <!-- Hamburger (mobile only) -->
+    <button class="nav-hamburger" id="nav-hamburger" type="button" title="Menu" aria-label="Open menu">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+    </button>
+
+    <!-- Brand -->
+    <a th:href="@{/}" class="nav-brand">
+        <span class="brand-icon">
+            <img th:src="@{/images/icons/headphone.png}"
+                 alt="🎧"
+                 class="brand-icon-img"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+            <span class="icon-fallback" style="display:none;">🎧</span>
+        </span>
+        <span>RevPlay</span>
+    </a>
+
+    <!-- Center: Search Bar (no form — JS handles it) -->
+    <div class="nav-search" sec:authorize="isAuthenticated()">
+        <div class="nav-search-form">
+            <span class="nav-search-icon">
+                <img th:src="@{/images/icons/search.png}"
+                     alt="🔍"
+                     class="nav-search-icon-img"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                <span class="icon-fallback" style="display:none;">🔍</span>
+            </span>
+            <input type="text"
+                   id="nav-search-input"
+                   class="nav-search-input"
+                   placeholder="What do you want to listen to?"
+                   autocomplete="off">
+        </div>
+    </div>
+
+    <!-- Right -->
+    <div class="nav-right">
+
+        <!-- Theme Toggle -->
+        <button id="theme-toggle" class="theme-toggle-btn" title="Toggle theme" type="button">
+            <span class="theme-icon theme-icon--sun" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <circle cx="12" cy="12" r="5"/>
+                    <line x1="12" y1="1"  x2="12" y2="3"/>
+                    <line x1="12" y1="21" x2="12" y2="23"/>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                    <line x1="1" y1="12" x2="3" y2="12"/>
+                    <line x1="21" y1="12" x2="23" y2="12"/>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                </svg>
+            </span>
+            <span class="theme-icon theme-icon--moon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3
+                             7 7 0 0 0 21 12.79z"/>
+                </svg>
+            </span>
+        </button>
+
+        <!-- Guest -->
+        <div sec:authorize="!isAuthenticated()" class="nav-links">
+            <a th:href="@{/auth/register}" class="nav-signup-btn">Sign Up</a>
+            <a th:href="@{/auth/login}" class="nav-login-btn">Log In</a>
+        </div>
+
+        <!-- Authenticated -->
+        <div sec:authorize="isAuthenticated()" class="nav-links">
+            <a th:href="@{/user/profile}" class="nav-profile-link" title="Profile">
+                <span class="nav-profile-avatar">
+                    <img th:if="${currentUserPicUrl != null}"
+                         th:src="${currentUserPicUrl}"
+                         alt="Profile"
+                         class="nav-avatar-img">
+                    <span th:if="${currentUserPicUrl == null}"
+                          sec:authentication="principal.username"
+                          class="nav-avatar-letter"
+                          th:text="${#strings.substring(#authentication.principal.username, 0, 1).toUpperCase()}">U</span>
+                </span>
+            </a>
+        </div>
+    </div>
+    <!-- Navbar Search Handler -->
+    <script>
+        (function() {
+            var navInput = document.getElementById('nav-search-input');
+            if (!navInput) return;
+
+            navInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    e.preventDefault();
+                    var q = navInput.value.trim();
+                    if (!q) return;
+                    var url = '/search?q=' + encodeURIComponent(q);
+                    if (window.PjaxRouter && window.PjaxRouter.navigate) {
+                        window.PjaxRouter.navigate(url);
+                    } else {
+                        window.location.href = url;
+                    }
+                }
+            });
+
+            // Re-bind after PJAX navigation
+            if (window.addEventListener) {
+                document.addEventListener('pjax:complete', function() {
+                    var inp = document.getElementById('nav-search-input');
+                    if (inp && !inp.dataset.bound) {
+                        inp.dataset.bound = '1';
+                        inp.addEventListener('keydown', function(e) {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                var q = inp.value.trim();
+                                if (!q) return;
+                                var url = '/search?q=' + encodeURIComponent(q);
+                                if (window.PjaxRouter && window.PjaxRouter.navigate) {
+                                    window.PjaxRouter.navigate(url);
+                                } else {
+                                    window.location.href = url;
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+        })();
+    </script>
+
+</nav>
+
+</body>
+</html>

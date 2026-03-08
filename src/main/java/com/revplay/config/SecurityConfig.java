@@ -1,73 +1,123 @@
 package com.revplay.config;
 
+import com.revplay.exception.RevPlayAccessDeniedHandler;
+import com.revplay.exception.RevPlayAuthenticationEntryPoint;
 import com.revplay.service.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final CustomUserDetailsService userDetailsService;
+        private final CustomUserDetailsService userDetailsService;
+        private final RevPlayAuthenticationEntryPoint authEntryPoint;
+        private final RevPlayAccessDeniedHandler accessDeniedHandler;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .authorizeHttpRequests(auth -> auth
-                        // Public pages
-                        .requestMatchers(
-                                "/", "/auth/register", "/auth/login",
-                                "/css/**", "/js/**", "/images/**",
-                                "/api/auth/**",
-                                "/swagger-ui/**", "/v3/api-docs/**"
-                        ).permitAll()
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-                        // Artist-only pages
-                        .requestMatchers("/artist/dashboard/**", "/api/artists/me/**", "/api/artists/analytics/**")
-                        .hasRole("ARTIST")
+                http
+                        .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
 
-                        // Admin-only pages
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .authorizeHttpRequests(auth -> auth
+                                // ✅ Public pages
+                                .requestMatchers(
+                                        "/", "/auth/register", "/auth/login",
+                                        "/css/**", "/js/**", "/images/**",
+                                        "/uploads/**",
+                                        "/api/auth/**",
+                                        "/swagger-ui/**", "/v3/api-docs/**",
+                                        "/search", "/about",
+                                        "/artist/{id:\\d+}",
+                                        "/artists",              // NEW: browse artists page
+                                        "/albums",               // NEW: browse albums page
+                                        "/albums/{id:\\d+}",     // NEW: album detail page
+                                        "/songs/{id:\\d+}"       // NEW: song detail page
+                                )
+                                .permitAll()
 
-                        // Everything else requires login
-                        .anyRequest().authenticated()
-                )
-                .formLogin(form -> form
-                        .loginPage("/auth/login")
-                        .loginProcessingUrl("/auth/login")
-                        .usernameParameter("emailOrUsername")
-                        .passwordParameter("password")
-                        .defaultSuccessUrl("/", true)
-                        .failureUrl("/auth/login?error=true")
-                        .permitAll()
-                )
-                .logout(logout -> logout
-                        .logoutUrl("/auth/logout")
-                        .logoutSuccessUrl("/auth/login?logout=true")
-                        .deleteCookies("JSESSIONID")
-                        .permitAll()
-                )
-                .userDetailsService(userDetailsService);
+                                // GET — listeners can browse
+                                .requestMatchers(HttpMethod.GET, "/api/songs/**").authenticated()
+                                .requestMatchers(HttpMethod.GET, "/api/albums/**").permitAll()   // NEW: album API public
+                                .requestMatchers(HttpMethod.GET, "/api/artists", "/api/artists/{id:\\d+}").permitAll()  // NEW: artist API public
 
-        return http.build();
-    }
+                                // Modify songs — only ARTIST
+                                .requestMatchers(HttpMethod.POST, "/api/songs/**").hasRole("ARTIST")
+                                .requestMatchers(HttpMethod.PUT, "/api/songs/**").hasRole("ARTIST")
+                                .requestMatchers(HttpMethod.DELETE, "/api/songs/**").hasRole("ARTIST")
+                                .requestMatchers(HttpMethod.PATCH, "/api/songs/**").hasRole("ARTIST")
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+                                // ✅ Artist pages (MVC routes)
+                                .requestMatchers("/artist/dashboard", "/artist/songs", "/artist/albums")
+                                .hasRole("ARTIST")
 
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
-    }
+                                // ✅ Artist API — management, songs, albums, analytics
+                                .requestMatchers("/api/artists/me/**").hasRole("ARTIST")
+                                .requestMatchers("/api/artists/songs/**").hasRole("ARTIST")
+                                .requestMatchers("/api/artists/albums/**").hasRole("ARTIST")
+                                .requestMatchers("/api/artists/analytics/**").hasRole("ARTIST")
+
+                                // ✅ Artist registration
+                                .requestMatchers(HttpMethod.POST, "/api/artists/register").authenticated()
+
+                                // ✅ Admin pages and API
+                                .requestMatchers("/admin/**").hasRole("ADMIN")
+                                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                                // ✅ User artist request API
+                                .requestMatchers("/user/api/artist-request").authenticated()
+
+                                // ✅ Everything else
+                                .anyRequest().authenticated())
+
+                        .exceptionHandling(ex -> ex
+                                .defaultAuthenticationEntryPointFor(
+                                        authEntryPoint,
+                                        new AntPathRequestMatcher("/api/**"))
+                                .accessDeniedHandler(accessDeniedHandler))
+
+                        .formLogin(form -> form
+                                .loginPage("/auth/login")
+                                .loginProcessingUrl("/auth/login")
+                                .usernameParameter("emailOrUsername")
+                                .passwordParameter("password")
+                                .defaultSuccessUrl("/", true)
+                                .failureUrl("/auth/login?error=true")
+                                .permitAll())
+
+                        .logout(logout -> logout
+                                .logoutUrl("/auth/logout")
+                                .logoutSuccessUrl("/auth/login?logout=true")
+                                .deleteCookies("JSESSIONID")
+                                .permitAll())
+
+                        .userDetailsService(userDetailsService);
+
+                return http.build();
+        }
+
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
+
+        @Bean
+        public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
+                throws Exception {
+                return config.getAuthenticationManager();
+        }
 }

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+
+<aside th:fragment="sidebar" class="sidebar" id="sidebar">
+    <nav class="sidebar-nav">
+
+        <!-- ═══ Main Navigation ═══ -->
+        <div class="sidebar-section">
+            <a th:href="@{/}" class="sidebar-item" data-nav="primary" title="Home">
+        <span class="sidebar-icon">
+            <img th:src="@{/images/icons/home.png}" alt="🏠" class="sidebar-icon-img"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+            <span class="sidebar-icon-fallback" style="display:none;">🏠</span>
+        </span>
+                <span class="sidebar-label">Home</span>
+            </a>
+
+            <a th:href="@{/library}" class="sidebar-item" data-nav="primary" title="Browse Music">
+        <span class="sidebar-icon">
+            <img th:src="@{/images/icons/music-book.png}" alt="📚" class="sidebar-icon-img"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+            <span class="sidebar-icon-fallback" style="display:none;">📚</span>
+        </span>
+                <span class="sidebar-label">Library</span>
+            </a>
+
+        </div>
+
+        <!-- ═══ Browse ═══ -->
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">Browse</div>
+
+            <a th:href="@{/artists}" class="sidebar-item" data-nav="primary" title="Artists">
+        <span class="sidebar-icon">
+            <img th:src="@{/images/icons/microphone.png}" alt="🎤" class="sidebar-icon-img"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+            <span class="sidebar-icon-fallback" style="display:none;">🎤</span>
+        </span>
+                <span class="sidebar-label">Artists</span>
+            </a>
+
+            <a th:href="@{/albums}" class="sidebar-item" data-nav="primary" title="Albums">
+        <span class="sidebar-icon">
+            <img th:src="@{/images/icons/vynil.png}" alt="💿" class="sidebar-icon-img"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+            <span class="sidebar-icon-fallback" style="display:none;">💿</span>
+        </span>
+                <span class="sidebar-label">Albums</span>
+            </a>
+        </div>
+
+        <!-- ═══ Authenticated User Links ═══ -->
+        <div sec:authorize="isAuthenticated()" class="sidebar-section">
+            <div class="sidebar-section-title">Your Music</div>
+
+            <a th:href="@{/playlists}" class="sidebar-item" data-nav="primary" title="Playlists">
+                <span class="sidebar-icon">
+                    <img th:src="@{/images/icons/playlist.png}" alt="📋" class="sidebar-icon-img"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                    <span class="sidebar-icon-fallback" style="display:none;">📋</span>
+                </span>
+                <span class="sidebar-label">Playlists</span>
+            </a>
+
+            <a th:href="@{/favorites}" class="sidebar-item" data-nav="secondary" title="Favorites">
+                <span class="sidebar-icon">
+                    <img th:src="@{/images/icons/favourite.png}" alt="❤️" class="sidebar-icon-img"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                    <span class="sidebar-icon-fallback" style="display:none;">❤️</span>
+                </span>
+                <span class="sidebar-label">Favorites</span>
+            </a>
+
+            <a th:href="@{/history}" class="sidebar-item" data-nav="secondary" title="History">
+                <span class="sidebar-icon">
+                    <img th:src="@{/images/icons/history.png}" alt="🕐" class="sidebar-icon-img"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                    <span class="sidebar-icon-fallback" style="display:none;">🕐</span>
+                </span>
+                <span class="sidebar-label">History</span>
+            </a>
+        </div>
+
+        <!-- ═══ Artist Section ═══ -->
+        <div sec:authorize="hasRole('ARTIST')" class="sidebar-section">
+            <div class="sidebar-section-title">Artist</div>
+
+            <a th:href="@{/artist/dashboard}" class="sidebar-item" data-nav="secondary" title="Dashboard">
+                <span class="sidebar-icon">
+                    <img th:src="@{/images/icons/layout.png}" alt="📊" class="sidebar-icon-img"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                    <span class="sidebar-icon-fallback" style="display:none;">📊</span>
+                </span>
+                <span class="sidebar-label">Dashboard</span>
+            </a>
+
+            <a th:href="@{/artist/songs}" class="sidebar-item" data-nav="secondary" title="My Songs">
+                <span class="sidebar-icon">
+                    <img th:src="@{/images/icons/musical.png}" alt="🎵" class="sidebar-icon-img"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                    <span class="sidebar-icon-fallback" style="display:none;">🎵</span>
+                </span>
+                <span class="sidebar-label">My Songs</span>
+            </a>
+
+            <a th:href="@{/artist/albums}" class="sidebar-item" data-nav="secondary" title="My Albums">
+                <span class="sidebar-icon">
+                    <img th:src="@{/images/icons/vynil.png}" alt="💿" class="sidebar-icon-img"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                    <span class="sidebar-icon-fallback" style="display:none;">💿</span>
+                </span>
+                <span class="sidebar-label">My Albums</span>
+            </a>
+        </div>
+
+        <!-- ═══ Admin Section ═══ -->
+        <div sec:authorize="hasRole('ADMIN')" class="sidebar-section">
+            <div class="sidebar-section-title">Admin</div>
+
+            <a th:href="@{/admin}" class="sidebar-item" data-nav="secondary" title="Admin Panel">
+                <span class="sidebar-icon">
+                    <img th:src="@{/images/icons/settings.png}" alt="⚙️" class="sidebar-icon-img"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                    <span class="sidebar-icon-fallback" style="display:none;">⚙️</span>
+                </span>
+                <span class="sidebar-label">Admin Panel</span>
+            </a>
+        </div>
+
+        <!-- ═══ Spacer ═══ -->
+        <div class="sidebar-spacer"></div>
+
+        <!-- ═══ Account Section ═══ -->
+        <div sec:authorize="isAuthenticated()" class="sidebar-section sidebar-bottom">
+            <a th:href="@{/user/profile}" class="sidebar-item" data-nav="secondary" title="Profile">
+                <span class="sidebar-icon">
+                    <img th:src="@{/images/icons/user.png}" alt="👤" class="sidebar-icon-img"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                    <span class="sidebar-icon-fallback" style="display:none;">👤</span>
+                </span>
+                <span class="sidebar-label">
+                    <span sec:authentication="principal.username">User</span>
+                </span>
+            </a>
+
+            <form th:action="@{/auth/logout}" method="post" class="sidebar-logout-form">
+                <button type="submit" class="sidebar-item sidebar-logout-btn" data-nav="secondary" title="Logout">
+                    <span class="sidebar-icon">
+                        <img th:src="@{/images/icons/switch.png}" alt="🚪" class="sidebar-icon-img"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                        <span class="sidebar-icon-fallback" style="display:none;">🚪</span>
+                    </span>
+                    <span class="sidebar-label">Logout</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- ═══ Guest Links ═══ -->
+        <div sec:authorize="!isAuthenticated()" class="sidebar-section sidebar-bottom">
+            <a th:href="@{/auth/register}" class="sidebar-item sidebar-cta" data-nav="secondary" title="Sign Up">
+                <span class="sidebar-icon">
+                    <img th:src="@{/images/icons/signup.png}" alt="✏️" class="sidebar-icon-img sidebar-icon-img--cta"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                    <span class="sidebar-icon-fallback" style="display:none;">✏️</span>
+                </span>
+                <span class="sidebar-label">Sign Up</span>
+            </a>
+
+            <a th:href="@{/auth/login}" class="sidebar-item" data-nav="secondary" title="Log In">
+                <span class="sidebar-icon">
+                    <img th:src="@{/images/icons/login.png}" alt="🔑" class="sidebar-icon-img"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                    <span class="sidebar-icon-fallback" style="display:none;">🔑</span>
+                </span>
+                <span class="sidebar-label">Log In</span>
+            </a>
+        </div>
+
+    </nav>
+</aside>
+
+<!-- Mobile sidebar overlay (backdrop) -->
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+</body>
+</html>

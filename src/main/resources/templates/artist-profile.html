@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head('Artist')}"></head>
+<body>
+<div th:replace="~{layout :: page(~{::#artist-profile-content})}">
+
+    <div id="artist-profile-content">
+
+        <!-- ═══ Artist Banner & Profile ═══ -->
+        <div class="artist-banner"
+             th:style="${artist.bannerImageUrl != null ? 'background-image: url(' + artist.bannerImageUrl + ');' : ''}">
+            <div class="artist-banner-overlay"></div>
+            <div class="artist-profile-section">
+                <div class="artist-avatar-wrapper">
+                    <img th:if="${artist.profilePictureUrl != null}"
+                         th:src="${artist.profilePictureUrl}"
+                         alt="Artist" class="artist-avatar-img">
+                    <div th:if="${artist.profilePictureUrl == null}" class="artist-avatar-fallback">
+                        <span th:text="${artist.artistName != null ? artist.artistName.substring(0,1).toUpperCase() : '?'}">A</span>
+                    </div>
+                </div>
+                <div class="artist-profile-info">
+                    <span class="artist-verified-label">ARTIST</span>
+                    <h1 class="artist-name" th:text="${artist.artistName}">Artist Name</h1>
+                    <p class="artist-genre" th:if="${artist.genre}" th:text="${artist.genre}">Genre</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Bio Section ═══ -->
+        <div class="artist-bio-section" th:if="${artist.bio != null && !artist.bio.isEmpty()}">
+            <h2 class="section-title">About</h2>
+            <p class="artist-bio-text" th:text="${artist.bio}">Bio text here...</p>
+        </div>
+
+        <!-- ═══ Social Links ═══ -->
+        <div class="artist-social-links"
+             th:if="${artist.instagram != null || artist.twitter != null || artist.youtube != null || artist.spotify != null || artist.website != null}">
+            <h2 class="section-title">Connect</h2>
+            <div class="social-links-grid">
+                <a th:if="${artist.instagram != null && !artist.instagram.isEmpty()}"
+                   th:href="${artist.instagram}" target="_blank" class="social-link-card">
+                    <span class="social-icon">📸</span>
+                    <span class="social-name">Instagram</span>
+                </a>
+                <a th:if="${artist.twitter != null && !artist.twitter.isEmpty()}"
+                   th:href="${artist.twitter}" target="_blank" class="social-link-card">
+                    <span class="social-icon">🐦</span>
+                    <span class="social-name">Twitter / X</span>
+                </a>
+                <a th:if="${artist.youtube != null && !artist.youtube.isEmpty()}"
+                   th:href="${artist.youtube}" target="_blank" class="social-link-card">
+                    <span class="social-icon">▶️</span>
+                    <span class="social-name">YouTube</span>
+                </a>
+                <a th:if="${artist.spotify != null && !artist.spotify.isEmpty()}"
+                   th:href="${artist.spotify}" target="_blank" class="social-link-card">
+                    <span class="social-icon">🎧</span>
+                    <span class="social-name">Spotify</span>
+                </a>
+                <a th:if="${artist.website != null && !artist.website.isEmpty()}"
+                   th:href="${artist.website}" target="_blank" class="social-link-card">
+                    <span class="social-icon">🌐</span>
+                    <span class="social-name">Website</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- ═══ Songs Section ═══ -->
+        <section class="home-section" th:if="${artist.songs != null && !artist.songs.isEmpty()}">
+            <div class="section-header">
+                <h2 class="section-title">Songs</h2>
+                <span class="section-count" th:text="${artist.songs.size() + ' songs'}">0 songs</span>
+            </div>
+            <div class="song-grid">
+                <th:block th:each="song : ${artist.songs}">
+                    <div th:replace="~{fragments/song-card :: card(song=${song})}"></div>
+                </th:block>
+            </div>
+        </section>
+
+        <!-- ═══ Albums Section ═══ -->
+        <section class="home-section" th:if="${artist.albums != null && !artist.albums.isEmpty()}">
+            <div class="section-header">
+                <h2 class="section-title">Albums</h2>
+                <span class="section-count" th:text="${artist.albums.size() + ' albums'}">0 albums</span>
+            </div>
+            <div class="album-grid">
+                <div th:each="album : ${artist.albums}" class="album-card">
+                    <img th:src="${album.coverImageUrl != null ? album.coverImageUrl : 'https://placehold.co/200x200/1a1a2e/ffffff?text=💿'}"
+                         alt="Album Cover" class="album-cover">
+                    <div class="album-card-name" th:text="${album.name}">Album Name</div>
+                    <div class="album-card-meta">
+                        <span th:if="${album.releaseDate != null}" th:text="${album.releaseDate.year}">2026</span>
+                        <span th:if="${album.songCount > 0}" th:text="' • ' + ${album.songCount} + ' tracks'"> • 10 tracks</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══ Empty State ═══ -->
+        <div class="empty-state"
+             th:if="${(artist.songs == null || artist.songs.isEmpty()) && (artist.albums == null || artist.albums.isEmpty())}">
+            <div class="empty-icon">🎤</div>
+            <h2>No music yet</h2>
+            <p>This artist hasn't uploaded any songs yet</p>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

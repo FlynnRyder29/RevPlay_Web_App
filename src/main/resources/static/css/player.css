@@ -1,0 +1,513 @@
+/* ═══════════════════════════════════════════════════════
+   PLAYER — Player Bar, Player Page, Progress, Volume,
+            Controls, Queue Sidebar
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Player Bar (Bottom) ─────────────────────────── */
+
+.player-bar {
+    height: 90px;
+    background-color: rgba(24, 24, 24, 0.82);
+    backdrop-filter: blur(24px) saturate(1.2);
+    -webkit-backdrop-filter: blur(24px) saturate(1.2);
+    border-top: 1px solid var(--glass-border);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 100;
+}
+
+.player-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    width: 30%;
+}
+
+.player-left img {
+    width: 56px;
+    height: 56px;
+    border-radius: 4px;
+}
+
+.player-center {
+    width: 40%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.player-controls {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 8px;
+}
+
+.control-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    line-height: 1;
+    color: var(--text-muted);
+    font-size: 20px;
+    cursor: pointer;
+    transition: color 0.2s, transform 0.15s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.control-btn:hover {
+    color: var(--text-main);
+}
+
+.control-play {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    background-color: transparent;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    box-sizing: border-box;
+    overflow: visible;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+}
+
+.control-play:hover {
+    transform: scale(1.1);
+    background-color: transparent;
+    color: #000;
+}
+
+/* ── Progress Bar ────────────────────────────────── */
+
+.progress-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.progress-time {
+    font-size: 11px;
+    color: var(--text-muted);
+    min-width: 35px;
+}
+
+.progress-bar-bg {
+    height: 4px;
+    background-color: #535353;
+    border-radius: 2px;
+    width: 100%;
+    cursor: pointer;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background-color: var(--text-main);
+    border-radius: 2px;
+    width: 0%;
+}
+
+.progress-bar-bg:hover .progress-bar-fill {
+    background-color: var(--primary-color);
+}
+
+/* ── Player Right (Volume) ───────────────────────── */
+
+.player-right {
+    width: 30%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 15px;
+}
+
+/* ── Player Track Info (left section) ────────────── */
+
+.player-album-art {
+    width: 56px;
+    height: 56px;
+    border-radius: 4px;
+    object-fit: cover;
+}
+
+.player-track-info {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+}
+
+.player-track-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.player-track-artist {
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Volume Bar ──────────────────────────────────── */
+
+.volume-bar {
+    width: 100px;
+}
+
+.volume-fill {
+    background-color: var(--text-main);
+    transition: width 0.1s ease;
+}
+
+.volume-bar:hover .volume-fill {
+    background-color: var(--primary-color);
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   DEDICATED PLAYER PAGE
+   ═══════════════════════════════════════════════════════ */
+
+.player-page {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 20px 0 60px;
+}
+
+.player-hero {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.player-hero-art {
+    width: 300px;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    margin-bottom: 30px;
+}
+
+.now-playing-label {
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+.player-hero-title {
+    font-size: 1.8rem;
+    margin: 10px 0 5px;
+}
+
+.player-hero-artist {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.player-hero-album {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-top: 5px;
+}
+
+.player-page-progress {
+    margin-bottom: 25px;
+}
+
+.player-page-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 25px;
+    margin-bottom: 25px;
+}
+
+.page-ctrl-lg {
+    font-size: 28px;
+}
+
+.page-ctrl-play {
+    width: 64px;
+    height: 64px;
+    min-width: 64px;
+    min-height: 64px;
+    background-color: transparent;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+}
+
+.page-ctrl-play:hover {
+    transform: scale(1.08);
+    background-color: transparent;
+}
+
+.player-page-volume {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+/* ── Keyboard Hints ────────────────────────── */
+
+.keyboard-hints {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.hint-pill {
+    display: inline-block;
+    padding: 4px 12px;
+    background-color: rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+/* ── Player Page Layout (with queue sidebar) ── */
+
+.player-page-layout {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+.player-page-layout .player-page {
+    flex: 1;
+    min-width: 0;
+}
+
+/* ── Queue Sidebar ─────────────────────────── */
+
+.queue-sidebar {
+    width: 300px;
+    flex-shrink: 0;
+    background-color: var(--bg-surface);
+    border-radius: 12px;
+    padding: 20px;
+    max-height: 600px;
+    overflow-y: auto;
+    position: sticky;
+    top: 20px;
+}
+
+.queue-sidebar-title {
+    font-size: 13px;
+    font-weight: 700;
+    margin: 0 0 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+}
+
+.queue-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.queue-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.queue-item:hover {
+    background-color: var(--bg-surface-hover);
+}
+
+.queue-item--active {
+    background-color: rgba(215, 82, 9, 0.15);
+}
+
+.queue-item--active .queue-song-title {
+    color: var(--primary-color);
+}
+
+.queue-num {
+    color: var(--text-muted);
+    font-size: 13px;
+    min-width: 20px;
+    text-align: center;
+}
+
+.queue-info {
+    min-width: 0;
+    flex: 1;
+}
+
+.queue-song-title {
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.queue-song-artist {
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.queue-empty {
+    color: var(--text-muted);
+    font-size: 14px;
+    text-align: center;
+    padding: 20px 0;
+}
+
+/* Hide scrollbar but keep scrollable */
+.queue-sidebar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.queue-sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.queue-sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+}
+
+/* ── Playlist Row Active State ─────────────── */
+
+.playlist-row--active {
+    background-color: rgba(215, 82, 9, 0.1) !important;
+}
+
+.playlist-row--active .col-num {
+    color: var(--primary-color);
+}
+
+.playlist-row--active .song-row-title {
+    color: var(--primary-color);
+}
+
+/* ── Player Action Buttons (fav + playlist) ──────── */
+
+.player-action-btns {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    margin-left: 4px;
+}
+
+/* ── Add to Playlist Button ──────────────────────── */
+
+.player-playlist-btn {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    color: var(--text-muted);
+    transition: color 0.2s, background-color 0.2s, transform 0.15s;
+}
+
+.player-playlist-btn:hover {
+    color: var(--text-main);
+    background-color: rgba(255, 255, 255, 0.08);
+    transform: scale(1.1);
+}
+
+.player-playlist-btn:active {
+    transform: scale(0.95);
+}
+
+/* Plus badge on the playlist icon */
+.player-playlist-plus {
+    position: absolute;
+    bottom: 2px;
+    right: 1px;
+    width: 10px;
+    height: 10px;
+    background-color: var(--bg-dark);
+    border-radius: 50%;
+    padding: 1px;
+    color: var(--primary-color);
+    pointer-events: none;
+}
+
+.player-playlist-btn:hover .player-playlist-plus {
+    color: var(--primary-hover);
+}
+
+/* Tooltip on hover */
+.player-playlist-btn::after {
+    content: 'Add to Playlist';
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--bg-surface);
+    color: var(--text-main);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 6px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.2s, visibility 0.2s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    z-index: 10;
+}
+
+.player-playlist-btn:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ── Light Theme ─────────────────────────────────── */
+
+[data-theme="light"] .player-playlist-btn:hover {
+    background-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .player-playlist-plus {
+    background-color: var(--bg-surface);
+}

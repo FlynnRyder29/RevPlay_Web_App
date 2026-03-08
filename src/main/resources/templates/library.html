@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head('Library')}"></head>
+<body>
+<div th:replace="~{layout :: page(~{::#library-content})}">
+
+    <div id="library-content">
+
+        <!-- ============ Page Header ============ -->
+        <div class="library-header">
+            <h1>Browse Music</h1>
+            <p class="library-subtitle">Discover songs from talented artists</p>
+        </div>
+
+        <!-- ============ Search & Filter Bar ============ -->
+        <div class="library-controls">
+            <!-- Search -->
+            <div class="search-form">
+                <div class="search-input-wrapper">
+                    <span class="search-icon">🔍</span>
+                    <input type="text"
+                           id="library-search-input"
+                           class="search-input"
+                           placeholder="Search songs, artists..."
+                           th:value="${currentQuery}">
+                </div>
+                <button type="button" id="library-search-btn" class="btn-search">Search</button>
+            </div>
+
+            <!-- Filter Controls -->
+            <div class="library-filters">
+                <!-- Genre Filter -->
+                <div class="filter-group">
+                    <label class="filter-label" for="library-genre-select">Genre</label>
+                    <select id="library-genre-select" class="genre-select filter-select">
+                        <option value="">All Genres</option>
+                        <option th:each="g : ${genres}"
+                                th:value="${g.name}"
+                                th:text="${g.name}"
+                                th:selected="${g.name == currentGenre}">Genre</option>
+                    </select>
+                </div>
+
+                <!-- Artist Filter -->
+                <div class="filter-group">
+                    <label class="filter-label" for="library-artist-input">Artist</label>
+                    <input type="text"
+                           id="library-artist-input"
+                           class="filter-input"
+                           placeholder="Filter by artist..."
+                           th:value="${currentArtist}">
+                </div>
+
+                <!-- Album Filter -->
+                <div class="filter-group">
+                    <label class="filter-label" for="library-album-input">Album</label>
+                    <input type="text"
+                           id="library-album-input"
+                           class="filter-input"
+                           placeholder="Filter by album..."
+                           th:value="${currentAlbum}">
+                </div>
+
+                <!-- Year Filter -->
+                <div class="filter-group">
+                    <label class="filter-label" for="library-year-input">Year</label>
+                    <input type="number"
+                           id="library-year-input"
+                           class="filter-input filter-input-year"
+                           placeholder="e.g. 2025"
+                           min="1900" max="2099"
+                           th:value="${currentYear}">
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Filter Indicator -->
+        <div class="active-filters" th:if="${currentQuery != null || currentGenre != null || currentArtist != null || currentAlbum != null || currentYear != null}">
+            <span class="filter-label">Showing results for:</span>
+            <span class="filter-tag" th:if="${currentQuery != null}" th:text="'Search: ' + ${currentQuery}"></span>
+            <span class="filter-tag" th:if="${currentGenre != null}" th:text="'Genre: ' + ${currentGenre}"></span>
+            <span class="filter-tag" th:if="${currentArtist != null}" th:text="'Artist: ' + ${currentArtist}"></span>
+            <span class="filter-tag" th:if="${currentAlbum != null}" th:text="'Album: ' + ${currentAlbum}"></span>
+            <span class="filter-tag" th:if="${currentYear != null}" th:text="'Year: ' + ${currentYear}"></span>
+            <a th:href="@{/library}" class="clear-filters">✕ Clear All</a>
+        </div>
+
+        <!-- ============ Song Grid ============ -->
+        <div class="song-grid" th:if="${songs != null && songs.totalElements > 0}">
+            <th:block th:each="song : ${songs.content}">
+                <div th:replace="~{fragments/song-card :: card(song=${song})}"></div>
+            </th:block>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" th:if="${songs == null || songs.totalElements == 0}">
+            <div class="empty-icon">🎵</div>
+            <h2>No songs found</h2>
+            <p th:if="${currentQuery != null || currentGenre != null || currentArtist != null || currentAlbum != null || currentYear != null}">Try adjusting your filters</p>
+            <p th:if="${currentQuery == null && currentGenre == null && currentArtist == null && currentAlbum == null && currentYear == null}">Songs will appear here once artists upload them</p>
+            <a th:href="@{/library}" class="btn-primary" style="display: inline-block; width: auto; padding: 12px 30px; margin-top: 15px;">Browse All</a>
+        </div>
+
+        <!-- ============ Pagination ============ -->
+        <div class="pagination" th:if="${songs != null && songs.totalPages > 1}">
+            <a th:if="${songs.hasPrevious()}"
+               th:href="@{/library(q=${currentQuery}, genre=${currentGenre}, artist=${currentArtist}, album=${currentAlbum}, year=${currentYear}, page=${songs.number - 1}, size=${songs.size})}"
+               class="page-link">← Previous</a>
+            <span th:if="${!songs.hasPrevious()}" class="page-link disabled">← Previous</span>
+
+            <div class="page-numbers">
+                <th:block th:each="i : ${#numbers.sequence(0, songs.totalPages - 1)}">
+                    <a th:if="${i != songs.number}"
+                       th:href="@{/library(q=${currentQuery}, genre=${currentGenre}, artist=${currentArtist}, album=${currentAlbum}, year=${currentYear}, page=${i}, size=${songs.size})}"
+                       th:text="${i + 1}" class="page-num"></a>
+                    <span th:if="${i == songs.number}" th:text="${i + 1}" class="page-num active"></span>
+                </th:block>
+            </div>
+
+            <a th:if="${songs.hasNext()}"
+               th:href="@{/library(q=${currentQuery}, genre=${currentGenre}, artist=${currentArtist}, album=${currentAlbum}, year=${currentYear}, page=${songs.number + 1}, size=${songs.size})}"
+               class="page-link">Next →</a>
+            <span th:if="${!songs.hasNext()}" class="page-link disabled">Next →</span>
+        </div>
+
+        <!-- Song Count -->
+        <div class="song-count" th:if="${songs != null && songs.totalElements > 0}">
+            <span th:text="'Showing ' + ${songs.numberOfElements} + ' of ' + ${songs.totalElements} + ' songs'"></span>
+        </div>
+
+        <!-- ============ Library Script (PJAX-aware) ============ -->
+        <script>
+            (function () {
+                'use strict';
+
+                function buildLibraryUrl() {
+                    var params = [];
+
+                    var q = document.getElementById('library-search-input');
+                    var genre = document.getElementById('library-genre-select');
+                    var artist = document.getElementById('library-artist-input');
+                    var album = document.getElementById('library-album-input');
+                    var year = document.getElementById('library-year-input');
+
+                    if (q && q.value.trim()) params.push('q=' + encodeURIComponent(q.value.trim()));
+                    if (genre && genre.value) params.push('genre=' + encodeURIComponent(genre.value));
+                    if (artist && artist.value.trim()) params.push('artist=' + encodeURIComponent(artist.value.trim()));
+                    if (album && album.value.trim()) params.push('album=' + encodeURIComponent(album.value.trim()));
+                    if (year && year.value.trim()) params.push('year=' + encodeURIComponent(year.value.trim()));
+
+                    return '/library' + (params.length ? '?' + params.join('&') : '');
+                }
+
+                function navigate(url) {
+                    if (window.PjaxRouter && window.PjaxRouter.navigate) {
+                        window.PjaxRouter.navigate(url);
+                    } else {
+                        window.location.href = url;
+                    }
+                }
+
+                function applyFilters() {
+                    navigate(buildLibraryUrl());
+                }
+
+                // Search button
+                var searchBtn = document.getElementById('library-search-btn');
+                if (searchBtn) {
+                    searchBtn.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        applyFilters();
+                    });
+                }
+
+                // Enter key on any input
+                var inputs = ['library-search-input', 'library-artist-input', 'library-album-input', 'library-year-input'];
+                inputs.forEach(function (inputId) {
+                    var el = document.getElementById(inputId);
+                    if (el) {
+                        el.addEventListener('keydown', function (e) {
+                            if (e.key === 'Enter' || e.keyCode === 13) {
+                                e.preventDefault();
+                                applyFilters();
+                            }
+                        });
+                    }
+                });
+
+                // Genre dropdown change
+                var genreSelect = document.getElementById('library-genre-select');
+                if (genreSelect) {
+                    genreSelect.addEventListener('change', function () {
+                        applyFilters();
+                    });
+                }
+
+            })();
+        </script>
+
+    </div>
+</div>
+</body>
+</html>

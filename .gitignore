@@ -60,3 +60,9 @@ uploads/
 .env
 application-local.yml
 
+song_test_output.txt
+test-output.txt
+src/main/resources/db/migration/V102_seed_data.sql
+src/main/resources/db/migration/V104_seed_data.sql
+src/main/resources/db/migration/V105_seed_data.sql
+src/main/resources/db/migration/V106_seed_data.sql

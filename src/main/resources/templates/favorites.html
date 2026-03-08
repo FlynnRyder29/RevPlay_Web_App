@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head('Favorites')}"></head>
+<body>
+<div th:replace="~{layout :: page(~{::#favorites-content})}">
+
+    <div id="favorites-content">
+
+        <div class="hero-section fav-hero">
+            <h1 class="hero-title">My Favorites</h1>
+            <p class="hero-subtitle"
+               th:text="${songs != null ? songs.size() + ' saved songs' : '0 saved songs'}">0 saved songs</p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="fav-action-btns" th:if="${songs != null and !songs.isEmpty()}">
+            <button class="pl-btn pl-btn--primary" id="btn-play-all-favs">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="#000"><polygon points="6,3 20,12 6,21"/></svg>
+                Play All
+            </button>
+            <button class="pl-btn pl-btn--secondary" id="btn-shuffle-favs">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+                Shuffle
+            </button>
+            <button class="pl-btn pl-btn--secondary" id="btn-queue-favs">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round">
+                    <line x1="3" y1="6" x2="17" y2="6"/><line x1="3" y1="12" x2="17" y2="12"/>
+                    <line x1="3" y1="18" x2="11" y2="18"/>
+                    <line x1="16" y1="16" x2="16" y2="22"/><line x1="13" y1="19" x2="19" y2="19"/>
+                </svg>
+                Add to Queue
+            </button>
+            <button class="pl-btn pl-btn--danger" id="btn-clear-favs">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                Clear All
+            </button>
+        </div>
+
+        <!-- SONG GRID FOR FAVORITES -->
+        <div class="song-grid fav-song-grid" th:if="${songs != null and !songs.isEmpty()}">
+            <th:block th:each="song : ${songs}">
+                <div th:replace="~{fragments/song-card :: card(song=${song})}"></div>
+            </th:block>
+        </div>
+
+        <div th:if="${songs == null or songs.isEmpty()}" class="empty-state fav-empty-state">
+            <div class="empty-icon">🎬</div>
+            <h2>No favorites yet</h2>
+            <p>Find some music you love and click the heart icon.</p>
+            <a th:href="@{/search}" class="btn-primary fav-discover-btn">Discover Music</a>
+        </div>
+
+        <!-- Favorites page script -->
+        <script>
+            (function () {
+                'use strict';
+                var csrfToken = (document.querySelector('meta[name="_csrf"]') || {}).content || '';
+
+                // Mark all hearts as favorited (all songs on this page ARE favorites)
+                var btns = document.querySelectorAll('.song-card-fav-btn');
+                btns.forEach(function (btn) {
+                    btn.classList.add('favorited');
+                    btn.innerHTML = '♥';
+                    btn.title = 'Remove from Favorites';
+                });
+
+                // ── Play All ──
+                var playAllBtn = document.getElementById('btn-play-all-favs');
+                if (playAllBtn) {
+                    playAllBtn.addEventListener('click', function () {
+                        var songs = getSongsFromCards();
+                        if (songs.length && window.RevPlay && window.RevPlay.playQueue) {
+                            window.RevPlay.playQueue(songs, 0);
+                        }
+                    });
+                }
+
+                // ── Shuffle ──
+                var shuffleBtn = document.getElementById('btn-shuffle-favs');
+                if (shuffleBtn) {
+                    shuffleBtn.addEventListener('click', function () {
+                        var songs = getSongsFromCards();
+                        if (songs.length && window.RevPlay && window.RevPlay.shuffleQueue) {
+                            window.RevPlay.shuffleQueue(songs);
+                        }
+                    });
+                }
+
+                // ── Add All to Queue ──
+                var queueBtn = document.getElementById('btn-queue-favs');
+                if (queueBtn) {
+                    queueBtn.addEventListener('click', function () {
+                        var songs = getSongsFromCards();
+                        if (songs.length && window.RevPlay && window.RevPlay.addToQueue) {
+                            window.RevPlay.addToQueue(songs);
+                        }
+                    });
+                }
+
+                // ── Clear All ──
+                var clearBtn = document.getElementById('btn-clear-favs');
+                if (clearBtn) {
+                    clearBtn.addEventListener('click', function () {
+                        var count = document.querySelectorAll('.song-card').length;
+                        if (count === 0) return;
+
+                        RevPlay.confirm({
+                            title: 'Clear All Favorites',
+                            message: 'Remove all ' + count + ' songs from your favorites? This cannot be undone.',
+                            type: 'danger',
+                            confirmText: 'Clear All',
+                            cancelText: 'Cancel'
+                        }).then(function (confirmed) {
+                            if (!confirmed) return;
+
+                            var cards = document.querySelectorAll('.song-card');
+                            var songIds = [];
+                            cards.forEach(function (card) {
+                                var btn = card.querySelector('.song-card-fav-btn');
+                                if (btn) songIds.push(btn.getAttribute('data-song-id'));
+                            });
+
+                            var completed = 0;
+                            var total = songIds.length;
+
+                            songIds.forEach(function (songId) {
+                                fetch('/api/favorites/' + songId, {
+                                    method: 'DELETE',
+                                    headers: { 'X-CSRF-TOKEN': csrfToken }
+                                }).then(function () {
+                                    completed++;
+                                    if (completed === total) {
+                                        RevPlay.toast({ type: 'success', message: 'All favorites cleared' });
+                                        if (window.PjaxRouter && window.PjaxRouter.invalidateCache) {
+                                            window.PjaxRouter.invalidateCache('/favorites');
+                                        }
+                                        if (window.PjaxRouter && window.PjaxRouter.reload) {
+                                            window.PjaxRouter.reload();
+                                        } else {
+                                            window.location.reload();
+                                        }
+                                    }
+                                });
+                            });
+                        });
+                    });
+                }
+
+                function getSongsFromCards() {
+                    var cards = document.querySelectorAll('.song-card');
+                    var songs = [];
+                    cards.forEach(function (card) {
+                        var img = card.querySelector('img');
+                        songs.push({
+                            id: card.getAttribute('data-id') || '',
+                            url: card.getAttribute('data-url') || '',
+                            title: card.getAttribute('data-title') || (card.querySelector('.song-title') ? card.querySelector('.song-title').textContent : 'Unknown'),
+                            artist: card.getAttribute('data-artist') || (card.querySelector('.song-artist') ? card.querySelector('.song-artist').textContent : 'Unknown'),
+                            cover: img ? img.src : ''
+                        });
+                    });
+                    return songs;
+                }
+            })();
+        </script>
+
+    </div>
+</div>
+</body>
+</html>

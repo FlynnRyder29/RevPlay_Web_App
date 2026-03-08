@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head('Admin Panel')}"></head>
+<body>
+<div th:replace="~{layout :: page(~{::#admin-content})}">
+
+    <div id="admin-content">
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- HERO                                    -->
+        <!-- ═══════════════════════════════════════ -->
+        <div class="adm-hero">
+            <div class="adm-hero-glow"></div>
+            <div class="adm-hero-inner">
+                <div class="adm-hero-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>
+                    </svg>
+                </div>
+                <h1 class="adm-hero-title">Admin Dashboard</h1>
+                <p class="adm-hero-subtitle">Platform management & analytics</p>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- TAB NAVIGATION                          -->
+        <!-- ═══════════════════════════════════════ -->
+        <div class="adm-tabs" id="admin-tabs">
+            <button class="adm-tab adm-tab--active" data-tab="overview">
+                <svg class="adm-tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                <span>Overview</span>
+            </button>
+            <button class="adm-tab" data-tab="requests">
+                <svg class="adm-tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                <span>Artist Requests</span>
+                <span class="adm-tab-badge" id="tab-badge-requests" style="display:none;">0</span>
+            </button>
+            <button class="adm-tab" data-tab="users">
+                <svg class="adm-tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span>Users</span>
+            </button>
+            <button class="adm-tab" data-tab="content">
+                <svg class="adm-tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="15.5" r="2.5"/><path d="M8 17V5l12-2v10"/></svg>
+                <span>Content</span>
+            </button>
+            <button class="adm-tab" data-tab="reports">
+                <svg class="adm-tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                <span>Reports</span>
+            </button>
+            <div class="adm-tab-slider" id="adm-tab-slider"></div>
+        </div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- TAB: OVERVIEW                           -->
+        <!-- ═══════════════════════════════════════ -->
+        <div class="adm-panel adm-panel--active" id="tab-overview">
+            <div class="adm-stats-grid" id="stats-grid">
+                <!-- Total Users -->
+                <div class="adm-stat-card" data-accent="blue" style="--accent: #3b82f6; --accent-glow: rgba(59,130,246,0.15);">
+                    <div class="adm-stat-icon-wrap">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </div>
+                    <div class="adm-stat-info">
+                        <span class="adm-stat-label">Total Users</span>
+                        <span class="adm-stat-value" id="stat-total-users">—</span>
+                    </div>
+                </div>
+                <!-- Artists -->
+                <div class="adm-stat-card" data-accent="purple" style="--accent: #a855f7; --accent-glow: rgba(168,85,247,0.15);">
+                    <div class="adm-stat-icon-wrap">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                    </div>
+                    <div class="adm-stat-info">
+                        <span class="adm-stat-label">Artists</span>
+                        <span class="adm-stat-value" id="stat-total-artists">—</span>
+                    </div>
+                </div>
+                <!-- Listeners -->
+                <div class="adm-stat-card" data-accent="cyan" style="--accent: #06b6d4; --accent-glow: rgba(6,182,212,0.15);">
+                    <div class="adm-stat-icon-wrap">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+                    </div>
+                    <div class="adm-stat-info">
+                        <span class="adm-stat-label">Listeners</span>
+                        <span class="adm-stat-value" id="stat-total-listeners">—</span>
+                    </div>
+                </div>
+                <!-- Songs -->
+                <div class="adm-stat-card" data-accent="green" style="--accent: #22c55e; --accent-glow: rgba(34,197,94,0.15);">
+                    <div class="adm-stat-icon-wrap">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="15.5" r="2.5"/><path d="M8 17V5l12-2v10"/></svg>
+                    </div>
+                    <div class="adm-stat-info">
+                        <span class="adm-stat-label">Total Songs</span>
+                        <span class="adm-stat-value" id="stat-total-songs">—</span>
+                    </div>
+                </div>
+                <!-- Playlists -->
+                <div class="adm-stat-card" data-accent="orange" style="--accent: #f97316; --accent-glow: rgba(249,115,22,0.15);">
+                    <div class="adm-stat-icon-wrap">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                    </div>
+                    <div class="adm-stat-info">
+                        <span class="adm-stat-label">Playlists</span>
+                        <span class="adm-stat-value" id="stat-total-playlists">—</span>
+                    </div>
+                </div>
+                <!-- New This Week -->
+                <div class="adm-stat-card adm-stat-card--highlight" data-accent="primary" style="--accent: var(--primary-color); --accent-glow: rgba(215,82,9,0.15);">
+                    <div class="adm-stat-icon-wrap">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                    </div>
+                    <div class="adm-stat-info">
+                        <span class="adm-stat-label">New This Week</span>
+                        <span class="adm-stat-value" id="stat-new-week">—</span>
+                    </div>
+                </div>
+                <!-- Pending Requests -->
+                <div class="adm-stat-card adm-stat-card--pending" id="stat-pending-card" data-accent="amber" style="--accent: #f59e0b; --accent-glow: rgba(245,158,11,0.15);">
+                    <div class="adm-stat-icon-wrap">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                    <div class="adm-stat-info">
+                        <span class="adm-stat-label">Pending Requests</span>
+                        <span class="adm-stat-value" id="stat-pending-requests">—</span>
+                    </div>
+                    <div class="adm-stat-pulse" id="pending-pulse"></div>
+                </div>
+            </div>
+
+            <!-- System Health -->
+            <div class="adm-section">
+                <h3 class="adm-section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                    System Health
+                </h3>
+                <div class="adm-health-card">
+                    <div class="adm-health-dot"></div>
+                    <span>All Systems Operational</span>
+                    <span class="adm-health-time" id="health-time"></span>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="adm-section">
+                <h3 class="adm-section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    Quick Actions
+                </h3>
+                <div class="adm-quick-actions">
+                    <button class="adm-quick-btn" data-tab-target="requests">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                        Review Requests
+                    </button>
+                    <button class="adm-quick-btn" data-tab-target="users">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        Manage Users
+                    </button>
+                    <button class="adm-quick-btn" data-tab-target="content">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="15.5" r="2.5"/><path d="M8 17V5l12-2v10"/></svg>
+                        View Content
+                    </button>
+                    <button class="adm-quick-btn" data-tab-target="reports">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                        View Reports
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- TAB: ARTIST REQUESTS                    -->
+        <!-- ═══════════════════════════════════════ -->
+        <div class="adm-panel" id="tab-requests" style="display:none;">
+            <div class="adm-section">
+                <h3 class="adm-section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                    Artist Upgrade Requests
+                </h3>
+
+                <!-- Request Stats -->
+                <div class="adm-request-stats" id="request-stats">
+                    <div class="adm-req-stat adm-req-stat--pending">
+                        <div class="adm-req-stat-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        </div>
+                        <div class="adm-req-stat-data">
+                            <span class="adm-req-stat-count" id="req-stat-pending">0</span>
+                            <span class="adm-req-stat-label">Pending</span>
+                        </div>
+                    </div>
+                    <div class="adm-req-stat adm-req-stat--approved">
+                        <div class="adm-req-stat-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        </div>
+                        <div class="adm-req-stat-data">
+                            <span class="adm-req-stat-count" id="req-stat-approved">0</span>
+                            <span class="adm-req-stat-label">Approved</span>
+                        </div>
+                    </div>
+                    <div class="adm-req-stat adm-req-stat--rejected">
+                        <div class="adm-req-stat-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                        </div>
+                        <div class="adm-req-stat-data">
+                            <span class="adm-req-stat-count" id="req-stat-rejected">0</span>
+                            <span class="adm-req-stat-label">Rejected</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter -->
+                <div class="adm-controls">
+                    <select id="request-status-filter" class="adm-select">
+                        <option value="">All Requests</option>
+                        <option value="PENDING" selected>Pending</option>
+                        <option value="APPROVED">Approved</option>
+                        <option value="REJECTED">Rejected</option>
+                    </select>
+                    <button class="adm-btn adm-btn--primary" id="btn-filter-requests">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                        Filter
+                    </button>
+                </div>
+
+                <!-- Requests Table -->
+                <div class="adm-table-wrap">
+                    <table class="adm-table" id="requests-table">
+                        <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Artist Name</th>
+                            <th>Genre</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            <th>Requested</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="requests-tbody">
+                        <tr><td colspan="7" class="adm-loading"><div class="adm-spinner"></div> Loading requests...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="adm-pagination" id="requests-pagination"></div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- TAB: USERS                              -->
+        <!-- ═══════════════════════════════════════ -->
+        <div class="adm-panel" id="tab-users" style="display:none;">
+            <div class="adm-section">
+                <h3 class="adm-section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    User Management
+                </h3>
+
+                <div class="adm-controls">
+                    <div class="adm-search-bar">
+                        <svg class="adm-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <input type="text" id="user-search" class="adm-input"
+                               placeholder="Search by username, email, or display name...">
+                    </div>
+                    <select id="user-role-filter" class="adm-select">
+                        <option value="">All Roles</option>
+                        <option value="LISTENER">Listeners</option>
+                        <option value="ARTIST">Artists</option>
+                        <option value="ADMIN">Admins</option>
+                    </select>
+                    <button class="adm-btn adm-btn--primary" id="btn-search-users">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        Search
+                    </button>
+                </div>
+
+                <div class="adm-table-wrap">
+                    <table class="adm-table" id="users-table">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Display Name</th>
+                            <th>Role</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="users-tbody">
+                        <tr><td colspan="7" class="adm-loading"><div class="adm-spinner"></div> Loading users...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="adm-pagination" id="users-pagination"></div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- TAB: CONTENT                            -->
+        <!-- ═══════════════════════════════════════ -->
+        <div class="adm-panel" id="tab-content" style="display:none;">
+            <div class="adm-section">
+                <h3 class="adm-section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    Top Songs by Play Count
+                </h3>
+                <div class="adm-table-wrap">
+                    <table class="adm-table" id="songs-table">
+                        <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Title</th>
+                            <th>Artist</th>
+                            <th>Genre</th>
+                            <th>Plays</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="songs-tbody">
+                        <tr><td colspan="6" class="adm-loading"><div class="adm-spinner"></div> Loading songs...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- TAB: REPORTS                            -->
+        <!-- ═══════════════════════════════════════ -->
+        <div class="adm-panel" id="tab-reports" style="display:none;">
+            <div class="adm-section">
+                <h3 class="adm-section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    Role Distribution
+                </h3>
+                <div class="adm-role-bars" id="role-bars"></div>
+            </div>
+            <div class="adm-section">
+                <h3 class="adm-section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                    User Growth (Last 30 Days)
+                </h3>
+                <div class="adm-growth-chart" id="growth-chart">
+                    <div class="adm-loading"><div class="adm-spinner"></div> Loading growth data...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- CHANGE ROLE MODAL                       -->
+        <!-- ═══════════════════════════════════════ -->
+        <div id="role-modal" class="modal-overlay" style="display:none;">
+            <div class="adm-modal">
+                <div class="adm-modal-header">
+                    <div class="adm-modal-icon adm-modal-icon--info">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </div>
+                    <h2 class="adm-modal-title">Change User Role</h2>
+                    <button class="adm-modal-close" onclick="document.getElementById('role-modal').style.display='none'">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                </div>
+                <div class="adm-modal-body">
+                    <p id="role-modal-user" class="adm-modal-desc"></p>
+                    <label class="adm-modal-label">New Role</label>
+                    <select id="role-modal-select" class="adm-select" style="width: 100%; margin-bottom: 20px;">
+                        <option value="LISTENER">🎧 Listener</option>
+                        <option value="ARTIST">🎤 Artist</option>
+                        <option value="ADMIN">🛡️ Admin</option>
+                    </select>
+                    <input type="hidden" id="role-modal-user-id">
+                    <button class="adm-btn adm-btn--primary adm-btn--full" id="btn-confirm-role">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        Confirm Change
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- REJECT REQUEST MODAL                    -->
+        <!-- ═══════════════════════════════════════ -->
+        <div id="reject-modal" class="modal-overlay" style="display:none;">
+            <div class="adm-modal">
+                <div class="adm-modal-header">
+                    <div class="adm-modal-icon adm-modal-icon--danger">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                    </div>
+                    <h2 class="adm-modal-title">Reject Artist Request</h2>
+                    <button class="adm-modal-close" onclick="document.getElementById('reject-modal').style.display='none'">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                </div>
+                <div class="adm-modal-body">
+                    <p id="reject-modal-user" class="adm-modal-desc"></p>
+                    <label class="adm-modal-label" for="reject-note">Reason for Rejection</label>
+                    <textarea id="reject-note" class="adm-textarea"
+                              rows="3" placeholder="Explain why this request is being declined..."></textarea>
+                    <input type="hidden" id="reject-modal-request-id">
+                    <div class="adm-modal-actions">
+                        <button class="adm-btn adm-btn--ghost" onclick="document.getElementById('reject-modal').style.display='none'">
+                            Cancel
+                        </button>
+                        <button class="adm-btn adm-btn--danger" id="btn-confirm-reject">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                            Confirm Rejection
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- ADMIN JAVASCRIPT                        -->
+        <!-- ═══════════════════════════════════════ -->
+        <script>
+            (function () {
+                'use strict';
+
+                var csrfToken = (document.querySelector('meta[name="_csrf"]') || {}).content || '';
+                var currentPage = 0;
+                var currentSearch = '';
+                var currentRoleFilter = '';
+                var currentRequestPage = 0;
+                var currentRequestStatus = 'PENDING';
+
+                // ══════════════════════════════════════════════════════════
+                // TAB SYSTEM with animated slider
+                // ══════════════════════════════════════════════════════════
+
+                var tabs = document.querySelectorAll('.adm-tab');
+                var slider = document.getElementById('adm-tab-slider');
+
+                function moveSlider(tab) {
+                    if (!slider || !tab) return;
+                    var rect = tab.getBoundingClientRect();
+                    var parentRect = tab.parentElement.getBoundingClientRect();
+                    slider.style.width = rect.width + 'px';
+                    slider.style.left = (rect.left - parentRect.left + tab.parentElement.scrollLeft) + 'px';
+                }
+
+                tabs.forEach(function (tab) {
+                    tab.addEventListener('click', function () {
+                        var target = this.getAttribute('data-tab');
+
+                        tabs.forEach(function (t) { t.classList.remove('adm-tab--active'); });
+                        this.classList.add('adm-tab--active');
+                        moveSlider(this);
+
+                        document.querySelectorAll('.adm-panel').forEach(function (p) {
+                            p.style.display = 'none';
+                            p.classList.remove('adm-panel--active');
+                        });
+                        var panel = document.getElementById('tab-' + target);
+                        if (panel) {
+                            panel.style.display = 'block';
+                            panel.classList.add('adm-panel--active');
+                        }
+
+                        if (target === 'requests') loadArtistRequests();
+                        if (target === 'users') loadUsers();
+                        if (target === 'content') loadTopSongs();
+                        if (target === 'reports') loadReports();
+                    });
+                });
+
+                // Quick action buttons
+                document.querySelectorAll('.adm-quick-btn[data-tab-target]').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        var target = this.getAttribute('data-tab-target');
+                        var tab = document.querySelector('.adm-tab[data-tab="' + target + '"]');
+                        if (tab) tab.click();
+                    });
+                });
+
+                // Init slider position
+                requestAnimationFrame(function () {
+                    var activeTab = document.querySelector('.adm-tab--active');
+                    if (activeTab) moveSlider(activeTab);
+                });
+
+                // ══════════════════════════════════════════════════════════
+                // ANIMATED NUMBER COUNTER
+                // ══════════════════════════════════════════════════════════
+
+                function animateValue(el, end) {
+                    if (!el) return;
+                    var start = 0;
+                    var duration = 800;
+                    var startTime = null;
+                    end = parseInt(end) || 0;
+
+                    if (end === 0) { el.textContent = '0'; return; }
+
+                    function step(timestamp) {
+                        if (!startTime) startTime = timestamp;
+                        var progress = Math.min((timestamp - startTime) / duration, 1);
+                        var eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+                        el.textContent = Math.floor(eased * end).toLocaleString();
+                        if (progress < 1) requestAnimationFrame(step);
+                        else el.textContent = end.toLocaleString();
+                    }
+
+                    requestAnimationFrame(step);
+                }
+
+                // ══════════════════════════════════════════════════════════
+                // OVERVIEW — Load Stats
+                // ══════════════════════════════════════════════════════════
+
+                function loadStats() {
+                    fetch('/api/admin/stats', {
+                        headers: { 'Accept': 'application/json' }
+                    })
+                        .then(function (res) { return res.json(); })
+                        .then(function (data) {
+                            animateValue(document.getElementById('stat-total-users'), data.totalUsers);
+                            animateValue(document.getElementById('stat-total-artists'), data.totalArtists);
+                            animateValue(document.getElementById('stat-total-listeners'), data.totalListeners);
+                            animateValue(document.getElementById('stat-total-songs'), data.totalSongs);
+                            animateValue(document.getElementById('stat-total-playlists'), data.totalPlaylists);
+                            animateValue(document.getElementById('stat-new-week'), data.newUsersThisWeek);
+
+                            var pending = data.pendingArtistRequests || 0;
+                            animateValue(document.getElementById('stat-pending-requests'), pending);
+
+                            var badge = document.getElementById('tab-badge-requests');
+                            if (badge) {
+                                if (pending > 0) {
+                                    badge.textContent = pending;
+                                    badge.style.display = 'inline-flex';
+                                } else {
+                                    badge.style.display = 'none';
+                                }
+                            }
+
+                            var pulse = document.getElementById('pending-pulse');
+                            if (pulse) pulse.style.display = pending > 0 ? 'block' : 'none';
+                        })
+                        .catch(function () {
+                            console.warn('Failed to load admin stats');
+                        });
+
+                    // Health time
+                    var healthEl = document.getElementById('health-time');
+                    if (healthEl) {
+                        var now = new Date();
+                        healthEl.textContent = 'Last checked: ' + now.toLocaleTimeString();
+                    }
+                }
+
+                loadStats();
+
+                // ══════════════════════════════════════════════════════════
+                // ARTIST REQUESTS TAB
+                // ══════════════════════════════════════════════════════════
+
+                var filterRequestsBtn = document.getElementById('btn-filter-requests');
+                var requestStatusFilter = document.getElementById('request-status-filter');
+
+                if (filterRequestsBtn) {
+                    filterRequestsBtn.addEventListener('click', function () {
+                        currentRequestPage = 0;
+                        currentRequestStatus = requestStatusFilter ? requestStatusFilter.value : '';
+                        loadArtistRequests();
+                    });
+                }
+
+                function loadArtistRequests() {
+                    loadRequestStats();
+
+                    var tbody = document.getElementById('requests-tbody');
+                    if (!tbody) return;
+                    tbody.innerHTML = '<tr><td colspan="7" class="adm-loading"><div class="adm-spinner"></div> Loading requests...</td></tr>';
+
+                    var url = '/api/admin/artist-requests?page=' + currentRequestPage + '&size=15';
+                    if (currentRequestStatus) url += '&status=' + currentRequestStatus;
+
+                    fetch(url, { headers: { 'Accept': 'application/json' } })
+                        .then(function (res) { return res.json(); })
+                        .then(function (data) {
+                            var requests = data.content || [];
+                            tbody.innerHTML = '';
+
+                            if (requests.length === 0) {
+                                tbody.innerHTML = '<tr><td colspan="7" class="adm-empty">' +
+                                    '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="11" x2="22" y2="11"/></svg>' +
+                                    '<p>No requests found</p></td></tr>';
+                                renderRequestPagination(0, 0);
+                                return;
+                            }
+
+                            requests.forEach(function (req, idx) {
+                                var tr = document.createElement('tr');
+                                tr.className = 'adm-row-animate';
+                                tr.style.animationDelay = (idx * 0.04) + 's';
+
+                                var userCell =
+                                    '<div class="adm-user-cell">' +
+                                    (req.profilePictureUrl
+                                        ? '<img src="' + req.profilePictureUrl + '" class="adm-avatar">'
+                                        : '<div class="adm-avatar-fallback">' + (req.username ? req.username.charAt(0).toUpperCase() : '?') + '</div>') +
+                                    '<div>' +
+                                    '<div class="adm-user-name">' + escapeHtml(req.username) + '</div>' +
+                                    '<div class="adm-user-email">' + escapeHtml(req.email) + '</div>' +
+                                    '</div>' +
+                                    '</div>';
+
+                                var statusBadge = '<span class="adm-badge adm-badge--' + req.status.toLowerCase() + '">' +
+                                    (req.status === 'PENDING' ? '⏳ ' : req.status === 'APPROVED' ? '✅ ' : '❌ ') +
+                                    req.status + '</span>';
+
+                                var actions = '';
+                                if (req.status === 'PENDING') {
+                                    actions =
+                                        '<button class="adm-action-btn adm-action-btn--approve" ' +
+                                        'data-id="' + req.id + '" data-username="' + escapeHtml(req.username) + '" ' +
+                                        'data-artist="' + escapeHtml(req.artistName) + '" title="Approve">' +
+                                        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>' +
+                                        '</button>' +
+                                        '<button class="adm-action-btn adm-action-btn--reject" ' +
+                                        'data-id="' + req.id + '" data-username="' + escapeHtml(req.username) + '" ' +
+                                        'data-artist="' + escapeHtml(req.artistName) + '" title="Reject">' +
+                                        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+                                        '</button>';
+                                } else if (req.status === 'APPROVED') {
+                                    actions = '<span class="adm-status-text adm-status-text--approved">Approved</span>';
+                                } else if (req.status === 'REJECTED') {
+                                    actions = '<span class="adm-status-text adm-status-text--rejected" title="' + escapeHtml(req.adminNote || '') + '">Rejected</span>';
+                                }
+
+                                var reasonText = req.reason ? (req.reason.length > 60 ? req.reason.substring(0, 60) + '...' : req.reason) : '—';
+
+                                tr.innerHTML =
+                                    '<td>' + userCell + '</td>' +
+                                    '<td><strong>' + escapeHtml(req.artistName) + '</strong></td>' +
+                                    '<td>' + escapeHtml(req.genre || '—') + '</td>' +
+                                    '<td class="adm-reason-cell" title="' + escapeHtml(req.reason || '') + '">' + escapeHtml(reasonText) + '</td>' +
+                                    '<td>' + statusBadge + '</td>' +
+                                    '<td>' + formatDate(req.createdAt) + '</td>' +
+                                    '<td class="adm-actions-cell">' + actions + '</td>';
+
+                                tbody.appendChild(tr);
+                            });
+
+                            attachRequestActions();
+                            renderRequestPagination(data.totalPages, data.number);
+                        })
+                        .catch(function () {
+                            tbody.innerHTML = '<tr><td colspan="7" class="adm-loading" style="color: var(--error-color);">Error loading requests</td></tr>';
+                        });
+                }
+
+                function loadRequestStats() {
+                    fetch('/api/admin/artist-requests/stats', {
+                        headers: { 'Accept': 'application/json' }
+                    })
+                        .then(function (res) { return res.json(); })
+                        .then(function (data) {
+                            animateValue(document.getElementById('req-stat-pending'), data.pending || 0);
+                            animateValue(document.getElementById('req-stat-approved'), data.approved || 0);
+                            animateValue(document.getElementById('req-stat-rejected'), data.rejected || 0);
+                        })
+                        .catch(function () {});
+                }
+
+                function attachRequestActions() {
+                    document.querySelectorAll('.adm-action-btn--approve').forEach(function (btn) {
+                        btn.addEventListener('click', function () {
+                            var requestId = this.getAttribute('data-id');
+                            var username = this.getAttribute('data-username');
+                            var artistName = this.getAttribute('data-artist');
+
+                            RevPlay.confirm({
+                                title: 'Approve Artist Request',
+                                message: 'Approve "' + username + '" as artist "' + artistName + '"?\n\nThis will change their role to ARTIST and create their artist profile.',
+                                type: 'success',
+                                confirmText: 'Approve',
+                                cancelText: 'Cancel'
+                            }).then(function (confirmed) {
+                                if (!confirmed) return;
+
+                                btn.disabled = true;
+                                btn.innerHTML = '<div class="adm-spinner adm-spinner--sm"></div>';
+
+                                fetch('/api/admin/artist-requests/' + requestId + '/approve', {
+                                    method: 'PUT',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': csrfToken
+                                    },
+                                    body: JSON.stringify({ note: 'Approved by admin' })
+                                })
+                                    .then(function (res) {
+                                        if (res.status >= 200 && res.status < 300) return res.json();
+                                        return res.json().then(function (d) { throw new Error(d.error || 'Failed'); });
+                                    })
+                                    .then(function () {
+                                        RevPlay.toast({ type: 'success', message: '"' + username + '" approved as artist!' });
+                                        loadArtistRequests();
+                                        loadStats();
+                                    })
+                                    .catch(function (err) {
+                                        RevPlay.toast({ type: 'error', message: err.message });
+                                        btn.disabled = false;
+                                        btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>';
+                                    });
+                            });
+                        });
+                    });
+
+                    document.querySelectorAll('.adm-action-btn--reject').forEach(function (btn) {
+                        btn.addEventListener('click', function () {
+                            var requestId = this.getAttribute('data-id');
+                            var username = this.getAttribute('data-username');
+                            var artistName = this.getAttribute('data-artist');
+
+                            document.getElementById('reject-modal-request-id').value = requestId;
+                            document.getElementById('reject-modal-user').textContent =
+                                'Reject request from "' + username + '" (wants to be "' + artistName + '")';
+                            document.getElementById('reject-note').value = '';
+                            document.getElementById('reject-modal').style.display = 'flex';
+                        });
+                    });
+                }
+
+                var confirmRejectBtn = document.getElementById('btn-confirm-reject');
+                if (confirmRejectBtn) {
+                    confirmRejectBtn.addEventListener('click', function () {
+                        var requestId = document.getElementById('reject-modal-request-id').value;
+                        var note = document.getElementById('reject-note').value.trim();
+
+                        confirmRejectBtn.disabled = true;
+                        confirmRejectBtn.innerHTML = '<div class="adm-spinner adm-spinner--sm"></div> Rejecting...';
+
+                        fetch('/api/admin/artist-requests/' + requestId + '/reject', {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken
+                            },
+                            body: JSON.stringify({ note: note })
+                        })
+                            .then(function (res) {
+                                if (res.status >= 200 && res.status < 300) return res.json();
+                                return res.json().then(function (d) { throw new Error(d.error || 'Failed'); });
+                            })
+                            .then(function () {
+                                document.getElementById('reject-modal').style.display = 'none';
+                                RevPlay.toast({ type: 'success', message: 'Request rejected' });
+                                loadArtistRequests();
+                                loadStats();
+                            })
+                            .catch(function (err) {
+                                RevPlay.toast({ type: 'error', message: err.message });
+                            })
+                            .finally(function () {
+                                confirmRejectBtn.disabled = false;
+                                confirmRejectBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Confirm Rejection';
+                            });
+                    });
+                }
+
+                function renderRequestPagination(totalPages, currentPageNum) {
+                    var container = document.getElementById('requests-pagination');
+                    if (!container) return;
+                    container.innerHTML = '';
+                    if (totalPages <= 1) return;
+
+                    for (var i = 0; i < totalPages; i++) {
+                        var btn = document.createElement('button');
+                        btn.className = 'adm-page-btn' + (i === currentPageNum ? ' adm-page-btn--active' : '');
+                        btn.textContent = i + 1;
+                        btn.setAttribute('data-page', i);
+                        btn.addEventListener('click', function () {
+                            currentRequestPage = parseInt(this.getAttribute('data-page'));
+                            loadArtistRequests();
+                        });
+                        container.appendChild(btn);
+                    }
+                }
+
+                // ══════════════════════════════════════════════════════════
+                // USERS TAB
+                // ══════════════════════════════════════════════════════════
+
+                var searchBtn = document.getElementById('btn-search-users');
+                var searchInput = document.getElementById('user-search');
+                var roleFilter = document.getElementById('user-role-filter');
+
+                if (searchBtn) {
+                    searchBtn.addEventListener('click', function () {
+                        currentPage = 0;
+                        currentSearch = searchInput ? searchInput.value : '';
+                        currentRoleFilter = roleFilter ? roleFilter.value : '';
+                        loadUsers();
+                    });
+                }
+
+                if (searchInput) {
+                    searchInput.addEventListener('keydown', function (e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            if (searchBtn) searchBtn.click();
+                        }
+                    });
+                }
+
+                function loadUsers() {
+                    var tbody = document.getElementById('users-tbody');
+                    if (!tbody) return;
+                    tbody.innerHTML = '<tr><td colspan="7" class="adm-loading"><div class="adm-spinner"></div> Loading...</td></tr>';
+
+                    var url = '/api/admin/users?page=' + currentPage + '&size=15';
+                    if (currentSearch) url += '&search=' + encodeURIComponent(currentSearch);
+                    if (currentRoleFilter) url += '&role=' + currentRoleFilter;
+
+                    fetch(url, { headers: { 'Accept': 'application/json' } })
+                        .then(function (res) { return res.json(); })
+                        .then(function (data) {
+                            var users = data.content || [];
+                            tbody.innerHTML = '';
+
+                            if (users.length === 0) {
+                                tbody.innerHTML = '<tr><td colspan="7" class="adm-empty">' +
+                                    '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
+                                    '<p>No users found</p></td></tr>';
+                                return;
+                            }
+
+                            users.forEach(function (u, idx) {
+                                var tr = document.createElement('tr');
+                                tr.className = 'adm-row-animate';
+                                tr.style.animationDelay = (idx * 0.03) + 's';
+                                tr.innerHTML =
+                                    '<td><span class="adm-id-badge">' + u.id + '</span></td>' +
+                                    '<td><strong>' + escapeHtml(u.username) + '</strong></td>' +
+                                    '<td class="adm-email-cell">' + escapeHtml(u.email) + '</td>' +
+                                    '<td>' + escapeHtml(u.displayName || '—') + '</td>' +
+                                    '<td><span class="adm-role-badge adm-role-badge--' + u.role.toLowerCase() + '">' +
+                                    (u.role === 'ADMIN' ? '🛡️ ' : u.role === 'ARTIST' ? '🎤 ' : '🎧 ') +
+                                    u.role + '</span></td>' +
+                                    '<td>' + formatDate(u.createdAt) + '</td>' +
+                                    '<td class="adm-actions-cell">' +
+                                    '<button class="adm-action-btn adm-action-btn--role" data-id="' + u.id + '" data-username="' + escapeHtml(u.username) + '" data-role="' + u.role + '" title="Change Role">' +
+                                    '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' +
+                                    '</button>' +
+                                    '<button class="adm-action-btn adm-action-btn--delete" data-id="' + u.id + '" data-username="' + escapeHtml(u.username) + '" title="Delete User">' +
+                                    '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>' +
+                                    '</button>' +
+                                    '</td>';
+                                tbody.appendChild(tr);
+                            });
+
+                            attachUserActions();
+                            renderPagination(data.totalPages, data.number);
+                        })
+                        .catch(function () {
+                            tbody.innerHTML = '<tr><td colspan="7" class="adm-loading" style="color: var(--error-color);">Error loading users</td></tr>';
+                        });
+                }
+
+                function attachUserActions() {
+                    document.querySelectorAll('.adm-action-btn--role').forEach(function (btn) {
+                        btn.addEventListener('click', function () {
+                            var userId = this.getAttribute('data-id');
+                            var username = this.getAttribute('data-username');
+                            var currentRole = this.getAttribute('data-role');
+
+                            document.getElementById('role-modal-user-id').value = userId;
+                            document.getElementById('role-modal-user').textContent =
+                                'Change role for: ' + username + ' (currently ' + currentRole + ')';
+                            document.getElementById('role-modal-select').value = currentRole;
+                            document.getElementById('role-modal').style.display = 'flex';
+                        });
+                    });
+
+                    document.querySelectorAll('#users-tbody .adm-action-btn--delete').forEach(function (btn) {
+                        btn.addEventListener('click', function () {
+                            var userId = this.getAttribute('data-id');
+                            var username = this.getAttribute('data-username');
+
+                            RevPlay.confirm({
+                                title: 'Delete User',
+                                message: 'Delete user "' + username + '"? This will remove all their data and cannot be undone.',
+                                type: 'danger',
+                                confirmText: 'Delete User',
+                                cancelText: 'Cancel'
+                            }).then(function (confirmed) {
+                                if (!confirmed) return;
+
+                                fetch('/api/admin/users/' + userId, {
+                                    method: 'DELETE',
+                                    headers: { 'X-CSRF-TOKEN': csrfToken }
+                                })
+                                    .then(function (res) {
+                                        if (res.status >= 200 && res.status < 300) {
+                                            RevPlay.toast({ type: 'success', message: 'User "' + username + '" deleted' });
+                                            loadUsers();
+                                            loadStats();
+                                        } else {
+                                            return res.json().then(function (d) { throw new Error(d.error || 'Failed'); });
+                                        }
+                                    })
+                                    .catch(function (err) {
+                                        RevPlay.toast({ type: 'error', message: err.message });
+                                    });
+                            });
+                        });
+                    });
+                }
+
+                var confirmRoleBtn = document.getElementById('btn-confirm-role');
+                if (confirmRoleBtn) {
+                    confirmRoleBtn.addEventListener('click', function () {
+                        var userId = document.getElementById('role-modal-user-id').value;
+                        var newRole = document.getElementById('role-modal-select').value;
+
+                        confirmRoleBtn.disabled = true;
+                        confirmRoleBtn.innerHTML = '<div class="adm-spinner adm-spinner--sm"></div> Updating...';
+
+                        fetch('/api/admin/users/' + userId + '/role', {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken
+                            },
+                            body: JSON.stringify({ role: newRole })
+                        })
+                            .then(function (res) {
+                                if (!res.ok) return res.json().then(function (d) { throw new Error(d.error || 'Failed'); });
+                                return res.json();
+                            })
+                            .then(function () {
+                                document.getElementById('role-modal').style.display = 'none';
+                                RevPlay.toast({ type: 'success', message: 'Role updated to ' + newRole });
+                                loadUsers();
+                                loadStats();
+                            })
+                            .catch(function (err) {
+                                RevPlay.toast({ type: 'error', message: err.message });
+                            })
+                            .finally(function () {
+                                confirmRoleBtn.disabled = false;
+                                confirmRoleBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Confirm Change';
+                            });
+                    });
+                }
+
+                function renderPagination(totalPages, currentPageNum) {
+                    var container = document.getElementById('users-pagination');
+                    if (!container) return;
+                    container.innerHTML = '';
+                    if (totalPages <= 1) return;
+
+                    for (var i = 0; i < totalPages; i++) {
+                        var btn = document.createElement('button');
+                        btn.className = 'adm-page-btn' + (i === currentPageNum ? ' adm-page-btn--active' : '');
+                        btn.textContent = i + 1;
+                        btn.setAttribute('data-page', i);
+                        btn.addEventListener('click', function () {
+                            currentPage = parseInt(this.getAttribute('data-page'));
+                            loadUsers();
+                        });
+                        container.appendChild(btn);
+                    }
+                }
+
+                // ══════════════════════════════════════════════════════════
+                // CONTENT TAB — Top Songs
+                // ══════════════════════════════════════════════════════════
+
+                function loadTopSongs() {
+                    var tbody = document.getElementById('songs-tbody');
+                    if (!tbody) return;
+                    tbody.innerHTML = '<tr><td colspan="6" class="adm-loading"><div class="adm-spinner"></div> Loading...</td></tr>';
+
+                    fetch('/api/admin/stats/top-songs?limit=20', {
+                        headers: { 'Accept': 'application/json' }
+                    })
+                        .then(function (res) { return res.json(); })
+                        .then(function (songs) {
+                            tbody.innerHTML = '';
+
+                            if (songs.length === 0) {
+                                tbody.innerHTML = '<tr><td colspan="6" class="adm-empty">' +
+                                    '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round"><circle cx="5.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="15.5" r="2.5"/><path d="M8 17V5l12-2v10"/></svg>' +
+                                    '<p>No songs found</p></td></tr>';
+                                return;
+                            }
+
+                            songs.forEach(function (s, idx) {
+                                var tr = document.createElement('tr');
+                                tr.className = 'adm-row-animate';
+                                tr.style.animationDelay = (idx * 0.03) + 's';
+
+                                var rankClass = idx < 3 ? ' adm-rank--top' : '';
+                                var rankEmoji = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '';
+
+                                tr.innerHTML =
+                                    '<td><span class="adm-rank' + rankClass + '">' + (rankEmoji || (idx + 1)) + '</span></td>' +
+                                    '<td><strong>' + escapeHtml(s.title) + '</strong></td>' +
+                                    '<td>' + escapeHtml(s.artist) + '</td>' +
+                                    '<td><span class="adm-genre-tag">' + escapeHtml(s.genre || '—') + '</span></td>' +
+                                    '<td><span class="adm-play-count">' +
+                                    '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg> ' +
+                                    (s.playCount || 0).toLocaleString() + '</span></td>' +
+                                    '<td><button class="adm-action-btn adm-action-btn--delete" data-song-id="' + s.id + '" data-title="' + escapeHtml(s.title) + '" title="Remove Song">' +
+                                    '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>' +
+                                    '</button></td>';
+                                tbody.appendChild(tr);
+                            });
+
+                            tbody.querySelectorAll('.adm-action-btn--delete').forEach(function (btn) {
+                                btn.addEventListener('click', function () {
+                                    var songId = this.getAttribute('data-song-id');
+                                    var title = this.getAttribute('data-title');
+
+                                    RevPlay.confirm({
+                                        title: 'Remove Song',
+                                        message: 'Remove "' + title + '" from the platform? This cannot be undone.',
+                                        type: 'danger',
+                                        confirmText: 'Remove',
+                                        cancelText: 'Cancel'
+                                    }).then(function (confirmed) {
+                                        if (!confirmed) return;
+
+                                        fetch('/api/admin/songs/' + songId, {
+                                            method: 'DELETE',
+                                            headers: { 'X-CSRF-TOKEN': csrfToken }
+                                        })
+                                            .then(function (res) {
+                                                if (res.status >= 200 && res.status < 300) {
+                                                    RevPlay.toast({ type: 'success', message: '"' + title + '" removed' });
+                                                    loadTopSongs();
+                                                    loadStats();
+                                                } else {
+                                                    RevPlay.toast({ type: 'error', message: 'Failed to delete song' });
+                                                }
+                                            })
+                                            .catch(function () {
+                                                RevPlay.toast({ type: 'error', message: 'Error deleting song' });
+                                            });
+                                    });
+                                });
+                            });
+                        })
+                        .catch(function () {
+                            tbody.innerHTML = '<tr><td colspan="6" class="adm-loading" style="color: var(--error-color);">Error loading songs</td></tr>';
+                        });
+                }
+
+                // ══════════════════════════════════════════════════════════
+                // REPORTS TAB
+                // ══════════════════════════════════════════════════════════
+
+                function loadReports() {
+                    loadRoleDistribution();
+                    loadGrowthChart();
+                }
+
+                function loadRoleDistribution() {
+                    var container = document.getElementById('role-bars');
+                    if (!container) return;
+                    container.innerHTML = '<div class="adm-loading"><div class="adm-spinner"></div> Loading...</div>';
+
+                    fetch('/api/admin/stats/roles', {
+                        headers: { 'Accept': 'application/json' }
+                    })
+                        .then(function (res) { return res.json(); })
+                        .then(function (data) {
+                            container.innerHTML = '';
+                            var total = 0;
+                            Object.values(data).forEach(function (v) { total += v; });
+
+                            var roleIcons = {
+                                LISTENER: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>',
+                                ARTIST: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>',
+                                ADMIN: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'
+                            };
+
+                            var roleColors = {
+                                LISTENER: '#3b82f6',
+                                ARTIST: '#a855f7',
+                                ADMIN: '#f59e0b'
+                            };
+
+                            Object.keys(data).forEach(function (role, idx) {
+                                var count = data[role];
+                                var pct = total > 0 ? Math.round((count / total) * 100) : 0;
+
+                                var bar = document.createElement('div');
+                                bar.className = 'adm-role-bar adm-row-animate';
+                                bar.style.animationDelay = (idx * 0.1) + 's';
+                                bar.innerHTML =
+                                    '<div class="adm-role-bar-header">' +
+                                    '<span class="adm-role-bar-name">' +
+                                    (roleIcons[role] || '') +
+                                    '<span class="adm-role-badge adm-role-badge--' + role.toLowerCase() + '">' + role + '</span>' +
+                                    '</span>' +
+                                    '<span class="adm-role-bar-stats">' + count + ' users · ' + pct + '%</span>' +
+                                    '</div>' +
+                                    '<div class="adm-role-bar-track">' +
+                                    '<div class="adm-role-bar-fill" style="width: 0%; background: ' + (roleColors[role] || 'var(--primary-color)') + ';"></div>' +
+                                    '</div>';
+                                container.appendChild(bar);
+
+                                // Animate bar fill
+                                requestAnimationFrame(function () {
+                                    requestAnimationFrame(function () {
+                                        var fill = bar.querySelector('.adm-role-bar-fill');
+                                        if (fill) fill.style.width = pct + '%';
+                                    });
+                                });
+                            });
+                        })
+                        .catch(function () {
+                            container.innerHTML = '<div class="adm-loading" style="color: var(--error-color);">Error loading data</div>';
+                        });
+                }
+
+                function loadGrowthChart() {
+                    var container = document.getElementById('growth-chart');
+                    if (!container) return;
+                    container.innerHTML = '<div class="adm-loading"><div class="adm-spinner"></div> Loading...</div>';
+
+                    fetch('/api/admin/stats/growth?days=30', {
+                        headers: { 'Accept': 'application/json' }
+                    })
+                        .then(function (res) { return res.json(); })
+                        .then(function (data) {
+                            container.innerHTML = '';
+
+                            if (!data || data.length === 0) {
+                                container.innerHTML = '<div class="adm-empty"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><p>No growth data available</p></div>';
+                                return;
+                            }
+
+                            var maxCount = 0;
+                            data.forEach(function (d) {
+                                if (d[1] > maxCount) maxCount = d[1];
+                            });
+
+                            var chartHtml = '<div class="adm-growth-bars">';
+                            data.forEach(function (d, idx) {
+                                var date = d[0];
+                                var count = d[1];
+                                var pct = maxCount > 0 ? Math.round((count / maxCount) * 100) : 0;
+
+                                chartHtml +=
+                                    '<div class="adm-growth-bar-item" title="' + date + ': ' + count + ' new users">' +
+                                    '<div class="adm-growth-bar-col">' +
+                                    '<div class="adm-growth-bar-fill" style="height: 0%; --target-height: ' + Math.max(pct, 4) + '%; animation-delay: ' + (idx * 0.02) + 's;"></div>' +
+                                    '</div>' +
+                                    '<div class="adm-growth-bar-count">' + count + '</div>' +
+                                    '<div class="adm-growth-bar-label">' + formatShortDate(date) + '</div>' +
+                                    '</div>';
+                            });
+                            chartHtml += '</div>';
+                            container.innerHTML = chartHtml;
+                        })
+                        .catch(function () {
+                            container.innerHTML = '<div class="adm-loading" style="color: var(--error-color);">Error loading growth data</div>';
+                        });
+                }
+
+                // ══════════════════════════════════════════════════════════
+                // HELPERS
+                // ══════════════════════════════════════════════════════════
+
+                function escapeHtml(text) {
+                    if (!text) return '';
+                    var div = document.createElement('div');
+                    div.textContent = text;
+                    return div.innerHTML;
+                }
+
+                function formatDate(dateStr) {
+                    if (!dateStr) return '—';
+                    var d = new Date(dateStr);
+                    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                }
+
+                function formatShortDate(dateStr) {
+                    if (!dateStr) return '';
+                    var parts = dateStr.split('-');
+                    return parts[1] + '/' + parts[2];
+                }
+
+                // Close modals on overlay click
+                document.querySelectorAll('.modal-overlay').forEach(function (m) {
+                    m.addEventListener('click', function (e) {
+                        if (e.target === m) m.style.display = 'none';
+                    });
+                });
+
+            })();
+        </script>
+
+    </div>
+</div>
+</body>
+</html>

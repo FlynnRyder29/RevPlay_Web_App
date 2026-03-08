@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{layout :: head('Now Playing')}"></head>
+
+<body>
+<div th:replace="~{layout :: page(~{::#player-content})}">
+
+    <div id="player-content">
+
+        <div class="player-page-layout">
+
+            <!-- ============ Now Playing Hero ============ -->
+            <div class="player-page">
+
+                <div class="player-hero">
+                    <img id="player-page-art"
+                         src="https://www.shutterstock.com/shutterstock/photos/2626947211/display_1500/stock-vector-jazz-music-poster-design-template-2626947211.jpg"
+                         alt="Album Art"
+                         class="player-hero-art">
+
+                    <div class="player-hero-info">
+                        <span class="now-playing-label">NOW PLAYING</span>
+                        <h1 id="player-page-title" class="player-hero-title">Select a song</h1>
+                        <p id="player-page-artist" class="player-hero-artist">Choose from the library</p>
+                        <p id="player-page-album" class="player-hero-album"></p>
+                    </div>
+                </div>
+
+                <!-- Large Progress Bar -->
+                <div class="player-page-progress">
+                    <div class="progress-container">
+                        <span class="progress-time" id="page-time-current">0:00</span>
+                        <div class="progress-bar-bg" id="page-progress-container">
+                            <div class="progress-bar-fill" id="page-progress-fill"></div>
+                        </div>
+                        <span class="progress-time" id="page-time-total">0:00</span>
+                    </div>
+                </div>
+
+                <!-- Large Controls -->
+                <div class="player-page-controls">
+                    <button class="control-btn page-ctrl-secondary" id="page-btn-shuffle" title="Shuffle">
+                        <img th:src="@{/images/icons/shuffle.png}" alt="🔀" class="page-ctrl-icon"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                        <span class="icon-fallback" style="display:none;">🔀</span>
+                    </button>
+
+                    <button class="control-btn page-ctrl-lg" id="page-btn-prev" title="Previous">
+                        <img th:src="@{/images/icons/rewind.png}" alt="⏮" class="page-ctrl-icon page-ctrl-icon-lg"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                        <span class="icon-fallback" style="display:none;">⏮</span>
+                    </button>
+
+                    <button class="control-btn page-ctrl-play" id="page-btn-play" title="Play">
+                        <img th:src="@{/images/icons/play.png}" alt="▶"
+                             class="player-icon-img player-play-img page-play-icon"
+                             data-play-src="/images/icons/play.png"
+                             data-pause-src="/images/icons/pause.png"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                        <span class="icon-fallback play-fallback" style="display:none;">▶</span>
+                    </button>
+
+                    <button class="control-btn page-ctrl-lg" id="page-btn-next" title="Next">
+                        <img th:src="@{/images/icons/forward.png}" alt="⏭" class="page-ctrl-icon page-ctrl-icon-lg"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                        <span class="icon-fallback" style="display:none;">⏭</span>
+                    </button>
+
+                    <button class="control-btn page-ctrl-secondary" id="page-btn-repeat" title="Repeat">
+                        <img th:src="@{/images/icons/repeat.png}" alt="🔁" class="page-ctrl-icon player-repeat-img"
+                             data-repeat-src="/images/icons/repeat.png"
+                             data-repeat-one-src="/images/icons/repeat-one.png"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                        <span class="icon-fallback repeat-fallback" style="display:none;">🔁</span>
+                    </button>
+                </div>
+
+                <!-- Volume Control -->
+                <div class="player-page-volume">
+                    <button class="control-btn" id="page-vol-icon" title="Volume">
+                        <img th:src="@{/images/icons/volume.png}" alt="🔊" class="page-ctrl-icon"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                        <span class="icon-fallback" style="display:none;">🔊</span>
+                    </button>
+                    <div class="progress-bar-bg" id="page-volume-bar" style="width: 150px;">
+                        <div class="progress-bar-fill" id="page-volume-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+
+                <!-- Keyboard Shortcuts Hint -->
+                <div class="keyboard-hints">
+                    <span class="hint-pill">Space — Play/Pause</span>
+                    <span class="hint-pill">← → — Seek 5s</span>
+                    <span class="hint-pill">Shift+← → — Prev/Next</span>
+                    <span class="hint-pill">↑ ↓ — Volume</span>
+                    <span class="hint-pill">M — Mute</span>
+                    <span class="hint-pill">S — Shuffle</span>
+                    <span class="hint-pill">R — Repeat</span>
+                </div>
+
+                <!-- Quick link to library -->
+                <div style="text-align: center; margin-top: 30px;">
+                    <a th:href="@{/library}" class="btn-primary"
+                       style="display: inline-block; width: auto; padding: 12px 30px;">
+                        ← Browse Library
+                    </a>
+                </div>
+            </div>
+
+            <!-- ============ Queue Sidebar ============ -->
+            <div class="queue-sidebar">
+                <h3 class="queue-sidebar-title">Queue</h3>
+                <div id="queue-list" class="queue-list">
+                    <div class="queue-empty">Play a song to see the queue</div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+</body>
+
+</html>

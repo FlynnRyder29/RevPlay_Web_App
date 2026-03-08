@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- ================================================================
+         RevPlay — Logback Spring Configuration
+         Author: Member 6 — Database, Testing & DevOps
+
+         Logging Standards:
+           INFO  — Controllers (incoming requests, responses)
+           DEBUG — Services (business logic, queries)
+           ERROR — Exceptions (with stack traces)
+           WARN  — Unexpected but non-fatal situations
+
+         Profiles:
+           dev  — Console only, DEBUG level, colored output
+           test — Console only, WARN level (keep test output clean)
+           prod — File + Console, INFO level, rolling daily logs
+    ================================================================ -->
+
+    <!-- ── Shared Properties ──────────────────────────────────────── -->
+    <property name="LOG_PATH"    value="logs" />
+    <property name="APP_NAME"    value="revplay" />
+    <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n" />
+    <property name="LOG_PATTERN_COLOR"
+              value="%d{HH:mm:ss.SSS} %highlight(%-5level) %cyan(%logger{36}) - %msg%n" />
+
+    <!-- ================================================================
+         APPENDERS
+    ================================================================ -->
+
+    <!-- Console appender (dev/test) -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${LOG_PATTERN_COLOR}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- Console appender plain (prod — no ANSI colors) -->
+    <appender name="CONSOLE_PLAIN" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- Rolling file appender (prod) -->
+    <appender name="FILE_ROLLING" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/${APP_NAME}.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- Roll over daily, keep 30 days -->
+            <fileNamePattern>${LOG_PATH}/${APP_NAME}.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- Error-only file appender (prod) -->
+    <appender name="FILE_ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/${APP_NAME}-error.log</file>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/${APP_NAME}-error.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>60</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- ================================================================
+         PROFILE: dev
+         Console, DEBUG, colored output
+    ================================================================ -->
+    <springProfile name="dev">
+
+        <logger name="com.revplay"                    level="DEBUG" additivity="false">
+            <appender-ref ref="CONSOLE" />
+        </logger>
+
+        <!-- Controller layer — INFO -->
+        <logger name="com.revplay.controller"         level="INFO"  additivity="false">
+            <appender-ref ref="CONSOLE" />
+        </logger>
+
+        <!-- Service layer — DEBUG -->
+        <logger name="com.revplay.service"            level="DEBUG" additivity="false">
+            <appender-ref ref="CONSOLE" />
+        </logger>
+
+        <!-- Repository / JPA SQL — DEBUG (shows generated queries) -->
+        <logger name="com.revplay.repository"         level="DEBUG" additivity="false">
+            <appender-ref ref="CONSOLE" />
+        </logger>
+
+        <!-- Hibernate SQL output -->
+        <logger name="org.hibernate.SQL"              level="DEBUG" additivity="false">
+            <appender-ref ref="CONSOLE" />
+        </logger>
+        <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE" additivity="false">
+            <appender-ref ref="CONSOLE" />
+        </logger>
+
+        <!-- Spring web -->
+        <logger name="org.springframework.web"        level="DEBUG" additivity="false">
+            <appender-ref ref="CONSOLE" />
+        </logger>
+
+        <!-- Flyway -->
+        <logger name="org.flywaydb"                   level="INFO"  additivity="false">
+            <appender-ref ref="CONSOLE" />
+        </logger>
+
+        <!-- Security -->
+        <logger name="org.springframework.security"   level="INFO"  additivity="false">
+            <appender-ref ref="CONSOLE" />
+        </logger>
+
+        <root level="INFO">
+            <appender-ref ref="CONSOLE" />
+        </root>
+
+    </springProfile>
+
+    <!-- ================================================================
+         PROFILE: test
+         Console only, WARN — keeps test output clean
+    ================================================================ -->
+    <springProfile name="test">
+
+        <logger name="com.revplay"                    level="WARN"  additivity="false">
+            <appender-ref ref="CONSOLE" />
+        </logger>
+
+        <!-- Show ERROR logs from exception handler during tests -->
+        <logger name="com.revplay.exception"          level="ERROR" additivity="false">
+            <appender-ref ref="CONSOLE" />
+        </logger>
+
+        <!-- Suppress Hibernate noise in tests -->
+        <logger name="org.hibernate"                  level="WARN"  additivity="false">
+            <appender-ref ref="CONSOLE" />
+        </logger>
+
+        <logger name="org.flywaydb"                   level="WARN"  additivity="false">
+            <appender-ref ref="CONSOLE" />
+        </logger>
+
+        <root level="WARN">
+            <appender-ref ref="CONSOLE" />
+        </root>
+
+    </springProfile>
+
+    <!-- ================================================================
+         PROFILE: prod
+         File + Console plain, INFO, rolling logs, separate error file
+    ================================================================ -->
+    <springProfile name="prod">
+
+        <logger name="com.revplay"                    level="INFO"  additivity="false">
+            <appender-ref ref="CONSOLE_PLAIN" />
+            <appender-ref ref="FILE_ROLLING" />
+        </logger>
+
+        <!-- Controller — INFO -->
+        <logger name="com.revplay.controller"         level="INFO"  additivity="false">
+            <appender-ref ref="CONSOLE_PLAIN" />
+            <appender-ref ref="FILE_ROLLING" />
+        </logger>
+
+        <!-- Service — INFO (DEBUG disabled in prod) -->
+        <logger name="com.revplay.service"            level="INFO"  additivity="false">
+            <appender-ref ref="CONSOLE_PLAIN" />
+            <appender-ref ref="FILE_ROLLING" />
+        </logger>
+
+        <!-- Exception handler — WARN and above logged to rolling file
+             ERROR level additionally captured in dedicated error log -->
+        <logger name="com.revplay.exception"          level="WARN"  additivity="false">
+            <appender-ref ref="CONSOLE_PLAIN" />
+            <appender-ref ref="FILE_ROLLING" />
+            <appender-ref ref="FILE_ERROR" />
+        </logger>
+
+        <!-- Suppress Hibernate SQL in prod -->
+        <logger name="org.hibernate.SQL"              level="WARN"  additivity="false">
+            <appender-ref ref="FILE_ROLLING" />
+        </logger>
+
+        <logger name="org.flywaydb"                   level="INFO"  additivity="false">
+            <appender-ref ref="CONSOLE_PLAIN" />
+            <appender-ref ref="FILE_ROLLING" />
+        </logger>
+
+        <logger name="org.springframework"            level="WARN"  additivity="false">
+            <appender-ref ref="FILE_ROLLING" />
+        </logger>
+
+        <root level="WARN">
+            <appender-ref ref="CONSOLE_PLAIN" />
+            <appender-ref ref="FILE_ROLLING" />
+        </root>
+
+    </springProfile>
+
+</configuration>
