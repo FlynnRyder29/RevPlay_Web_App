@@ -18,14 +18,14 @@ erDiagram
         varchar display_name "nullable"
         text bio "nullable"
         varchar profile_picture_url "nullable"
-        enum role "LISTENER | ARTIST | ADMIN"
+        enum role "LISTENER or ARTIST or ADMIN"
         datetime created_at "NOT NULL"
         datetime updated_at "NOT NULL"
     }
 
     ARTISTS {
         bigint id PK "AUTO_INCREMENT"
-        bigint user_id FK_UK "NOT NULL → users (CASCADE)"
+        bigint user_id FK "UNIQUE, NOT NULL, refs users"
         varchar artist_name "NOT NULL"
         text bio "nullable"
         varchar genre "nullable"
@@ -50,7 +50,7 @@ erDiagram
         text description "nullable"
         varchar cover_image_url "nullable"
         date release_date "nullable"
-        bigint artist_id FK "NOT NULL → artists (CASCADE)"
+        bigint artist_id FK "NOT NULL, refs artists, CASCADE"
         datetime created_at "NOT NULL"
     }
 
@@ -58,14 +58,14 @@ erDiagram
         bigint id PK "AUTO_INCREMENT"
         varchar title "NOT NULL"
         varchar genre "nullable"
-        int duration "NOT NULL (seconds)"
+        int duration "NOT NULL, in seconds"
         varchar audio_url "NOT NULL"
         varchar cover_image_url "nullable"
         date release_date "nullable"
         bigint play_count "DEFAULT 0"
-        enum visibility "PUBLIC | UNLISTED | PRIVATE"
-        bigint artist_id FK "NOT NULL → artists (CASCADE)"
-        bigint album_id FK "nullable → albums (SET NULL)"
+        enum visibility "PUBLIC or UNLISTED or PRIVATE"
+        bigint artist_id FK "NOT NULL, refs artists, CASCADE"
+        bigint album_id FK "nullable, refs albums, SET NULL"
         datetime created_at "NOT NULL"
     }
 
@@ -75,61 +75,61 @@ erDiagram
         text description "nullable"
         boolean is_public "DEFAULT TRUE"
         varchar cover_image_url "nullable"
-        bigint user_id FK "NOT NULL → users (CASCADE)"
+        bigint user_id FK "NOT NULL, refs users, CASCADE"
         datetime created_at "NOT NULL"
         datetime updated_at "NOT NULL"
     }
 
     PLAYLIST_SONGS {
         bigint id PK "AUTO_INCREMENT"
-        bigint playlist_id FK "NOT NULL → playlists (CASCADE)"
-        bigint song_id FK "NOT NULL → songs (CASCADE)"
+        bigint playlist_id FK "NOT NULL, refs playlists, CASCADE"
+        bigint song_id FK "NOT NULL, refs songs, CASCADE"
         int position "Order in playlist"
         datetime added_at "NOT NULL"
     }
 
     FAVORITES {
         bigint id PK "AUTO_INCREMENT"
-        bigint user_id FK "NOT NULL → users (CASCADE)"
-        bigint song_id FK "NOT NULL → songs (CASCADE)"
+        bigint user_id FK "NOT NULL, refs users, CASCADE"
+        bigint song_id FK "NOT NULL, refs songs, CASCADE"
         datetime created_at "NOT NULL"
     }
 
     LISTENING_HISTORY {
         bigint id PK "AUTO_INCREMENT"
-        bigint user_id FK "NOT NULL → users (CASCADE)"
-        bigint song_id FK "NOT NULL → songs (CASCADE)"
+        bigint user_id FK "NOT NULL, refs users, CASCADE"
+        bigint song_id FK "NOT NULL, refs songs, CASCADE"
         datetime played_at "NOT NULL"
     }
 
     PLAYLIST_FOLLOWS {
         bigint id PK "AUTO_INCREMENT"
-        bigint user_id FK "NOT NULL → users (CASCADE)"
-        bigint playlist_id FK "NOT NULL → playlists (CASCADE)"
+        bigint user_id FK "NOT NULL, refs users, CASCADE"
+        bigint playlist_id FK "NOT NULL, refs playlists, CASCADE"
         datetime followed_at "NOT NULL"
     }
 
     PLAY_EVENTS {
         bigint id PK "AUTO_INCREMENT"
-        bigint song_id FK "NOT NULL → songs (CASCADE)"
-        bigint user_id FK "nullable → users (SET NULL)"
+        bigint song_id FK "NOT NULL, refs songs, CASCADE"
+        bigint user_id FK "nullable, refs users, SET NULL"
         datetime played_at "NOT NULL"
     }
 
     ARTIST_REQUESTS {
         bigint id PK "AUTO_INCREMENT"
-        bigint user_id FK "NOT NULL → users"
+        bigint user_id FK "NOT NULL, refs users"
         varchar artist_name "NOT NULL"
         varchar genre "nullable"
         text reason "nullable"
-        enum status "PENDING | APPROVED | REJECTED"
+        enum status "PENDING or APPROVED or REJECTED"
         text admin_note "nullable"
-        bigint reviewed_by FK "nullable → users"
+        bigint reviewed_by FK "nullable, refs users"
         datetime reviewed_at "nullable"
         datetime created_at "NOT NULL"
     }
 
-    %% ── Core Relationships ──
+    %% Relationships
     USERS ||--o| ARTISTS : "can become"
     USERS ||--o{ PLAYLISTS : "creates"
     USERS ||--o{ FAVORITES : "marks"
