@@ -216,6 +216,60 @@
     border-color: rgba(255, 255, 255, 0.15);
 }
 
+/* ── Fix: Override song-card button styles on detail page ── */
+
+.song-detail-actions .song-card-fav-btn,
+.song-detail-actions .song-card-add-playlist-btn {
+    /* Reset card-level styles */
+    position: static;
+    width: auto;
+    height: auto;
+    opacity: 1;
+    border-radius: 50px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    padding: 11px 24px;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary, #fff);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    transform: none;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.song-detail-actions .song-card-fav-btn:hover,
+.song-detail-actions .song-card-add-playlist-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: var(--accent, #fd7e14);
+    color: var(--accent, #fd7e14);
+    transform: none;
+}
+
+.song-detail-actions .song-card-fav-btn.favorited {
+    color: #ff4d4d;
+    border-color: #ff4d4d;
+    background: rgba(255, 77, 77, 0.1);
+}
+
+/* Light theme */
+[data-theme="light"] .song-detail-actions .song-card-fav-btn,
+[data-theme="light"] .song-detail-actions .song-card-add-playlist-btn {
+    background: #f0f0f0;
+    color: #333;
+    border-color: #ddd;
+}
+
+[data-theme="light"] .song-detail-actions .song-card-fav-btn:hover,
+[data-theme="light"] .song-detail-actions .song-card-add-playlist-btn:hover {
+    background: #e8e8e8;
+    border-color: var(--accent, #fd7e14);
+    color: var(--accent, #fd7e14);
+}
+
 /* ── Responsive ── */
 @media (max-width: 768px) {
     .song-detail-card {

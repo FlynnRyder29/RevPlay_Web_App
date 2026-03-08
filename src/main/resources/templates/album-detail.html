@@ -49,7 +49,8 @@
                  th:data-id="${track.id}"
                  th:data-url="${track.audioUrl}"
                  th:data-title="${track.title}"
-                 th:data-artist="${track.artistName != null ? track.artistName : 'Unknown'}">
+                 th:data-artist="${track.artistName != null ? track.artistName : 'Unknown'}"
+                 th:data-cover="${track.coverImageUrl != null ? track.coverImageUrl : (album.coverImageUrl != null ? album.coverImageUrl : '')}">
 
                 <span class="tracklist-col-num" th:text="${iter.count}">1</span>
 
@@ -105,22 +106,30 @@
                         var url = row.getAttribute('data-url');
                         var title = row.getAttribute('data-title');
                         var artist = row.getAttribute('data-artist');
+                        var cover = row.getAttribute('data-cover');
 
-                        if (url && window.RevPlay && window.RevPlay.play) {
+                        if (url && window.RevPlay && window.RevPlay.playQueue) {
                             var queue = [];
                             document.querySelectorAll('.tracklist-row').forEach(function (r) {
                                 queue.push({
                                     id: r.getAttribute('data-id'),
                                     url: r.getAttribute('data-url'),
                                     title: r.getAttribute('data-title'),
-                                    artist: r.getAttribute('data-artist')
+                                    artist: r.getAttribute('data-artist'),
+                                    cover: r.getAttribute('data-cover')
                                 });
                             });
 
                             var index = queue.findIndex(function (s) { return s.id === id; });
                             window.RevPlay.playQueue(queue, index >= 0 ? index : 0);
                         } else if (url && window.RevPlay && window.RevPlay.playSong) {
-                            window.RevPlay.playSong({ id: id, url: url, title: title, artist: artist });
+                            window.RevPlay.playSong({
+                                id: id,
+                                url: url,
+                                title: title,
+                                artist: artist,
+                                cover: cover
+                            });
                         }
                     });
                 });

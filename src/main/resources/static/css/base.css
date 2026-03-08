@@ -40,12 +40,30 @@
     /* Scrollbar */
     --scrollbar-thumb: #535353;
     --scrollbar-track: transparent;
+
+    /* ── Glass system ── */
+    --glass-bg-heavy: rgba(0, 0, 0, 0.72);
+    --glass-bg-medium: rgba(0, 0, 0, 0.6);
+    --glass-bg-light: rgba(18, 18, 18, 0.7);
+    --glass-bg-content: rgba(18, 18, 18, 0.88);
+    --glass-border: rgba(255, 255, 255, 0.06);
+    --glass-border-hover: rgba(255, 255, 255, 0.1);
+    --glass-glow-1: rgba(215, 82, 9, 0.08);
+    --glass-glow-2: rgba(139, 92, 246, 0.06);
+    --glass-glow-3: rgba(59, 130, 246, 0.05);
+    --glass-glow-4: rgba(236, 72, 153, 0.03);
 }
 
 body {
     margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: var(--bg-dark);
+    background-color: #0a0a0f;
+    background-image:
+            radial-gradient(ellipse 80% 50% at 8% 8%, var(--glass-glow-1) 0%, transparent 55%),
+            radial-gradient(ellipse 60% 70% at 92% 12%, var(--glass-glow-2) 0%, transparent 55%),
+            radial-gradient(ellipse 70% 50% at 50% 88%, var(--glass-glow-3) 0%, transparent 55%),
+            radial-gradient(ellipse 40% 40% at 72% 55%, var(--glass-glow-4) 0%, transparent 55%);
+    background-attachment: fixed;
     color: var(--text-main);
     display: flex;
     flex-direction: column;

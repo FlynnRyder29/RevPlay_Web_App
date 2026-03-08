@@ -7,7 +7,10 @@
 
 .player-bar {
     height: 90px;
-    background-color: #181818;
+    background-color: rgba(24, 24, 24, 0.82);
+    backdrop-filter: blur(24px) saturate(1.2);
+    -webkit-backdrop-filter: blur(24px) saturate(1.2);
+    border-top: 1px solid var(--glass-border);
     border-top: 1px solid var(--border-color);
     display: flex;
     align-items: center;
