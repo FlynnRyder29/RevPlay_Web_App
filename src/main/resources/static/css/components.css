@@ -353,6 +353,78 @@
     transform: scale(1.1);
 }
 
+/* ── Add to Queue Button ── */
+.add-to-queue-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    color: white;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.add-to-queue-btn:hover {
+    background: rgba(0, 0, 0, 0.8);
+    transform: scale(1.1);
+    color: var(--primary-color);
+}
+
+.add-to-queue-btn svg {
+    pointer-events: none;
+}
+
+/* Queue button on non-card contexts (playlist rows, history entries) */
+.playlist-song-row .add-to-queue-btn,
+.history-entry .add-to-queue-btn {
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    color: var(--text-muted);
+    opacity: 0;
+    transition: opacity 0.2s, color 0.2s, background 0.2s;
+}
+
+.playlist-song-row:hover .add-to-queue-btn,
+.history-entry:hover .add-to-queue-btn {
+    opacity: 1;
+}
+
+.playlist-song-row .add-to-queue-btn:hover,
+.history-entry .add-to-queue-btn:hover {
+    color: var(--primary-color);
+    background: rgba(215, 82, 9, 0.1);
+}
+
+/* Light theme */
+[data-theme="light"] .add-to-queue-btn {
+    background: rgba(255, 255, 255, 0.7);
+    color: #333;
+}
+
+[data-theme="light"] .add-to-queue-btn:hover {
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--primary-color);
+}
+
+[data-theme="light"] .playlist-song-row .add-to-queue-btn,
+[data-theme="light"] .history-entry .add-to-queue-btn {
+    background: transparent;
+    color: #999;
+}
+
+[data-theme="light"] .playlist-song-row .add-to-queue-btn:hover,
+[data-theme="light"] .history-entry .add-to-queue-btn:hover {
+    color: var(--primary-color);
+    background: rgba(215, 82, 9, 0.08);
+}
+
 .song-card-fav-btn.favorited {
     color: #ff4d4d;
 }

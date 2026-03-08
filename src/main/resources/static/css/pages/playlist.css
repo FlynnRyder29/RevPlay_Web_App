@@ -1005,7 +1005,122 @@
     color: var(--text-muted);
     margin-top: 2px;
 }
+/* ══════════════════════════════════════════
+   DRAG & DROP REORDER
+   ══════════════════════════════════════════ */
 
+/* Drag Handle */
+.pl-drag-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    padding: 4px;
+    border-radius: 4px;
+    transition: opacity 0.2s, background 0.2s;
+    opacity: 0;
+    flex-shrink: 0;
+    width: 24px;
+}
+
+.playlist-song-row:hover .pl-drag-handle {
+    opacity: 1;
+}
+
+.pl-drag-handle:hover {
+    background: rgba(255, 255, 255, 0.08);
+    opacity: 1;
+}
+
+.pl-drag-handle:active {
+    cursor: grabbing;
+}
+
+.pl-drag-handle svg {
+    pointer-events: none;
+}
+
+/* Dragging State */
+.pl-row--dragging {
+    opacity: 0.25;
+    background: rgba(215, 82, 9, 0.05) !important;
+    border: 1px dashed rgba(215, 82, 9, 0.3);
+    border-radius: 6px;
+}
+
+/* Drop Placeholder */
+.pl-drag-placeholder {
+    height: 4px;
+    background: var(--primary-color);
+    border-radius: 2px;
+    margin: 2px 16px;
+    transition: opacity 0.15s;
+    animation: plPlaceholderPulse 1s ease-in-out infinite;
+}
+
+@keyframes plPlaceholderPulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+
+/* Draggable row grid — needs extra column for handle */
+.pl-row-draggable {
+    grid-template-columns: 24px 40px 1fr 200px auto !important;
+}
+
+/* Row Actions (owner) */
+.pl-row-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+/* Row Actions (visitor — queue + duration) */
+.pl-row-actions-visitor {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+/* Header alignment when drag handles present */
+.playlist-song-list[data-is-owner="true"] .playlist-song-header {
+    grid-template-columns: 24px 40px 1fr 200px auto;
+}
+
+/* Light theme */
+[data-theme="light"] .pl-drag-handle:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .pl-row--dragging {
+    background: rgba(215, 82, 9, 0.03) !important;
+    border-color: rgba(215, 82, 9, 0.2);
+}
+
+/* Responsive — hide drag handle column on mobile */
+@media (max-width: 768px) {
+    .pl-row-draggable {
+        grid-template-columns: 30px 1fr auto !important;
+    }
+
+    .playlist-song-list[data-is-owner="true"] .playlist-song-header {
+        grid-template-columns: 30px 1fr auto;
+    }
+
+    .pl-drag-handle {
+        display: none;
+    }
+
+    .pl-row-actions {
+        gap: 4px;
+    }
+
+    .pl-row-actions-visitor .col-duration {
+        display: none;
+    }
+}
 
 /* ══════════════════════════════════════════
    LIGHT THEME
