@@ -583,16 +583,108 @@
                                 return;
                             }
                             var maxVal = Math.max.apply(null, points.map(function(p) { return p.playCount; })) || 1;
-                            var html = '<div class="trend-chart">';
+                            var totalPlays = points.reduce(function(sum, p) { return sum + p.playCount; }, 0);
+                            var avgPlays = Math.round(totalPlays / points.length);
+
+                            var html = '<div class="trend-enhanced">';
+
+                            // ── Summary chips ──
+                            html += '<div class="trend-stats-row">';
+                            html += '<div class="trend-stat-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:4px;"><polygon points="5 3 19 12 5 21 5 3"/></svg> Total: <strong>' + totalPlays.toLocaleString() + '</strong></div>';
+                            html += '<div class="trend-stat-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:4px;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Avg: <strong>' + avgPlays.toLocaleString() + '</strong></div>';
+                            html += '<div class="trend-stat-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:4px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> Peak: <strong>' + maxVal.toLocaleString() + '</strong></div>';
+                            html += '</div>';
+
+                            // ── Chart with tooltip ──
+                            html += '<div class="trend-chart-wrapper">';
+                            html += '<div class="trend-tooltip" id="trend-tooltip"><div class="trend-tooltip-date" id="tt-date"></div><div class="trend-tooltip-plays" id="tt-plays"></div></div>';
+
+                            // Y-axis labels
+                            html += '<div class="trend-y-axis">';
+                            html += '<span>' + maxVal + '</span>';
+                            html += '<span>' + Math.round(maxVal * 0.75) + '</span>';
+                            html += '<span>' + Math.round(maxVal * 0.5) + '</span>';
+                            html += '<span>' + Math.round(maxVal * 0.25) + '</span>';
+                            html += '<span>0</span>';
+                            html += '</div>';
+
+                            html += '<div class="trend-chart-area">';
+
+                            // Grid lines
+                            html += '<div class="trend-grid-lines">';
+                            html += '<div class="trend-grid-line"></div>';
+                            html += '<div class="trend-grid-line"></div>';
+                            html += '<div class="trend-grid-line"></div>';
+                            html += '<div class="trend-grid-line"></div>';
+                            html += '</div>';
+
+                            // Average line
+                            var avgPct = Math.round((avgPlays / maxVal) * 100);
+                            html += '<div class="trend-avg-line" style="bottom:' + avgPct + '%"><span class="trend-avg-label">avg</span></div>';
+
+                            // Bars
+                            html += '<div class="trend-chart trend-chart-animated">';
                             points.forEach(function(p, i) {
                                 var pct = Math.round((p.playCount / maxVal) * 100);
-                                html += '<div class="trend-bar-col" style="animation-delay:' + (i * 30) + 'ms">' +
-                                    '<div class="trend-bar" style="height:' + Math.max(pct, 4) + '%"></div>' +
+                                var isMax = p.playCount === maxVal;
+                                var fullDate = formatPeriodFull(p.period, period);
+                                html += '<div class="trend-bar-col" style="--bar-delay:' + (i * 40) + 'ms" data-date="' + fullDate + '" data-plays="' + p.playCount + '" data-index="' + i + '">' +
+                                    '<div class="trend-bar-value">' + p.playCount + '</div>' +
+                                    '<div class="trend-bar' + (isMax ? ' trend-bar--peak' : '') + '" style="--bar-height:' + Math.max(pct, 3) + '%"></div>' +
                                     '<span class="trend-label">' + formatPeriod(p.period) + '</span>' +
                                     '</div>';
                             });
                             html += '</div>';
+
+                            html += '</div>'; // trend-chart-area
+                            html += '</div>'; // trend-chart-wrapper
+                            html += '</div>'; // trend-enhanced
+
                             container.innerHTML = html;
+
+                            // ── Tooltip hover logic ──
+                            var tooltip = document.getElementById('trend-tooltip');
+                            var ttDate = document.getElementById('tt-date');
+                            var ttPlays = document.getElementById('tt-plays');
+                            var chartWrapper = container.querySelector('.trend-chart-wrapper');
+
+                            container.querySelectorAll('.trend-bar-col').forEach(function(col) {
+                                col.addEventListener('mouseenter', function(e) {
+                                    var date = col.dataset.date;
+                                    var plays = col.dataset.plays;
+                                    ttDate.textContent = date;
+                                    ttPlays.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" style="vertical-align:-1px;margin-right:4px;"><polygon points="5 3 19 12 5 21 5 3"/></svg>' + parseInt(plays).toLocaleString() + ' plays';
+                                    tooltip.classList.add('trend-tooltip--visible');
+                                    positionTooltip(e, col);
+                                });
+
+                                col.addEventListener('mousemove', function(e) {
+                                    positionTooltip(e, col);
+                                });
+
+                                col.addEventListener('mouseleave', function() {
+                                    tooltip.classList.remove('trend-tooltip--visible');
+                                });
+                            });
+
+                            function positionTooltip(e, col) {
+                                if (!chartWrapper || !tooltip) return;
+                                var wrapperRect = chartWrapper.getBoundingClientRect();
+                                var colRect = col.getBoundingClientRect();
+                                var ttWidth = tooltip.offsetWidth || 160;
+                                var ttHeight = tooltip.offsetHeight || 60;
+
+                                var left = colRect.left - wrapperRect.left + (colRect.width / 2) - (ttWidth / 2);
+                                var top = colRect.top - wrapperRect.top - ttHeight - 12;
+
+                                // Keep within bounds
+                                if (left < 4) left = 4;
+                                if (left + ttWidth > wrapperRect.width - 4) left = wrapperRect.width - ttWidth - 4;
+                                if (top < 4) top = colRect.bottom - wrapperRect.top + 8;
+
+                                tooltip.style.left = left + 'px';
+                                tooltip.style.top = top + 'px';
+                            }
                         })
                         .catch(function() { container.innerHTML = '<p class="text-muted">Failed to load trends</p>'; });
                 }
@@ -602,6 +694,26 @@
                     if (p.length === 10) return p.substring(5);
                     if (p.indexOf('W') !== -1) return p.substring(5);
                     if (p.length === 7) return p.substring(5);
+                    return p;
+                }
+
+                function formatPeriodFull(p, periodType) {
+                    if (!p) return '';
+                    try {
+                        if (periodType === 'daily' && p.length === 10) {
+                            var d = new Date(p + 'T00:00:00');
+                            return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                        }
+                        if (periodType === 'weekly' && p.indexOf('W') !== -1) {
+                            var parts = p.split('-W');
+                            return 'Week ' + parts[1] + ', ' + parts[0];
+                        }
+                        if (periodType === 'monthly' && p.length === 7) {
+                            var parts = p.split('-');
+                            var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+                            return months[parseInt(parts[1]) - 1] + ' ' + parts[0];
+                        }
+                    } catch(e) {}
                     return p;
                 }
 
