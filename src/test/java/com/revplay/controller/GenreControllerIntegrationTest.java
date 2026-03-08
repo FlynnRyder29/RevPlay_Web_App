@@ -4,6 +4,7 @@ import com.revplay.exception.RevPlayAccessDeniedHandler;
 import com.revplay.exception.RevPlayAuthenticationEntryPoint;
 import com.revplay.model.Genre;
 import com.revplay.repository.GenreRepository;
+import com.revplay.repository.UserRepository;
 import com.revplay.service.CustomUserDetailsService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -39,6 +40,7 @@ class GenreControllerIntegrationTest {
     @MockitoBean private CustomUserDetailsService customUserDetailsService;
     @MockitoBean private RevPlayAuthenticationEntryPoint authEntryPoint;
     @MockitoBean private RevPlayAccessDeniedHandler accessDeniedHandler;
+    @MockitoBean private UserRepository userRepository;
 
 
 

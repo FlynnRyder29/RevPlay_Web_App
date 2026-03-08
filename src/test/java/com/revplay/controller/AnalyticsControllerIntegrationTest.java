@@ -4,8 +4,11 @@ import com.revplay.dto.AnalyticsDTO;
 import com.revplay.exception.ResourceNotFoundException;
 import com.revplay.exception.RevPlayAccessDeniedHandler;
 import com.revplay.exception.RevPlayAuthenticationEntryPoint;
+import com.revplay.repository.UserRepository;
 import com.revplay.service.AnalyticsService;
+import com.revplay.config.SecurityConfig;
 import com.revplay.service.CustomUserDetailsService;
+import org.springframework.context.annotation.Import;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -28,6 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * All endpoints require ARTIST role — class-level @PreAuthorize("hasRole('ARTIST')").
  */
 @WebMvcTest(AnalyticsController.class)
+@Import(SecurityConfig.class)
 @DisplayName("AnalyticsController Integration Tests")
 class AnalyticsControllerIntegrationTest {
 
@@ -37,6 +41,7 @@ class AnalyticsControllerIntegrationTest {
     @MockitoBean private CustomUserDetailsService      customUserDetailsService;
     @MockitoBean private RevPlayAuthenticationEntryPoint authEntryPoint;
     @MockitoBean private RevPlayAccessDeniedHandler    accessDeniedHandler;
+    @MockitoBean private UserRepository userRepository;
 
     @BeforeEach
     void configureSecurityHandlers() throws Exception {

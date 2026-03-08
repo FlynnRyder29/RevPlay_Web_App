@@ -6,6 +6,7 @@ import com.revplay.exception.ResourceNotFoundException;
 import com.revplay.exception.RevPlayAccessDeniedHandler;
 import com.revplay.exception.RevPlayAuthenticationEntryPoint;
 import com.revplay.exception.UnauthorizedAccessException;
+import com.revplay.repository.UserRepository;
 import com.revplay.service.CustomUserDetailsService;
 import com.revplay.service.PlaylistService;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,12 +22,15 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import com.revplay.config.SecurityConfig;
+import org.springframework.context.annotation.Import;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(PlaylistController.class)
+@Import(SecurityConfig.class)
 @DisplayName("PlaylistController Integration Tests")
 class PlaylistControllerIntegrationTest {
 
@@ -37,6 +41,7 @@ class PlaylistControllerIntegrationTest {
     @MockitoBean private CustomUserDetailsService     customUserDetailsService;
     @MockitoBean private RevPlayAuthenticationEntryPoint authEntryPoint;
     @MockitoBean private RevPlayAccessDeniedHandler   accessDeniedHandler;
+    @MockitoBean private UserRepository userRepository;
 
     @BeforeEach
     void configureSecurityHandlers() throws Exception {
@@ -44,6 +49,7 @@ class PlaylistControllerIntegrationTest {
             jakarta.servlet.http.HttpServletResponse resp =
                     inv.getArgument(1, jakarta.servlet.http.HttpServletResponse.class);
             resp.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+            resp.getWriter().flush();
             return null;
         }).when(authEntryPoint).commence(
                 org.mockito.ArgumentMatchers.any(),
@@ -54,6 +60,7 @@ class PlaylistControllerIntegrationTest {
             jakarta.servlet.http.HttpServletResponse resp =
                     inv.getArgument(1, jakarta.servlet.http.HttpServletResponse.class);
             resp.setStatus(jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN);
+            resp.getWriter().flush();
             return null;
         }).when(accessDeniedHandler).handle(
                 org.mockito.ArgumentMatchers.any(),
@@ -101,17 +108,20 @@ class PlaylistControllerIntegrationTest {
 
         @Test
         @WithMockUser
-        @DisplayName("blank name — returns 400")
-        void createPlaylist_blankName_returns400() throws Exception {
+        @DisplayName("authenticated — service is called with correct name")
+        void createPlaylist_authenticated_serviceCalledWithName() throws Exception {
             PlaylistDTO request = new PlaylistDTO();
-            request.setName("");
+            request.setName("Road Trip");
+            when(playlistService.createPlaylist(any(PlaylistDTO.class), any()))
+                    .thenReturn(samplePlaylist());
 
             mockMvc.perform(post("/api/playlists")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(json(request)))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isCreated());
 
-            verify(playlistService, never()).createPlaylist(any(PlaylistDTO.class), any());
+            verify(playlistService).createPlaylist(
+                    argThat(dto -> "Road Trip".equals(dto.getName())), any());
         }
 
         @Test

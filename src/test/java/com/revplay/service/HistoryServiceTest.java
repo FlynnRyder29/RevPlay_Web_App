@@ -9,6 +9,7 @@ import com.revplay.model.Song;
 import com.revplay.model.User;
 import java.util.List;
 import com.revplay.repository.HistoryRepository;
+import com.revplay.repository.PlayEventRepository;
 import com.revplay.repository.SongRepository;
 import com.revplay.util.SecurityUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,8 +45,9 @@ import static org.mockito.Mockito.*;
 class HistoryServiceTest {
 
     @Mock private HistoryRepository historyRepository;
-    @Mock private SongRepository    songRepository;
-    @Mock private SecurityUtils     securityUtils;
+    @Mock private SongRepository      songRepository;
+    @Mock private PlayEventRepository playEventRepository;
+    @Mock private SecurityUtils       securityUtils;
 
     @InjectMocks
     private HistoryService historyService;

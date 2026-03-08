@@ -5,6 +5,7 @@ import com.revplay.dto.HistoryDTO;
 import com.revplay.dto.HistoryRequest;
 import com.revplay.exception.RevPlayAccessDeniedHandler;
 import com.revplay.exception.RevPlayAuthenticationEntryPoint;
+import com.revplay.repository.UserRepository;
 import com.revplay.service.CustomUserDetailsService;
 import com.revplay.service.HistoryService;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -44,6 +46,7 @@ class HistoryControllerIntegrationTest {
     @MockitoBean private CustomUserDetailsService        customUserDetailsService;
     @MockitoBean private RevPlayAuthenticationEntryPoint authEntryPoint;
     @MockitoBean private RevPlayAccessDeniedHandler      accessDeniedHandler;
+    @MockitoBean private UserRepository userRepository;
 
     @BeforeEach
     void configureSecurityHandlers() throws Exception {
@@ -85,7 +88,7 @@ class HistoryControllerIntegrationTest {
             HistoryRequest request = new HistoryRequest();
             request.setSongId(1L);
 
-            mockMvc.perform(post("/api/history")
+            mockMvc.perform(post("/api/history").with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk());
@@ -100,7 +103,7 @@ class HistoryControllerIntegrationTest {
             // HistoryRequest.songId is annotated @NotNull — null value triggers 400
             HistoryRequest request = new HistoryRequest(); // songId = null
 
-            mockMvc.perform(post("/api/history")
+            mockMvc.perform(post("/api/history").with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
@@ -114,7 +117,7 @@ class HistoryControllerIntegrationTest {
             HistoryRequest request = new HistoryRequest();
             request.setSongId(1L);
 
-            mockMvc.perform(post("/api/history")
+            mockMvc.perform(post("/api/history").with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isUnauthorized());
@@ -232,7 +235,7 @@ class HistoryControllerIntegrationTest {
         void clearHistory_authenticated_returns204() throws Exception {
             doNothing().when(historyService).clearHistory();
 
-            mockMvc.perform(delete("/api/history"))
+            mockMvc.perform(delete("/api/history").with(csrf()))
                     .andExpect(status().isNoContent());
 
             verify(historyService).clearHistory();
@@ -241,7 +244,7 @@ class HistoryControllerIntegrationTest {
         @Test
         @DisplayName("unauthenticated — returns 401")
         void clearHistory_unauthenticated_returns401() throws Exception {
-            mockMvc.perform(delete("/api/history"))
+            mockMvc.perform(delete("/api/history").with(csrf()))
                     .andExpect(status().isUnauthorized());
         }
     }

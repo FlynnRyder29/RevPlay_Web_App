@@ -36,6 +36,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -545,6 +546,7 @@ class AlbumServiceImplTest {
             wireCurrentArtist();
             when(albumRepository.findById(ALBUM_ID)).thenReturn(Optional.of(album));
             when(albumRepository.countSongsByAlbumId(ALBUM_ID)).thenReturn(3);
+            when(songRepository.findByAlbumId(eq(ALBUM_ID), any(Pageable.class))).thenReturn(Page.empty());
 
             AlbumDTO result = albumService.getMyAlbumById(ALBUM_ID);
 
