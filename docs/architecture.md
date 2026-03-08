@@ -1,131 +1,135 @@
-# RevPlay — Architecture & ERD Documentation
+# 🎵 RevPlay — Architecture & ERD Documentation
+
+> Complete technical architecture of the RevPlay music streaming platform
 
 ---
 
-## 1. Entity Relationship Diagram (ERD)
+## 1. 🗃️ Entity Relationship Diagram (ERD)
+
+### 1.1 Full Database Schema
 
 ```mermaid
 erDiagram
     USERS {
-        BIGINT id PK
-        VARCHAR email UK "NOT NULL"
-        VARCHAR username UK "NOT NULL"
-        VARCHAR password_hash "NOT NULL"
-        VARCHAR display_name
-        TEXT bio
-        VARCHAR profile_picture_url
-        ENUM role "LISTENER | ARTIST | ADMIN"
-        DATETIME created_at
-        DATETIME updated_at
+        bigint id PK "AUTO_INCREMENT"
+        varchar email UK "NOT NULL"
+        varchar username UK "NOT NULL"
+        varchar password_hash "NOT NULL"
+        varchar display_name "nullable"
+        text bio "nullable"
+        varchar profile_picture_url "nullable"
+        enum role "LISTENER | ARTIST | ADMIN"
+        datetime created_at "NOT NULL"
+        datetime updated_at "NOT NULL"
     }
 
     ARTISTS {
-        BIGINT id PK
-        BIGINT user_id FK, UK "NOT NULL → users"
-        VARCHAR artist_name "NOT NULL"
-        TEXT bio
-        VARCHAR genre
-        VARCHAR profile_picture_url
-        VARCHAR banner_image_url
-        VARCHAR instagram
-        VARCHAR twitter
-        VARCHAR youtube
-        VARCHAR spotify
-        VARCHAR website
-        DATETIME created_at
-    }
-
-    ALBUMS {
-        BIGINT id PK
-        VARCHAR name "NOT NULL"
-        TEXT description
-        VARCHAR cover_image_url
-        DATE release_date
-        BIGINT artist_id FK "NOT NULL → artists"
-        DATETIME created_at
-    }
-
-    SONGS {
-        BIGINT id PK
-        VARCHAR title "NOT NULL"
-        VARCHAR genre
-        INT duration "NOT NULL (seconds)"
-        VARCHAR audio_url "NOT NULL"
-        VARCHAR cover_image_url
-        DATE release_date
-        BIGINT play_count "DEFAULT 0"
-        ENUM visibility "PUBLIC | UNLISTED | PRIVATE"
-        BIGINT artist_id FK "NOT NULL → artists"
-        BIGINT album_id FK "→ albums (nullable)"
-        DATETIME created_at
+        bigint id PK "AUTO_INCREMENT"
+        bigint user_id FK_UK "NOT NULL → users (CASCADE)"
+        varchar artist_name "NOT NULL"
+        text bio "nullable"
+        varchar genre "nullable"
+        varchar profile_picture_url "nullable"
+        varchar banner_image_url "nullable"
+        varchar instagram "nullable"
+        varchar twitter "nullable"
+        varchar youtube "nullable"
+        varchar spotify "nullable"
+        varchar website "nullable"
+        datetime created_at "NOT NULL"
     }
 
     GENRES {
-        BIGINT id PK
-        VARCHAR name UK "NOT NULL"
+        bigint id PK "AUTO_INCREMENT"
+        varchar name UK "NOT NULL"
+    }
+
+    ALBUMS {
+        bigint id PK "AUTO_INCREMENT"
+        varchar name "NOT NULL"
+        text description "nullable"
+        varchar cover_image_url "nullable"
+        date release_date "nullable"
+        bigint artist_id FK "NOT NULL → artists (CASCADE)"
+        datetime created_at "NOT NULL"
+    }
+
+    SONGS {
+        bigint id PK "AUTO_INCREMENT"
+        varchar title "NOT NULL"
+        varchar genre "nullable"
+        int duration "NOT NULL (seconds)"
+        varchar audio_url "NOT NULL"
+        varchar cover_image_url "nullable"
+        date release_date "nullable"
+        bigint play_count "DEFAULT 0"
+        enum visibility "PUBLIC | UNLISTED | PRIVATE"
+        bigint artist_id FK "NOT NULL → artists (CASCADE)"
+        bigint album_id FK "nullable → albums (SET NULL)"
+        datetime created_at "NOT NULL"
     }
 
     PLAYLISTS {
-        BIGINT id PK
-        VARCHAR name "NOT NULL"
-        TEXT description
-        BOOLEAN is_public "DEFAULT TRUE"
-        BIGINT user_id FK "NOT NULL → users"
-        DATETIME created_at
-        DATETIME updated_at
+        bigint id PK "AUTO_INCREMENT"
+        varchar name "NOT NULL"
+        text description "nullable"
+        boolean is_public "DEFAULT TRUE"
+        varchar cover_image_url "nullable"
+        bigint user_id FK "NOT NULL → users (CASCADE)"
+        datetime created_at "NOT NULL"
+        datetime updated_at "NOT NULL"
     }
 
     PLAYLIST_SONGS {
-        BIGINT id PK
-        BIGINT playlist_id FK "NOT NULL → playlists"
-        BIGINT song_id FK "NOT NULL → songs"
-        INT position "Order in playlist"
-        DATETIME added_at
+        bigint id PK "AUTO_INCREMENT"
+        bigint playlist_id FK "NOT NULL → playlists (CASCADE)"
+        bigint song_id FK "NOT NULL → songs (CASCADE)"
+        int position "Order in playlist"
+        datetime added_at "NOT NULL"
     }
 
     FAVORITES {
-        BIGINT id PK
-        BIGINT user_id FK "NOT NULL → users"
-        BIGINT song_id FK "NOT NULL → songs"
-        DATETIME created_at
+        bigint id PK "AUTO_INCREMENT"
+        bigint user_id FK "NOT NULL → users (CASCADE)"
+        bigint song_id FK "NOT NULL → songs (CASCADE)"
+        datetime created_at "NOT NULL"
     }
 
     LISTENING_HISTORY {
-        BIGINT id PK
-        BIGINT user_id FK "NOT NULL → users"
-        BIGINT song_id FK "NOT NULL → songs"
-        DATETIME played_at
+        bigint id PK "AUTO_INCREMENT"
+        bigint user_id FK "NOT NULL → users (CASCADE)"
+        bigint song_id FK "NOT NULL → songs (CASCADE)"
+        datetime played_at "NOT NULL"
     }
 
     PLAYLIST_FOLLOWS {
-        BIGINT id PK
-        BIGINT user_id FK "NOT NULL → users"
-        BIGINT playlist_id FK "NOT NULL → playlists"
-        DATETIME followed_at
+        bigint id PK "AUTO_INCREMENT"
+        bigint user_id FK "NOT NULL → users (CASCADE)"
+        bigint playlist_id FK "NOT NULL → playlists (CASCADE)"
+        datetime followed_at "NOT NULL"
     }
 
     PLAY_EVENTS {
-        BIGINT id PK
-        BIGINT song_id FK "NOT NULL → songs"
-        BIGINT user_id FK "→ users (nullable)"
-        DATETIME played_at
+        bigint id PK "AUTO_INCREMENT"
+        bigint song_id FK "NOT NULL → songs (CASCADE)"
+        bigint user_id FK "nullable → users (SET NULL)"
+        datetime played_at "NOT NULL"
     }
 
     ARTIST_REQUESTS {
-        BIGINT id PK
-        BIGINT user_id FK "NOT NULL → users"
-        VARCHAR artist_name "NOT NULL"
-        VARCHAR genre
-        TEXT reason
-        ENUM status "PENDING | APPROVED | REJECTED"
-        TEXT admin_note
-        BIGINT reviewed_by FK "→ users (nullable)"
-        DATETIME reviewed_at
-        DATETIME created_at
+        bigint id PK "AUTO_INCREMENT"
+        bigint user_id FK "NOT NULL → users"
+        varchar artist_name "NOT NULL"
+        varchar genre "nullable"
+        text reason "nullable"
+        enum status "PENDING | APPROVED | REJECTED"
+        text admin_note "nullable"
+        bigint reviewed_by FK "nullable → users"
+        datetime reviewed_at "nullable"
+        datetime created_at "NOT NULL"
     }
 
-    %% ── Relationships ──
-
+    %% ── Core Relationships ──
     USERS ||--o| ARTISTS : "can become"
     USERS ||--o{ PLAYLISTS : "creates"
     USERS ||--o{ FAVORITES : "marks"
@@ -148,42 +152,105 @@ erDiagram
     PLAYLISTS ||--o{ PLAYLIST_FOLLOWS : "followed by"
 ```
 
-### Database Indexes
+### 1.2 Relationships Summary
 
-| Table | Index | Columns | Purpose |
-|-------|-------|---------|---------|
+```mermaid
+graph LR
+    subgraph Auth["🔐 Auth Domain"]
+        U["👤 Users"]
+        AR["📝 Artist Requests"]
+    end
+
+    subgraph Music["🎵 Music Domain"]
+        A["🎤 Artists"]
+        AL["💿 Albums"]
+        S["🎵 Songs"]
+        G["🏷️ Genres"]
+    end
+
+    subgraph Social["❤️ Social Domain"]
+        P["📋 Playlists"]
+        PS["🔗 Playlist Songs"]
+        F["♥ Favorites"]
+        PF["👥 Playlist Follows"]
+    end
+
+    subgraph Analytics["📊 Analytics Domain"]
+        LH["📜 Listening History"]
+        PE["📈 Play Events"]
+    end
+
+    U -->|"1:1"| A
+    U -->|"1:N"| P
+    U -->|"1:N"| F
+    U -->|"1:N"| LH
+    U -->|"1:N"| PF
+    U -->|"1:N"| PE
+    U -->|"1:N"| AR
+
+    A -->|"1:N"| S
+    A -->|"1:N"| AL
+    AL -->|"1:N"| S
+
+    S -->|"1:N"| PS
+    S -->|"1:N"| F
+    S -->|"1:N"| LH
+    S -->|"1:N"| PE
+
+    P -->|"1:N"| PS
+    P -->|"1:N"| PF
+
+    style Auth fill:#1a1a2e,stroke:#e94560,color:#edf2f4,stroke-width:2px
+    style Music fill:#0f3460,stroke:#00d2ff,color:#edf2f4,stroke-width:2px
+    style Social fill:#16213e,stroke:#a855f7,color:#edf2f4,stroke-width:2px
+    style Analytics fill:#1b4332,stroke:#4ade80,color:#edf2f4,stroke-width:2px
+
+    style U fill:#e94560,stroke:#fff,color:#fff
+    style AR fill:#f97316,stroke:#fff,color:#fff
+    style A fill:#00d2ff,stroke:#fff,color:#000
+    style AL fill:#06b6d4,stroke:#fff,color:#000
+    style S fill:#3b82f6,stroke:#fff,color:#fff
+    style G fill:#8b5cf6,stroke:#fff,color:#fff
+    style P fill:#a855f7,stroke:#fff,color:#fff
+    style PS fill:#c084fc,stroke:#fff,color:#000
+    style F fill:#ec4899,stroke:#fff,color:#fff
+    style PF fill:#d946ef,stroke:#fff,color:#fff
+    style LH fill:#4ade80,stroke:#fff,color:#000
+    style PE fill:#22c55e,stroke:#fff,color:#000
+```
+
+### 1.3 Database Indexes
+
+| Table | Index | Column(s) | Purpose |
+|:------|:------|:----------|:--------|
 | `users` | `idx_users_email` | `email` | Login lookup |
 | `users` | `idx_users_username` | `username` | Login lookup |
-| `users` | `idx_users_role` | `role` | Admin filtering |
-| `artists` | `idx_artists_artist_name` | `artist_name` | Search |
-| `albums` | `idx_albums_artist_id` | `artist_id` | FK lookup |
-| `albums` | `idx_albums_release_date` | `release_date` | Sorting |
-| `songs` | `idx_songs_artist_id` | `artist_id` | FK lookup |
-| `songs` | `idx_songs_album_id` | `album_id` | FK lookup |
-| `songs` | `idx_songs_title` | `title` | Search |
-| `songs` | `idx_songs_genre` | `genre` | Filter |
-| `songs` | `idx_songs_visibility` | `visibility` | Filter |
+| `users` | `idx_users_role` | `role` | Admin role filtering |
+| `artists` | `idx_artists_artist_name` | `artist_name` | Search by name |
+| `albums` | `idx_albums_artist_id` | `artist_id` | FK join optimization |
+| `albums` | `idx_albums_release_date` | `release_date` | Sort by date |
+| `songs` | `idx_songs_artist_id` | `artist_id` | FK join optimization |
+| `songs` | `idx_songs_album_id` | `album_id` | FK join optimization |
+| `songs` | `idx_songs_title` | `title` | Search by title |
+| `songs` | `idx_songs_genre` | `genre` | Filter by genre |
+| `songs` | `idx_songs_visibility` | `visibility` | Filter public/private |
 | `songs` | `idx_songs_play_count` | `play_count DESC` | Trending sort |
-| `songs` | `idx_songs_release_date` | `release_date` | Sorting |
-| `playlists` | `idx_playlists_user_id` | `user_id` | FK lookup |
-| `playlists` | `idx_playlists_is_public` | `is_public` | Public browse |
-| `playlist_songs` | `idx_ps_playlist_id` | `playlist_id` | FK lookup |
-| `playlist_songs` | `idx_ps_song_id` | `song_id` | FK lookup |
-| `favorites` | `idx_fav_user_id` | `user_id` | FK lookup |
-| `favorites` | `idx_fav_song_id` | `song_id` | FK lookup |
-| `listening_history` | `idx_lh_user_id` | `user_id` | FK lookup |
-| `listening_history` | `idx_lh_song_id` | `song_id` | FK lookup |
+| `songs` | `idx_songs_release_date` | `release_date` | Sort by date |
+| `playlists` | `idx_playlists_user_id` | `user_id` | My playlists lookup |
+| `playlists` | `idx_playlists_is_public` | `is_public` | Browse public playlists |
+| `playlist_songs` | `idx_ps_playlist_id` | `playlist_id` | Playlist contents |
+| `playlist_songs` | `idx_ps_song_id` | `song_id` | Song usage lookup |
+| `favorites` | `idx_fav_user_id` | `user_id` | My favorites |
+| `favorites` | `idx_fav_song_id` | `song_id` | Song popularity |
+| `listening_history` | `idx_lh_user_id` | `user_id` | User history |
 | `listening_history` | `idx_lh_played_at` | `played_at DESC` | Recent history |
-| `playlist_follows` | `idx_pf_user_id` | `user_id` | FK lookup |
-| `playlist_follows` | `idx_pf_playlist_id` | `playlist_id` | FK lookup |
 | `play_events` | `idx_pe_song_id` | `song_id` | Analytics queries |
-| `play_events` | `idx_pe_user_id` | `user_id` | Analytics queries |
 | `play_events` | `idx_pe_played_at` | `played_at DESC` | Trend analysis |
 
-### Unique Constraints
+### 1.4 Unique Constraints
 
-| Table | Constraint | Columns |
-|-------|-----------|---------|
+| Table | Constraint | Column(s) |
+|:------|:----------|:----------|
 | `users` | `uq_users_email` | `email` |
 | `users` | `uq_users_username` | `username` |
 | `genres` | `uq_genres_name` | `name` |
@@ -194,294 +261,420 @@ erDiagram
 
 ---
 
-## 2. Application Architecture Diagram
+## 2. 🏗️ Application Architecture
+
+### 2.1 Layered Architecture
 
 ```mermaid
 graph TB
-    subgraph CLIENT["🖥️ Client Browser"]
-        HTML["Thymeleaf HTML Pages<br/>(17 pages + 7 fragments)"]
-        CSS["Modular CSS<br/>(17 files)"]
-        JS["JavaScript Modules<br/>(7 files)"]
-        AUDIO["HTML5 Audio API"]
+    subgraph Client["🖥️ Client Browser"]
+        direction LR
+        HTML["📄 Thymeleaf Pages<br/>21 pages"]
+        FRAG["🧩 Fragments<br/>7 reusable"]
+        CSS["🎨 CSS Modules<br/>19 files"]
+        JSM["⚡ JavaScript<br/>7 modules"]
+        AUD["🔊 HTML5 Audio"]
     end
 
-    subgraph SPRING_BOOT["☕ Spring Boot 3.x Application"]
-        subgraph SECURITY["🔒 Security Layer"]
-            SEC_CONFIG["SecurityConfig<br/>(URL protection, BCrypt)"]
-            AUTH_ENTRY["AuthenticationEntryPoint"]
-            ACCESS_DENIED["AccessDeniedHandler"]
-            USER_DETAILS["CustomUserDetailsService"]
-        end
+    subgraph Security["🔒 Spring Security Layer"]
+        direction LR
+        SCONF["SecurityConfig<br/>URL protection + BCrypt"]
+        UDS["CustomUserDetailsService<br/>DB auth provider"]
+        AEP["AuthenticationEntryPoint<br/>Login redirect"]
+        ADH["AccessDeniedHandler<br/>403 handling"]
+    end
 
-        subgraph MVC["🌐 MVC Controllers"]
-            AUTH_CTRL["AuthController<br/>(login, register)"]
-            PAGE_CTRL["PageController<br/>(MVC routes)"]
-            USER_CTRL["UserController<br/>(profile, picture, artist-request)"]
-            ADMIN_CTRL["AdminController<br/>(admin dashboard)"]
-            LIBRARY_CTRL["LibraryController<br/>(library page)"]
+    subgraph Controllers["🌐 Controller Layer (17 controllers)"]
+        direction TB
+        subgraph MVC["📄 MVC Controllers (5)"]
+            AC["AuthController"]
+            PC["PageController"]
+            UC["UserController"]
+            ADC["AdminController"]
+            LC["LibraryController"]
         end
-
-        subgraph REST["📡 REST API Controllers"]
-            SONG_CTRL["SongController<br/>(browse, search, filter)"]
-            ALBUM_CTRL["AlbumController<br/>(browse, detail)"]
-            ARTIST_CAT["ArtistCatalogController<br/>(artist profiles)"]
-            GENRE_CTRL["GenreController<br/>(list genres)"]
-            PLAYLIST_CTRL["PlaylistController<br/>(CRUD, add/remove songs)"]
-            PL_FOLLOW_CTRL["PlaylistFollowController<br/>(follow/unfollow)"]
-            FAV_CTRL["FavoriteController<br/>(toggle, list)"]
-            HISTORY_CTRL["HistoryController<br/>(record, list, clear)"]
-            ARTIST_MGMT["ArtistManagementController<br/>(profile, picture, banner)"]
-            ARTIST_SONG["ArtistSongController<br/>(upload, edit, delete)"]
-            ARTIST_ALBUM["ArtistAlbumController<br/>(album CRUD)"]
-            ANALYTICS_CTRL["AnalyticsController<br/>(stats, trends, fans)"]
-        end
-
-        subgraph SERVICES["⚙️ Service Layer"]
-            AUTH_SVC["AuthService"]
-            USER_SVC["UserService"]
-            ADMIN_SVC["AdminService"]
-            SONG_SVC["SongService"]
-            ALBUM_CAT_SVC["AlbumCatalogService"]
-            ARTIST_CAT_SVC["ArtistCatalogService"]
-            PLAYLIST_SVC["PlaylistService"]
-            PL_FOLLOW_SVC["PlaylistFollowService"]
-            FAV_SVC["FavoriteService"]
-            HISTORY_SVC["HistoryService"]
-            ARTIST_SVC["ArtistServiceImpl"]
-            ALBUM_SVC["AlbumServiceImpl"]
-            ANALYTICS_SVC["AnalyticsService"]
-            FILE_SVC["FileStorageService"]
-        end
-
-        subgraph DATA["📦 Data Layer"]
-            REPOS["JPA Repositories<br/>(12 repositories)"]
-            SPECS["SongSpecification<br/>(dynamic filtering)"]
-            MAPPER["SongMapper<br/>(entity ↔ DTO)"]
-            ENTITIES["JPA Entities<br/>(12 entities + 2 enums)"]
-        end
-
-        subgraph CROSSCUT["🔧 Cross-Cutting"]
-            EXCEPTION["GlobalExceptionHandler<br/>(@ControllerAdvice)"]
-            MODEL_ADVICE["GlobalModelAdvice<br/>(navbar data)"]
-            SEC_UTILS["SecurityUtils<br/>(current user helper)"]
+        subgraph REST["📡 REST API Controllers (12)"]
+            SC["SongController"]
+            ALC["AlbumController"]
+            ACC["ArtistCatalogController"]
+            GC["GenreController"]
+            PLC["PlaylistController"]
+            PLFC["PlaylistFollowController"]
+            FC["FavoriteController"]
+            HC["HistoryController"]
+            AMC["ArtistMgmtController"]
+            ASC["ArtistSongController"]
+            AALC["ArtistAlbumController"]
+            ANC["AnalyticsController"]
         end
     end
 
-    subgraph STORAGE["💾 Storage"]
-        MYSQL[("MySQL 8<br/>revplay_db<br/>(12 tables)")]
-        FLYWAY["Flyway Migrations<br/>(4 migration files)"]
-        FILESYSTEM[("Local Filesystem<br/>/uploads/<br/>(audio, images)")]
+    subgraph Services["⚙️ Service Layer (17 services)"]
+        direction LR
+        AS["AuthService"]
+        US["UserService"]
+        ADS["AdminService"]
+        SS["SongService"]
+        ALCS["AlbumCatalogService"]
+        ARCS["ArtistCatalogService"]
+        PS["PlaylistService"]
+        PLFS["PlaylistFollowService"]
+        FS["FavoriteService"]
+        HS["HistoryService"]
+        ASI["ArtistServiceImpl"]
+        ALSI["AlbumServiceImpl"]
+        ANS["AnalyticsService"]
+        FSS["FileStorageService"]
     end
 
-    subgraph TESTING["🧪 Testing"]
-        UNIT["Unit Tests (13)<br/>JUnit + Mockito"]
-        INTEGRATION["Integration Tests (9)<br/>@SpringBootTest"]
-        JACOCO["JaCoCo Coverage<br/>(≥ 70% target)"]
+    subgraph Data["📦 Data Access Layer"]
+        direction LR
+        REPO["JPA Repositories<br/>12 repositories"]
+        SPEC["SongSpecification<br/>Dynamic filtering"]
+        MAP["SongMapper<br/>Entity ↔ DTO"]
+        ENT["JPA Entities<br/>12 entities + 2 enums"]
     end
 
-    %% Client to Server connections
-    HTML --> SEC_CONFIG
-    JS -->|"PJAX / AJAX / Fetch"| REST
-    JS -->|"MVC Navigation"| MVC
-    AUDIO -->|"Stream audio"| FILESYSTEM
+    subgraph CrossCut["🔧 Cross-Cutting Concerns"]
+        direction LR
+        GEH["GlobalExceptionHandler<br/>@ControllerAdvice"]
+        GMA["GlobalModelAdvice<br/>Navbar data injection"]
+        SU["SecurityUtils<br/>Current user helper"]
+    end
 
-    %% Security Flow
-    SEC_CONFIG --> USER_DETAILS
-    SEC_CONFIG --> AUTH_ENTRY
-    SEC_CONFIG --> ACCESS_DENIED
+    subgraph Storage["💾 Persistence"]
+        direction LR
+        DB[("🐬 MySQL 8<br/>revplay_db<br/>12 tables")]
+        FW["🔄 Flyway<br/>5 migrations"]
+        FS2[("📁 Filesystem<br/>/uploads/<br/>audio + images")]
+    end
 
-    %% MVC to Services
-    AUTH_CTRL --> AUTH_SVC
-    PAGE_CTRL --> SONG_SVC
-    PAGE_CTRL --> PLAYLIST_SVC
-    PAGE_CTRL --> ARTIST_CAT_SVC
-    USER_CTRL --> USER_SVC
-    USER_CTRL --> FILE_SVC
-    ADMIN_CTRL --> ADMIN_SVC
+    Client -->|"HTTP / PJAX / AJAX"| Security
+    Security --> Controllers
+    Controllers --> Services
+    Services --> Data
+    Data --> Storage
 
-    %% REST to Services
-    SONG_CTRL --> SONG_SVC
-    ALBUM_CTRL --> ALBUM_CAT_SVC
-    ARTIST_CAT --> ARTIST_CAT_SVC
-    PLAYLIST_CTRL --> PLAYLIST_SVC
-    PL_FOLLOW_CTRL --> PL_FOLLOW_SVC
-    FAV_CTRL --> FAV_SVC
-    HISTORY_CTRL --> HISTORY_SVC
-    ARTIST_MGMT --> ARTIST_SVC
-    ARTIST_SONG --> SONG_SVC
-    ARTIST_SONG --> FILE_SVC
-    ARTIST_ALBUM --> ALBUM_SVC
-    ANALYTICS_CTRL --> ANALYTICS_SVC
-
-    %% Services to Data
-    SERVICES --> REPOS
-    SONG_SVC --> SPECS
-    SONG_SVC --> MAPPER
-    REPOS --> ENTITIES
-
-    %% Data to Storage
-    ENTITIES --> MYSQL
-    FLYWAY --> MYSQL
-    FILE_SVC --> FILESYSTEM
-
-    %% Testing
-    UNIT -.->|"tests"| SERVICES
-    INTEGRATION -.->|"tests"| REST
-    JACOCO -.->|"coverage"| UNIT
-
-    %% Styles
-    classDef clientStyle fill:#1a1a2e,stroke:#16213e,color:#e94560
-    classDef securityStyle fill:#0f3460,stroke:#16213e,color:#e2e2e2
-    classDef controllerStyle fill:#533483,stroke:#16213e,color:#e2e2e2
-    classDef serviceStyle fill:#2b2d42,stroke:#8d99ae,color:#edf2f4
-    classDef dataStyle fill:#1b4332,stroke:#40916c,color:#d8f3dc
-    classDef storageStyle fill:#3c1642,stroke:#a663cc,color:#e2e2e2
-    classDef testStyle fill:#ff6b35,stroke:#16213e,color:#ffffff
+    style Client fill:#1e1b4b,stroke:#818cf8,color:#e0e7ff,stroke-width:2px
+    style Security fill:#7f1d1d,stroke:#f87171,color:#fef2f2,stroke-width:2px
+    style Controllers fill:#1e3a5f,stroke:#60a5fa,color:#dbeafe,stroke-width:2px
+    style MVC fill:#1e3a5f,stroke:#93c5fd,color:#dbeafe,stroke-width:1px
+    style REST fill:#1e3a5f,stroke:#93c5fd,color:#dbeafe,stroke-width:1px
+    style Services fill:#2d1b69,stroke:#a78bfa,color:#ede9fe,stroke-width:2px
+    style Data fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:2px
+    style CrossCut fill:#78350f,stroke:#fbbf24,color:#fef3c7,stroke-width:2px
+    style Storage fill:#3b0764,stroke:#c084fc,color:#f5f3ff,stroke-width:2px
 ```
 
----
-
-## 3. Request Flow Diagram
+### 2.2 Request Flow
 
 ```mermaid
 sequenceDiagram
-    participant B as Browser
-    participant S as SecurityFilter
-    participant C as Controller
-    participant SV as Service
-    participant R as Repository
-    participant DB as MySQL
+    actor User as 🧑 User
+    participant Browser as 🌐 Browser
+    participant Security as 🔒 SecurityFilter
+    participant Controller as 🎯 Controller
+    participant Service as ⚙️ Service
+    participant Repository as 📦 Repository
+    participant MySQL as 🐬 MySQL
 
-    B->>S: HTTP Request
-    S->>S: Check Authentication
-    alt Unauthenticated + Protected Route
-        S-->>B: Redirect → /login
-    else Authenticated or Public Route
-        S->>C: Forward Request
-        C->>SV: Business Logic
-        SV->>R: Data Access
-        R->>DB: SQL Query
-        DB-->>R: Result Set
-        R-->>SV: Entity/List
-        SV-->>C: DTO/Response
-        alt MVC Route
-            C-->>B: Thymeleaf HTML
-        else REST API
-            C-->>B: JSON Response
+    User->>Browser: Click / Navigate
+    Browser->>Security: HTTP Request
+
+    alt 🚫 Not Authenticated + Protected
+        Security-->>Browser: 302 → /login
+    else ✅ Authenticated or Public
+        Security->>Controller: Forward Request
+        Controller->>Service: Business Logic Call
+        Service->>Repository: JPA Query
+        Repository->>MySQL: SQL
+        MySQL-->>Repository: ResultSet
+        Repository-->>Service: Entity / List
+        Service-->>Controller: DTO / Model
+
+        alt 📄 MVC Route
+            Controller-->>Browser: Thymeleaf HTML Page
+        else 📡 REST API
+            Controller-->>Browser: JSON Response
         end
     end
+
+    Browser-->>User: Rendered Page / Updated UI
 ```
 
 ---
 
-## 4. Frontend Architecture
+## 3. 🎨 Frontend Architecture
+
+### 3.1 Page & Component Map
+
+```mermaid
+graph TB
+    subgraph Layout["📐 Layout System"]
+        LY["layout.html<br/>(master template)"]
+        NAV["🧭 navbar.html"]
+        SIDE["📱 sidebar.html"]
+        FOOT["📋 footer.html"]
+        PBAR["🎵 player-bar.html"]
+    end
+
+    subgraph PublicPages["🌍 Public Pages"]
+        IDX["🏠 index.html<br/>Home"]
+        LOG["🔑 login.html"]
+        REG["📝 register.html"]
+        LIB["📚 library.html"]
+        SRCH["🔍 search.html"]
+        PLY["▶️ player.html"]
+        AP["🎤 artist-profile.html"]
+        ART["👥 artists.html"]
+        ALB["💿 albums.html"]
+        AD["💿 album-detail.html"]
+        SD["🎵 song-detail.html"]
+        ABT["ℹ️ about.html"]
+    end
+
+    subgraph AuthPages["🔐 Authenticated Pages"]
+        PLL["📋 playlist.html"]
+        FAV["❤️ favorites.html"]
+        HIS["📜 history.html"]
+        PRF["👤 profile.html"]
+    end
+
+    subgraph ArtistPages["🎤 Artist Pages"]
+        ADASH["📊 artist-dashboard.html"]
+        ASNG["🎵 artist-songs.html"]
+        AALB["💿 artist-albums.html"]
+    end
+
+    subgraph AdminPages["👑 Admin Pages"]
+        ADM["⚙️ admin.html<br/>(4-tab dashboard)"]
+    end
+
+    LY --> NAV & SIDE & FOOT & PBAR
+    LY --> PublicPages & AuthPages & ArtistPages & AdminPages
+
+    subgraph SharedFragments["🧩 Shared Fragments"]
+        SC["🃏 song-card.html"]
+        IC["🎯 icon.html"]
+        PM["📋 playlist-modal.html"]
+    end
+
+    PublicPages --> SharedFragments
+    AuthPages --> SharedFragments
+
+    style Layout fill:#1e1b4b,stroke:#818cf8,color:#e0e7ff,stroke-width:2px
+    style PublicPages fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:2px
+    style AuthPages fill:#78350f,stroke:#fbbf24,color:#fef3c7,stroke-width:2px
+    style ArtistPages fill:#1e3a5f,stroke:#60a5fa,color:#dbeafe,stroke-width:2px
+    style AdminPages fill:#7f1d1d,stroke:#f87171,color:#fef2f2,stroke-width:2px
+    style SharedFragments fill:#2d1b69,stroke:#a78bfa,color:#ede9fe,stroke-width:2px
+```
+
+### 3.2 JavaScript Module Architecture
 
 ```mermaid
 graph LR
-    subgraph PAGES["Thymeleaf Pages (17)"]
-        INDEX[index.html]
-        LOGIN[login.html]
-        REGISTER[register.html]
-        LIBRARY[library.html]
-        PLAYER[player.html]
-        PLAYLIST[playlist.html]
-        FAVORITES[favorites.html]
-        HISTORY[history.html]
-        SEARCH[search.html]
-        PROFILE[profile.html]
-        ARTIST_PROF[artist-profile.html]
-        ARTIST_DASH[artist-dashboard.html]
-        ARTIST_SONGS[artist-songs.html]
-        ARTIST_ALBUMS[artist-albums.html]
-        ADMIN[admin.html]
-        ABOUT[about.html]
+    subgraph Core["🧠 Core Modules"]
+        PLAYER["🎵 player.js<br/>Audio engine, queue,<br/>keyboard shortcuts,<br/>shuffle, repeat"]
+        NAV["🧭 navigation.js<br/>PJAX router,<br/>history API,<br/>cache management"]
+        TOAST["🔔 confirm-toast.js<br/>Custom dialogs,<br/>toast notifications"]
     end
 
-    subgraph FRAGMENTS["Shared Fragments (7)"]
-        LAYOUT[layout.html]
-        NAVBAR[navbar.html]
-        SIDEBAR[sidebar.html]
-        FOOTER[footer.html]
-        PLAYER_BAR[player-bar.html]
-        SONG_CARD[song-card.html]
-        ICON[icon.html]
+    subgraph Features["⭐ Feature Modules"]
+        FAVS["❤️ favorites.js<br/>Heart toggle,<br/>optimistic UI,<br/>cross-page sync"]
+        PLACT["📋 playlist-actions.js<br/>CRUD modals,<br/>add-to-playlist,<br/>PJAX-compatible"]
     end
 
-    subgraph JS_MODULES["JavaScript (7)"]
-        PLAYER_JS["player.js<br/>(Audio engine, queue, keyboard)"]
-        NAV_JS["navigation.js<br/>(PJAX router)"]
-        FAV_JS["favorites.js<br/>(Heart toggle, sync)"]
-        PL_JS["playlist-actions.js<br/>(Modal management)"]
-        THEME_JS["theme.js<br/>(Light/dark toggle)"]
-        SIDEBAR_JS["sidebar.js<br/>(Mobile drawer)"]
-        TOAST_JS["confirm-toast.js<br/>(Notifications)"]
+    subgraph UI["🎨 UI Modules"]
+        THEME["🌓 theme.js<br/>Light/dark toggle,<br/>localStorage"]
+        SIDEBAR["📱 sidebar.js<br/>Mobile drawer,<br/>hamburger animation"]
     end
 
-    subgraph CSS_MODULES["CSS (17 modules)"]
-        BASE["base.css (variables)"]
-        CSS_LAYOUT["layout.css"]
-        COMPONENTS["components.css"]
-        ICONS["icons.css"]
-        CSS_PLAYER["player.css"]
-        THEME_CSS["theme.css"]
-        RESPONSIVE["responsive.css"]
-        PAGE_CSS["pages/*.css (10 files)"]
+    NAV -->|"pjax:complete"| FAVS
+    NAV -->|"pjax:complete"| PLACT
+    NAV -->|"reinit"| PLAYER
+    PLAYER -->|"song change"| FAVS
+    FAVS -->|"cache invalidate"| NAV
+    PLACT -->|"cache invalidate"| NAV
+    SIDE2[sidebar events] -.-> NAV
+
+    style Core fill:#1e1b4b,stroke:#818cf8,color:#e0e7ff,stroke-width:2px
+    style Features fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:2px
+    style UI fill:#78350f,stroke:#fbbf24,color:#fef3c7,stroke-width:2px
+```
+
+### 3.3 CSS Architecture
+
+```mermaid
+graph TB
+    subgraph Foundation["🎨 Foundation (7 files)"]
+        BASE["base.css<br/>Variables, resets"]
+        LAYOUT["layout.css<br/>Grid, nav, sidebar, footer"]
+        COMP["components.css<br/>Buttons, forms, modals, cards"]
+        ICONS["icons.css<br/>SVG icon system"]
+        PCSS["player.css<br/>Audio player, queue"]
+        TCSS["theme.css<br/>Light/dark overrides"]
+        RCSS["responsive.css<br/>3 breakpoints"]
     end
 
-    LAYOUT --> NAVBAR
-    LAYOUT --> SIDEBAR
-    LAYOUT --> FOOTER
-    LAYOUT --> PLAYER_BAR
+    subgraph Pages["📄 Page Styles (12 files)"]
+        PA["about.css"]
+        PD["admin.css"]
+        PL["album.css"]
+        PR["artist.css"]
+        PU["auth.css"]
+        PH["history.css"]
+        PO["home.css"]
+        PI["library.css"]
+        PP["playlist.css"]
+        PF["profile.css"]
+        PS["search.css"]
+        PSD["song-detail.css"]
+    end
 
-    PAGES --> LAYOUT
-    PAGES --> SONG_CARD
-    PAGES --> ICON
+    BASE --> LAYOUT --> COMP --> ICONS --> PCSS --> TCSS --> RCSS
+    RCSS --> Pages
 
-    LAYOUT --> CSS_MODULES
-    LAYOUT --> JS_MODULES
+    style Foundation fill:#1e1b4b,stroke:#818cf8,color:#e0e7ff,stroke-width:2px
+    style Pages fill:#2d1b69,stroke:#a78bfa,color:#ede9fe,stroke-width:2px
 ```
 
 ---
 
-## 5. Role-Based Access Control
+## 4. 🔐 Role-Based Access Control
 
 ```mermaid
 graph TD
-    subgraph ROLES["User Roles"]
-        LISTENER["🎧 LISTENER<br/>(Default role)"]
-        ARTIST["🎤 ARTIST<br/>(Upgraded via request)"]
-        ADMIN_ROLE["👑 ADMIN<br/>(System administrator)"]
+    subgraph Roles["User Roles"]
+        L["🎧 LISTENER<br/><i>Default role</i>"]
+        A["🎤 ARTIST<br/><i>Upgraded via request</i>"]
+        AD["👑 ADMIN<br/><i>System administrator</i>"]
     end
 
-    subgraph LISTENER_ACCESS["Listener Permissions"]
-        L1["Browse & search songs"]
-        L2["Create/manage playlists"]
-        L3["Toggle favorites"]
-        L4["View listening history"]
-        L5["Follow playlists"]
-        L6["Edit profile"]
-        L7["Request artist upgrade"]
+    subgraph ListenerPerms["🎧 Listener Permissions"]
+        L1["🔍 Browse & search songs"]
+        L2["📋 Create/manage playlists"]
+        L3["❤️ Toggle favorites"]
+        L4["📜 View listening history"]
+        L5["👥 Follow playlists"]
+        L6["👤 Edit profile & picture"]
+        L7["📝 Request artist upgrade"]
+        L8["💿 Browse albums & artists"]
     end
 
-    subgraph ARTIST_ACCESS["Artist Permissions (+ Listener)"]
-        A1["Upload songs (audio + metadata)"]
-        A2["Create/manage albums"]
-        A3["View analytics dashboard"]
-        A4["Edit artist profile & social links"]
-        A5["Toggle song visibility"]
+    subgraph ArtistPerms["🎤 Artist Permissions"]
+        A1["⬆️ Upload songs with audio"]
+        A2["💿 Create/manage albums"]
+        A3["📊 Analytics dashboard"]
+        A4["🖼️ Edit artist profile/banner"]
+        A5["🔒 Toggle song visibility"]
+        A6["🔗 Add social media links"]
     end
 
-    subgraph ADMIN_ACCESS["Admin Permissions (+ All)"]
-        AD1["View admin dashboard"]
-        AD2["Manage users (search, role change, delete)"]
-        AD3["Approve/reject artist requests"]
-        AD4["Delete songs & playlists"]
-        AD5["View growth & role analytics"]
+    subgraph AdminPerms["👑 Admin Permissions"]
+        AD1["📊 Admin dashboard"]
+        AD2["👥 Manage all users"]
+        AD3["✅ Approve/reject artist requests"]
+        AD4["🗑️ Delete any song/playlist"]
+        AD5["📈 View growth analytics"]
+        AD6["🔄 Change user roles"]
     end
 
-    LISTENER --> LISTENER_ACCESS
-    ARTIST --> ARTIST_ACCESS
-    ADMIN_ROLE --> ADMIN_ACCESS
+    L --> ListenerPerms
+    A --> ArtistPerms
+    AD --> AdminPerms
 
-    LISTENER -->|"Artist Request<br/>(Admin Approval)"| ARTIST
+    L -->|"Artist Request<br/>→ Admin Approval"| A
+
+    style Roles fill:#1e1b4b,stroke:#818cf8,color:#e0e7ff,stroke-width:2px
+    style ListenerPerms fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:2px
+    style ArtistPerms fill:#1e3a5f,stroke:#60a5fa,color:#dbeafe,stroke-width:2px
+    style AdminPerms fill:#7f1d1d,stroke:#f87171,color:#fef2f2,stroke-width:2px
+    style L fill:#22c55e,stroke:#fff,color:#fff,stroke-width:2px
+    style A fill:#3b82f6,stroke:#fff,color:#fff,stroke-width:2px
+    style AD fill:#ef4444,stroke:#fff,color:#fff,stroke-width:2px
 ```
+
+---
+
+## 5. 🧪 Testing Architecture
+
+```mermaid
+graph TB
+    subgraph UnitTests["🔬 Unit Tests (15 files)"]
+        UT1["AuthServiceTest"]
+        UT2["UserServiceTest"]
+        UT3["AdminServiceTest"]
+        UT4["CustomUserDetailsServiceTest"]
+        UT5["SongServiceTest"]
+        UT6["ArtistCatalogServiceTest"]
+        UT7["AlbumCatalogServiceTest"]
+        UT8["AlbumServiceImplTest"]
+        UT9["ArtistServiceImplTest"]
+        UT10["PlaylistServiceTest"]
+        UT11["PlaylistFollowServiceTest"]
+        UT12["FavoriteServiceTest"]
+        UT13["HistoryServiceTest"]
+        UT14["FileStorageServiceTest"]
+        UT15["AnalyticsServiceTest"]
+    end
+
+    subgraph IntegTests["🧩 Integration Tests (17 files)"]
+        IT1["AuthControllerIT"]
+        IT2["UserControllerIT"]
+        IT3["AdminControllerIT"]
+        IT4["PageControllerIT"]
+        IT5["LibraryControllerIT"]
+        IT6["SongControllerIT"]
+        IT7["AlbumControllerIT"]
+        IT8["ArtistCatalogControllerIT"]
+        IT9["ArtistManagementControllerIT"]
+        IT10["ArtistSongControllerIT"]
+        IT11["ArtistAlbumControllerIT"]
+        IT12["GenreControllerIT"]
+        IT13["PlaylistControllerIT"]
+        IT14["PlaylistFollowControllerIT"]
+        IT15["FavoriteControllerIT"]
+        IT16["HistoryControllerIT"]
+        IT17["AnalyticsControllerIT"]
+    end
+
+    subgraph TestUtils["🛠️ Test Utilities (3 files)"]
+        TU1["IntegrationTestBase"]
+        TU2["TestDataBuilder"]
+        TU3["TestConstants"]
+    end
+
+    UnitTests -->|"JUnit + Mockito"| Services["⚙️ Services"]
+    IntegTests -->|"@SpringBootTest"| API["📡 REST APIs"]
+    TestUtils --> UnitTests & IntegTests
+
+    JACOCO["📊 JaCoCo<br/>Coverage ≥ 70%"] -.-> UnitTests & IntegTests
+
+    style UnitTests fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:2px
+    style IntegTests fill:#1e3a5f,stroke:#60a5fa,color:#dbeafe,stroke-width:2px
+    style TestUtils fill:#78350f,stroke:#fbbf24,color:#fef3c7,stroke-width:2px
+    style JACOCO fill:#7f1d1d,stroke:#f87171,color:#fef2f2,stroke-width:2px
+```
+
+---
+
+## 6. 📊 File Statistics
+
+| Category | Count | Details |
+|:---------|:-----:|:--------|
+| 🗃️ Models | 14 | 12 entities + 2 enums |
+| 🌐 Controllers | 17 | 5 MVC + 12 REST |
+| ⚙️ Services | 17 | Business logic layer |
+| 📦 DTOs | 17 | Request/response objects |
+| 📚 Repositories | 12 | Spring Data JPA |
+| 📄 Templates | 21 | Thymeleaf pages |
+| 🧩 Fragments | 7 | Reusable components |
+| 🎨 CSS | 19 | 7 foundation + 12 page-specific |
+| ⚡ JS | 7 | Player, navigation, favorites, etc. |
+| 🧪 Tests | 35 | 15 unit + 17 integration + 3 utilities |
+| 🔧 Config | 3 | Security, Web, ModelAdvice |
+| ⚠️ Exceptions | 8 | Custom exceptions + handlers |
+| 🔄 Migrations | 5 | Flyway SQL files |
+| 🧰 Other | 3 | Mapper, Specification, SecurityUtils |
+| **TOTAL** | **~155** | Java + HTML + CSS + JS + SQL |

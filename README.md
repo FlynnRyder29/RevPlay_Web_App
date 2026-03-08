@@ -8,7 +8,12 @@
 [![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.4-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
 [![Thymeleaf](https://img.shields.io/badge/Thymeleaf-3.x-005F0F?style=for-the-badge&logo=thymeleaf&logoColor=white)](https://www.thymeleaf.org/)
-[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
+[![Tests](https://img.shields.io/badge/Tests-35_passing-22c55e?style=for-the-badge&logo=junit5&logoColor=white)](#testing)
+[![Coverage](https://img.shields.io/badge/Coverage-≥70%25-4ade80?style=for-the-badge)](docs/architecture.md)
+
+---
+
+🏠 **Home** · 🔍 **Search** · 📚 **Library** · 📋 **Playlists** · ❤️ **Favorites** · 📜 **History** · 🎤 **Artist Dashboard** · 👑 **Admin Panel**
 
 </div>
 
@@ -16,160 +21,213 @@
 
 ## 📋 Table of Contents
 
-- [Overview](#overview)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Architecture](#architecture)
-- [Prerequisites](#prerequisites)
-- [Setup & Installation](#setup--installation)
-- [Running the Application](#running-the-application)
-- [Project Structure](#project-structure)
-- [API Documentation](#api-documentation)
-- [Testing](#testing)
-- [Team](#team)
+- [Overview](#-overview)
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [Architecture](#-architecture)
+- [Prerequisites](#-prerequisites)
+- [Setup & Installation](#-setup--installation)
+- [Running the Application](#-running-the-application)
+- [Project Structure](#-project-structure)
+- [API Endpoints](#-api-endpoints)
+- [Testing](#-testing)
+- [Team](#-team)
 
 ---
 
-## Overview
+## 🌟 Overview
 
-**RevPlay** is a comprehensive music streaming web application that allows users to browse, search, and play music, create playlists, follow artists, and interact with a rich music library. Artists can upload music, manage albums, and track analytics. Administrators can manage users, approve artist requests, and monitor platform growth.
+**RevPlay** is a comprehensive music streaming web application that lets users browse, search, and play music, create playlists, follow artists, and interact with a rich music library. Artists can upload and manage their music, track analytics, and build their audience. Administrators can manage users, approve artist requests, and monitor platform growth.
 
-Built as a monolithic Spring Boot application with server-side rendering via Thymeleaf, the platform features a full-featured HTML5 audio player with keyboard shortcuts, PJAX-powered SPA-like navigation, responsive design with light/dark themes, and a modular CSS architecture.
+### Key Highlights
+
+| Feature | Description |
+|:--------|:------------|
+| 🎵 **Full Music Player** | HTML5 Audio with queue, shuffle, 3-mode repeat, keyboard shortcuts |
+| ⚡ **PJAX Navigation** | SPA-like page transitions without full page reloads |
+| 🌓 **Light/Dark Themes** | Toggle with localStorage persistence |
+| 📱 **Fully Responsive** | 3 breakpoints (1024px, 768px, 480px) with mobile sidebar |
+| 🎨 **Modular CSS** | 19 focused CSS files for maintainability |
+| 🔒 **Role-Based Access** | LISTENER → ARTIST → ADMIN with upgrade workflow |
+| 📊 **Analytics Dashboard** | Play counts, trends, top listeners, fan tracking |
+| 🧪 **35 Tests** | 15 unit + 17 integration tests, ≥70% coverage |
 
 ---
 
-## Features
+## ✨ Features
 
 ### 🎧 Listener Features
-- **Music Browsing** — Browse songs by genre, artist, album, or search by keyword
-- **Advanced Filtering** — Filter songs by genre, artist, album, and release year using JPA Specifications
-- **Music Player** — Full HTML5 Audio player with play/pause, skip, seek, volume control
-- **Queue Management** — Add songs to queue, shuffle, repeat (off/one/all), queue sidebar
-- **Keyboard Shortcuts** — Space (play/pause), ← → (skip), M (mute), S (shuffle), R (repeat)
-- **Playlists** — Create, edit, delete playlists; add/remove/reorder songs; public/private toggle
-- **Favorites** — Heart toggle on any song card with optimistic UI and pop animation
-- **Listening History** — Timeline view with relative timestamps, play all, shuffle, clear
-- **Follow Playlists** — Follow/unfollow public playlists from other users
-- **Profile Management** — Edit display name, bio, upload profile picture with live preview
+| Feature | Description |
+|:--------|:------------|
+| 🔍 **Music Browsing** | Browse songs by genre, artist, album with pagination |
+| 🎯 **Advanced Search** | Full-text search + multi-filter (genre, artist, album, year) |
+| ▶️ **Music Player** | Play/pause, skip, seek, volume control |
+| 🔀 **Queue Management** | Add to queue, shuffle, repeat (off/one/all) |
+| ⌨️ **Keyboard Shortcuts** | `Space` play/pause, `←→` skip, `M` mute, `S` shuffle, `R` repeat |
+| 📋 **Playlists** | Create, edit, delete, add/remove/reorder songs, public/private |
+| ❤️ **Favorites** | Heart toggle with optimistic UI & pop animation |
+| 📜 **Listening History** | Timeline view, relative timestamps, play all, clear |
+| 👥 **Follow Playlists** | Follow/unfollow public playlists from other users |
+| 👤 **Profile** | Edit name, bio, upload profile picture with live preview |
+| 💿 **Album/Song Detail** | Dedicated detail pages with track lists |
+| 🎤 **Artist Profiles** | Browse artists, view profiles with social links |
 
 ### 🎤 Artist Features
-- **Artist Request** — Listeners can request to become an artist (admin approval required)
-- **Song Upload** — Upload audio files with metadata (title, genre, duration, cover image)
-- **Album Management** — Create/edit/delete albums, add/remove songs
-- **Visibility Control** — Set songs as Public, Unlisted, or Private
-- **Analytics Dashboard** — Overview stats, per-song play counts, listening trends, top listeners, fan grid
-- **Profile Settings** — Upload profile picture, banner image, add social media links
+| Feature | Description |
+|:--------|:------------|
+| 📝 **Artist Request** | Listeners can apply to become an artist (admin approval) |
+| ⬆️ **Song Upload** | Upload audio + metadata (drag-drop, cover image, genre) |
+| 💿 **Album Management** | Create/edit/delete albums, manage tracks |
+| 🔒 **Visibility Control** | Public / Unlisted / Private per song |
+| 📊 **Analytics** | Per-song plays, listening trends, top listeners, fan grid |
+| 🖼️ **Profile Settings** | Profile picture, banner, bio, social links |
 
 ### 👑 Admin Features
-- **Admin Dashboard** — 4-tab layout (Overview, Users, Content, Reports)
-- **User Management** — Search, filter, paginate users; change roles; delete users
-- **Artist Request Management** — Approve/reject artist upgrade requests with notes
-- **Content Moderation** — Delete songs and playlists
-- **Analytics** — Role distribution, new user growth, top songs by play count
+| Feature | Description |
+|:--------|:------------|
+| 📊 **Dashboard** | 4-tab layout (Overview, Users, Content, Reports) |
+| 👥 **User Management** | Search, filter, paginate, change roles, delete |
+| ✅ **Artist Requests** | Approve/reject with reason notes |
+| 🗑️ **Content Moderation** | Delete any song or playlist |
+| 📈 **Growth Analytics** | Role distribution, user growth, top songs |
 
-### 🎨 UI/UX Features
-- **Responsive Design** — 3 breakpoints (1024px, 768px, 480px)
-- **Light/Dark Theme** — Toggle with localStorage persistence
-- **PJAX Navigation** — SPA-like page transitions without full page reloads
-- **Mobile Sidebar** — Slide-in drawer with hamburger toggle and overlay
-- **Modular CSS** — 17 focused CSS files (base, layout, components, icons, player, pages, theme, responsive)
-- **Custom Notifications** — Themed confirm dialogs and toast notifications
-- **SVG Icons** — Clean SVG icons throughout (no emoji dependencies)
-
----
-
-## Tech Stack
-
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| **Language** | Java 17+ | Core application language |
-| **Framework** | Spring Boot 3.4 | Web framework, DI, auto-configuration |
-| **Web** | Spring MVC | REST controllers + MVC page routing |
-| **Security** | Spring Security + BCrypt | Authentication, authorization, session management |
-| **ORM** | Spring Data JPA / Hibernate | Database access, entity mapping |
-| **Database** | MySQL 8 | Relational data storage |
-| **Migrations** | Flyway | Database schema versioning |
-| **Templating** | Thymeleaf | Server-side HTML rendering |
-| **Frontend** | Vanilla JS, HTML5, CSS3 | Interactive UI, audio player, PJAX |
-| **Testing** | JUnit + Mockito + JaCoCo | Unit tests, mocking, code coverage |
-| **API Docs** | Springdoc OpenAPI (Swagger) | Auto-generated API documentation |
-| **Build** | Maven | Dependency management, build lifecycle |
-| **Utilities** | Lombok, MapStruct | Boilerplate reduction, DTO mapping |
+### 🎨 UI/UX
+| Feature | Description |
+|:--------|:------------|
+| 📱 **Responsive** | Desktop → Tablet → Mobile → Small Mobile |
+| 🌓 **Themes** | Light/dark toggle persisted to localStorage |
+| ⚡ **PJAX** | SPA-like navigation, no full reloads |
+| 📱 **Mobile Sidebar** | Slide-in drawer with hamburger toggle |
+| 🔔 **Notifications** | Custom themed confirm dialogs & toast messages |
+| 🃏 **SVG Icons** | Clean vector icons throughout (no emojis) |
+| 💎 **Glassmorphism** | Modern UI with backdrop blur modals |
 
 ---
 
-## Architecture
+## 🛠️ Tech Stack
 
-> Complete diagrams available in [`docs/architecture.md`](docs/architecture.md)
+```mermaid
+graph LR
+    subgraph Backend["☕ Backend"]
+        JAVA["Java 17+"]
+        SB["Spring Boot 3.4"]
+        SM["Spring MVC"]
+        SS["Spring Security"]
+        JPA["Spring Data JPA"]
+        FW["Flyway"]
+    end
 
-### High-Level Architecture
+    subgraph Frontend["🎨 Frontend"]
+        TH["Thymeleaf"]
+        CSS["CSS3 (19 modules)"]
+        JS["Vanilla JS (7 modules)"]
+        H5["HTML5 Audio API"]
+    end
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     Client Browser                          │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌────────────┐  │
-│  │ Thymeleaf│  │ CSS (17) │  │  JS (7)  │  │ HTML5 Audio│  │
-│  │ HTML(17) │  │ Modules  │  │ Modules  │  │    API     │  │
-│  └────┬─────┘  └──────────┘  └────┬─────┘  └────────────┘  │
-│       │    MVC / PJAX / AJAX      │                         │
-└───────┼───────────────────────────┼─────────────────────────┘
-        │                           │
-┌───────▼───────────────────────────▼─────────────────────────┐
-│              Spring Boot 3.x Application                     │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │     Security Layer (Spring Security + BCrypt)       │    │
-│  └─────────────────────────┬───────────────────────────┘    │
-│  ┌─────────────┐  ┌───────▼──────────┐                      │
-│  │ MVC (5)     │  │ REST API (12)    │  ← Controllers       │
-│  └──────┬──────┘  └───────┬──────────┘                      │
-│         └────────┬────────┘                                  │
-│  ┌───────────────▼─────────────────────────────────────┐    │
-│  │          Service Layer (17 services)                 │    │
-│  └───────────────┬─────────────────────────────────────┘    │
-│  ┌───────────────▼───────────────┐  ┌──────────────────┐    │
-│  │  JPA Repositories (12)       │  │ FileStorageService│    │
-│  │  + SongSpecification         │  │                   │    │
-│  └───────────────┬───────────────┘  └────────┬─────────┘    │
-└──────────────────┼───────────────────────────┼──────────────┘
-                   │                           │
-          ┌────────▼────────┐         ┌────────▼────────┐
-          │   MySQL 8       │         │  Local Filesystem│
-          │  (12 tables)    │         │   /uploads/      │
-          │  Flyway managed │         │  (audio, images) │
-          └─────────────────┘         └─────────────────┘
+    subgraph DB["💾 Database"]
+        MY["MySQL 8"]
+    end
+
+    subgraph Test["🧪 Testing"]
+        JU["JUnit"]
+        MO["Mockito"]
+        JC["JaCoCo"]
+    end
+
+    subgraph Tools["🧰 Tools"]
+        MV["Maven"]
+        LO["Lombok"]
+        MS["MapStruct"]
+        SW["Swagger/OpenAPI"]
+    end
+
+    Backend --> Frontend
+    Backend --> DB
+    Backend --> Test
+
+    style Backend fill:#1e3a5f,stroke:#60a5fa,color:#dbeafe,stroke-width:2px
+    style Frontend fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:2px
+    style DB fill:#3b0764,stroke:#c084fc,color:#f5f3ff,stroke-width:2px
+    style Test fill:#7f1d1d,stroke:#f87171,color:#fef2f2,stroke-width:2px
+    style Tools fill:#78350f,stroke:#fbbf24,color:#fef3c7,stroke-width:2px
 ```
 
+| Layer | Technology | Version |
+|:------|:-----------|:--------|
+| **Language** | Java | 17+ |
+| **Framework** | Spring Boot | 3.4.x |
+| **Web** | Spring MVC | — |
+| **Security** | Spring Security + BCrypt | — |
+| **ORM** | Spring Data JPA / Hibernate | — |
+| **Database** | MySQL | 8.0+ |
+| **Migrations** | Flyway | Community |
+| **Templating** | Thymeleaf | 3.x |
+| **Frontend** | Vanilla JS + HTML5 + CSS3 | — |
+| **Testing** | JUnit + Mockito + JaCoCo | — |
+| **API Docs** | Springdoc OpenAPI (Swagger) | 2.8.5 |
+| **Build** | Maven | 3.9+ |
+| **Utilities** | Lombok, MapStruct | — |
+
 ---
 
-## Prerequisites
+## 🏗️ Architecture
 
-Before you begin, ensure you have the following installed:
+> 📐 **Complete diagrams & ERD:** [`docs/architecture.md`](docs/architecture.md)
 
-| Software | Version | Download |
-|----------|---------|----------|
-| **Java JDK** | 17 or higher | [OpenJDK](https://openjdk.org/) |
-| **Maven** | 3.9+ | [Maven](https://maven.apache.org/) |
-| **MySQL** | 8.0+ | [MySQL](https://dev.mysql.com/downloads/) |
-| **Git** | Latest | [Git](https://git-scm.com/) |
-| **IDE** (recommended) | IntelliJ IDEA | [IntelliJ](https://www.jetbrains.com/idea/) |
+### High-Level Overview
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                        🖥️ Client Browser                        │
+│   21 Thymeleaf Pages  ·  7 Fragments  ·  19 CSS  ·  7 JS       │
+│   HTML5 Audio Player  ·  PJAX Navigation  ·  Light/Dark Theme   │
+├──────────────────────────────────────────────────────────────────┤
+│                    🔒 Spring Security Layer                      │
+│      BCrypt · Session Auth · Role-Based URL Protection           │
+├──────────────────────────────────────────────────────────────────┤
+│                   🌐 Controller Layer (17)                       │
+│         5 MVC Controllers  ·  12 REST API Controllers            │
+├──────────────────────────────────────────────────────────────────┤
+│                    ⚙️ Service Layer (17)                         │
+│      Business Logic  ·  File Storage  ·  Analytics Engine        │
+├──────────────────────────────────────────────────────────────────┤
+│                   📦 Data Access Layer                           │
+│     12 JPA Repositories  ·  SongSpecification  ·  SongMapper    │
+├──────────────────────────────────────────────────────────────────┤
+│               💾 MySQL 8 (12 tables, Flyway)                    │
+│               📁 Local Filesystem (/uploads/)                    │
+└──────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## Setup & Installation
+## 📋 Prerequisites
 
-### 1. Clone the Repository
+| Software | Version | Required |
+|:---------|:--------|:---------|
+| ☕ Java JDK | 17+ | ✅ |
+| 📦 Maven | 3.9+ | ✅ |
+| 🐬 MySQL | 8.0+ | ✅ |
+| 🔀 Git | Latest | ✅ |
+| 💻 IDE | IntelliJ IDEA (recommended) | Optional |
+
+---
+
+## 🚀 Setup & Installation
+
+### 1️⃣ Clone the Repository
 ```bash
 git clone https://github.com/your-username/revplay.git
 cd revplay/Revplay_P2
 ```
 
-### 2. Create the MySQL Database
+### 2️⃣ Create MySQL Database
 ```sql
 CREATE DATABASE revplay_db;
 ```
-> Flyway will automatically create all tables on first startup.
+> 💡 Flyway will automatically create all 12 tables on first startup.
 
-### 3. Configure Database Credentials
+### 3️⃣ Configure Database Credentials
 Edit `src/main/resources/application.yml`:
 ```yaml
 spring:
@@ -179,127 +237,155 @@ spring:
     password: your_password    # ← Change this
 ```
 
-### 4. Build the Project
+### 4️⃣ Build the Project
 ```bash
+# On macOS/Linux:
 ./mvnw clean install -DskipTests
+
+# On Windows:
+mvnw.cmd clean install -DskipTests
 ```
-> On Windows, use `mvnw.cmd` instead of `./mvnw`
 
 ---
 
-## Running the Application
+## ▶️ Running the Application
 
-### Development Mode
+### Start the Server
 ```bash
 ./mvnw spring-boot:run
 ```
 
-The application will start at: **http://localhost:8080**
+🌐 **Open:** [http://localhost:8080](http://localhost:8080)
 
-### Default Accounts (from seed data)
+### Default Seed Data Accounts
 
 | Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@revplay.com | admin123 |
-| Artist | artist@revplay.com | artist123 |
-| Listener | user@revplay.com | user123 |
+|:-----|:------|:---------|
+| 👑 Admin | `admin@revplay.com` | `admin123` |
+| 🎤 Artist | `artist@revplay.com` | `artist123` |
+| 🎧 Listener | `user@revplay.com` | `user123` |
 
-> Note: Check `V99__seed_data.sql` for exact seed data credentials.
+> 📝 See `V99__seed_data.sql` for complete seed data (songs, albums, artists, playlists, etc.)
 
-### Available Routes
+### Application Routes
 
 | Route | Access | Description |
-|-------|--------|-------------|
-| `/` | Public | Home page (trending, playlists, artists) |
-| `/login` | Public | Login page |
-| `/register` | Public | Registration page |
-| `/library` | Public | Song library with search & filter |
-| `/search` | Public | Search results page |
-| `/player` | Public | Music player page |
-| `/artist/{id}` | Public | Artist public profile |
-| `/playlists` | Authenticated | Playlist management |
-| `/favorites` | Authenticated | Favorites page |
-| `/history` | Authenticated | Listening history |
-| `/profile` | Authenticated | User profile & settings |
-| `/artist/dashboard` | Artist | Artist dashboard |
-| `/artist/songs` | Artist | Song management |
-| `/artist/albums` | Artist | Album management |
-| `/admin/dashboard` | Admin | Admin dashboard |
-| `/about` | Public | About page |
-| `/swagger-ui.html` | Public | API documentation |
+|:------|:-------|:------------|
+| `/` | 🌍 Public | Home — trending songs, playlists, artists |
+| `/login` | 🌍 Public | Login page |
+| `/register` | 🌍 Public | Registration page |
+| `/library` | 🌍 Public | Song library with search & filters |
+| `/search` | 🌍 Public | Search results |
+| `/player` | 🌍 Public | Full-screen player |
+| `/artist/{id}` | 🌍 Public | Artist public profile |
+| `/artists` | 🌍 Public | Browse all artists |
+| `/albums` | 🌍 Public | Browse all albums |
+| `/albums/{id}` | 🌍 Public | Album detail with tracks |
+| `/songs/{id}` | 🌍 Public | Song detail page |
+| `/about` | 🌍 Public | About RevPlay |
+| `/playlists` | 🔐 Auth | Playlist management |
+| `/favorites` | 🔐 Auth | Favorites page |
+| `/history` | 🔐 Auth | Listening history |
+| `/profile` | 🔐 Auth | User profile & settings |
+| `/artist/dashboard` | 🎤 Artist | Artist dashboard & analytics |
+| `/artist/songs` | 🎤 Artist | Song management (upload, edit, delete) |
+| `/artist/albums` | 🎤 Artist | Album management |
+| `/admin/dashboard` | 👑 Admin | Admin dashboard |
+| `/swagger-ui.html` | 🌍 Public | API documentation |
 
 ---
 
-## Project Structure
+## 📂 Project Structure
 
 ```
 Revplay_P2/
-├── src/
-│   ├── main/
-│   │   ├── java/com/revplay/
-│   │   │   ├── config/          (3 files)  — SecurityConfig, WebConfig, GlobalModelAdvice
-│   │   │   ├── controller/      (17 files) — MVC + REST controllers
-│   │   │   ├── service/         (17 files) — Business logic layer
-│   │   │   ├── repository/      (12 files) — JPA data access
-│   │   │   ├── model/           (14 files) — JPA entities + enums
-│   │   │   ├── dto/             (17 files) — Request/response objects
-│   │   │   ├── exception/       (8 files)  — Custom exceptions + handlers
-│   │   │   ├── mapper/          (1 file)   — SongMapper
-│   │   │   ├── specification/   (1 file)   — SongSpecification
-│   │   │   └── util/            (1 file)   — SecurityUtils
-│   │   └── resources/
-│   │       ├── application.yml
-│   │       ├── logback-spring.xml
-│   │       ├── db/migration/    (4 files)  — Flyway SQL migrations
-│   │       ├── templates/       (17 pages + 7 fragments)
-│   │       └── static/
-│   │           ├── css/         (17 files) — Modular CSS architecture
-│   │           ├── js/          (7 files)  — Player, navigation, favorites, etc.
-│   │           └── images/      — Icons and team photos
-│   └── test/
-│       └── java/com/revplay/
-│           ├── service/         (13 unit tests)
-│           ├── controller/      (9 integration tests)
-│           └── util/            (3 test utilities)
-├── docs/
-│   ├── architecture.md          — ERD + architecture diagrams
-│   └── RevPlay_Team_Plan.md     — Team roles & responsibilities
-├── pom.xml
-└── uploads/                     — Runtime file uploads (gitignored)
+├── 📂 src/main/java/com/revplay/
+│   ├── ⚙️ config/              (3)   SecurityConfig, WebConfig, GlobalModelAdvice
+│   ├── 🌐 controller/          (17)  5 MVC + 12 REST controllers
+│   ├── ⚙️ service/             (17)  Business logic + file storage
+│   ├── 📚 repository/          (12)  Spring Data JPA
+│   ├── 📦 model/               (14)  12 entities + 2 enums
+│   ├── 📬 dto/                 (17)  Request/response DTOs
+│   ├── ⚠️ exception/           (8)   Custom exceptions + handlers
+│   ├── 🔄 mapper/              (1)   SongMapper
+│   ├── 🔍 specification/       (1)   SongSpecification
+│   └── 🔧 util/                (1)   SecurityUtils
+│
+├── 📂 src/main/resources/
+│   ├── 📄 application.yml
+│   ├── 📄 logback-spring.xml
+│   ├── 🗃️ db/migration/        (5)   Flyway SQL migrations
+│   ├── 📄 templates/           (21)  Thymeleaf pages
+│   │   └── 🧩 fragments/       (7)   Reusable components
+│   └── 🎨 static/
+│       ├── css/                (19)  7 foundation + 12 page-specific
+│       ├── js/                 (7)   Player, nav, favorites, etc.
+│       └── images/                   Icons & team photos
+│
+├── 📂 src/test/java/com/revplay/
+│   ├── 🔬 service/             (15)  Unit tests (JUnit + Mockito)
+│   ├── 🧩 controller/          (17)  Integration tests (@SpringBootTest)
+│   └── 🛠️ util/                (3)   Test utilities
+│
+├── 📂 docs/
+│   ├── 📐 architecture.md             ERD + architecture diagrams
+│   └── 📋 RevPlay_Team_Plan.md        Team roles & plan
+│
+├── 📄 pom.xml
+├── 📄 README.md
+└── 📁 uploads/                        Runtime file storage (gitignored)
 ```
 
-**Total: ~148 files** (Java + HTML + CSS + JS + SQL)
+### File Count Summary
+
+| Category | Count |
+|:---------|------:|
+| Java Models | 14 |
+| Controllers | 17 |
+| Services | 17 |
+| DTOs | 17 |
+| Repositories | 12 |
+| Templates | 21 |
+| Fragments | 7 |
+| CSS Files | 19 |
+| JS Files | 7 |
+| Tests | 35 |
+| Config | 3 |
+| Exceptions | 8 |
+| Migrations | 5 |
+| Other | 3 |
+| **Total** | **~155** |
 
 ---
 
-## API Documentation
+## 📡 API Endpoints
 
 ### Swagger UI
-With the application running, visit: **http://localhost:8080/swagger-ui.html**
+With the server running: **[http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)**
 
-### API Endpoint Groups
+### Endpoint Groups
 
-| Prefix | Controller | Methods | Description |
-|--------|-----------|---------|-------------|
-| `/api/auth` | AuthController | 2 | Register, login |
-| `/user` | UserController | 5 | Profile, picture, artist-request |
-| `/api/songs` | SongController | 4 | Browse, search, filter |
-| `/api/albums` | AlbumController | 2 | Browse, detail |
-| `/api/artists` | ArtistCatalogController | 2 | Artist profiles |
-| `/api/genres` | GenreController | 1 | Genre list |
-| `/api/playlists` | PlaylistController | 8 | CRUD, add/remove/reorder songs |
-| `/api/playlists/.../follow` | PlaylistFollowController | 3 | Follow/unfollow |
-| `/api/favorites` | FavoriteController | 4 | Toggle, list, IDs |
-| `/api/history` | HistoryController | 4 | Record, list, clear |
-| `/api/artists/me` | ArtistManagementController | 5 | Artist profile management |
-| `/api/artists/songs` | ArtistSongController | 4 | Song upload, edit, delete |
-| `/api/artists/albums` | ArtistAlbumController | 7 | Album CRUD, song management |
-| `/api/artists/analytics` | AnalyticsController | 5 | Stats, trends, fans, listeners |
-| `/api/admin` | AdminController | 9+ | Users, content, analytics, requests |
+| Prefix | Controller | # | Auth | Description |
+|:-------|:-----------|:-:|:-----|:------------|
+| `/api/auth` | AuthController | 2 | 🌍 | Register, Login |
+| `/user` | UserController | 5 | 🔐 | Profile, picture, artist-request |
+| `/api/songs` | SongController | 4 | 🌍 | Browse, search, filter, stream |
+| `/api/albums` | AlbumController | 2 | 🌍 | Browse, detail |
+| `/api/artists` | ArtistCatalogController | 2 | 🌍 | Artist profiles, list |
+| `/api/genres` | GenreController | 1 | 🌍 | Genre list |
+| `/api/playlists` | PlaylistController | 8 | 🔐 | CRUD + song management |
+| `/api/playlists/.../follow` | PlaylistFollowController | 3 | 🔐 | Follow/unfollow |
+| `/api/favorites` | FavoriteController | 4 | 🔐 | Toggle, list, IDs |
+| `/api/history` | HistoryController | 4 | 🔐 | Record, list, clear |
+| `/api/artists/me` | ArtistManagementController | 5 | 🎤 | Profile management |
+| `/api/artists/songs` | ArtistSongController | 4 | 🎤 | Upload, edit, delete |
+| `/api/artists/albums` | ArtistAlbumController | 7 | 🎤 | Album CRUD |
+| `/api/artists/analytics` | AnalyticsController | 5 | 🎤 | Stats, trends, fans |
+| `/api/admin` | AdminController | 9+ | 👑 | Users, content, requests |
 
 ---
 
-## Testing
+## 🧪 Testing
 
 ### Run All Tests
 ```bash
@@ -309,56 +395,56 @@ With the application running, visit: **http://localhost:8080/swagger-ui.html**
 ### Generate Coverage Report
 ```bash
 ./mvnw test jacoco:report
+# Report at: target/site/jacoco/index.html
 ```
-Coverage report will be at: `target/site/jacoco/index.html`
 
-### Test Summary
+### Test Coverage
 
 | Type | Count | Framework |
-|------|-------|-----------|
-| Unit Tests | 13 | JUnit + Mockito |
-| Integration Tests | 9 | @SpringBootTest |
-| Test Utilities | 3 | TestDataBuilder, TestConstants, IntegrationTestBase |
-| **Total** | **25** | **Target Coverage: ≥ 70%** |
+|:-----|------:|:----------|
+| 🔬 Unit Tests | 15 | JUnit + Mockito |
+| 🧩 Integration Tests | 17 | @SpringBootTest |
+| 🛠️ Test Utilities | 3 | Shared helpers |
+| **Total** | **35** | **Coverage Target: ≥ 70%** |
 
-### Test Coverage by Service
+<details>
+<summary>📋 Click to see all test classes</summary>
 
-| Service | Tests |
-|---------|-------|
-| AuthService | 10 tests |
-| UserService | 14 tests |
-| SongService | ≥3 tests |
-| ArtistCatalogService | ≥3 tests |
-| AlbumCatalogService | ≥3 tests |
-| AlbumServiceImpl | ≥3 tests |
-| ArtistServiceImpl | ≥3 tests |
-| PlaylistService | ≥3 tests |
-| PlaylistFollowService | ≥3 tests |
-| FavoriteService | ≥3 tests |
-| HistoryService | ≥3 tests |
-| FileStorageService | ≥3 tests |
-| AnalyticsService | ≥3 tests |
+**Unit Tests (15):**
+`AuthServiceTest` · `UserServiceTest` · `AdminServiceTest` · `CustomUserDetailsServiceTest` · `SongServiceTest` · `ArtistCatalogServiceTest` · `AlbumCatalogServiceTest` · `AlbumServiceImplTest` · `ArtistServiceImplTest` · `PlaylistServiceTest` · `PlaylistFollowServiceTest` · `FavoriteServiceTest` · `HistoryServiceTest` · `FileStorageServiceTest` · `AnalyticsServiceTest`
+
+**Integration Tests (17):**
+`AuthControllerIT` · `UserControllerIT` · `AdminControllerIT` · `PageControllerIT` · `LibraryControllerIT` · `SongControllerIT` · `AlbumControllerIT` · `ArtistCatalogControllerIT` · `ArtistManagementControllerIT` · `ArtistSongControllerIT` · `ArtistAlbumControllerIT` · `GenreControllerIT` · `PlaylistControllerIT` · `PlaylistFollowControllerIT` · `FavoriteControllerIT` · `HistoryControllerIT` · `AnalyticsControllerIT`
+
+**Utilities (3):**
+`IntegrationTestBase` · `TestDataBuilder` · `TestConstants`
+
+</details>
 
 ---
 
-## Team
+## 👥 Team
 
-| Member | Role | Responsibility |
-|--------|------|---------------|
-| **Member 1 (Lead)** | Tech Lead / Frontend / Auth | Full frontend, authentication, admin dashboard, code review |
-| **Member 3** | Music Catalog & Search | Songs, albums, artists CRUD, search/filter APIs |
-| **Member 4** | Playlists, Favorites & History | Playlist CRUD, favorites, listening history, follows |
-| **Member 5** | Artist Features & Analytics | Artist profiles, music upload, album management, analytics |
-| **Member 6** | Database, Testing & DevOps | ERD, Flyway, JUnit/Mockito suites, logging, CI |
+| # | Member | Role | Key Areas |
+|:-:|:-------|:-----|:----------|
+| 1 | **Tech Lead** | Frontend / Auth / Admin | Full frontend (21 pages, 19 CSS, 7 JS), authentication, admin dashboard, code review |
+| 3 | **Backend** | Music Catalog & Search | Songs, albums, artists CRUD, search/filter APIs, JPA Specifications |
+| 4 | **Backend** | Playlists & Social | Playlist CRUD, favorites, listening history, follow/unfollow |
+| 5 | **Backend** | Artist & Analytics | Artist profiles, music upload, album management, analytics APIs |
+| 6 | **DevOps** | Database & Testing | ERD, Flyway migrations, JUnit/Mockito test suites, JaCoCo coverage |
 
 ---
 
 ## 📄 License
 
-This project was built as part of an academic sprint project.
+This project was built as part of an academic sprint project (10-day sprint, Feb 26 – Mar 8, 2026).
 
 ---
 
 <div align="center">
-  <b>Built with ❤️ by the RevPlay Team</b>
+
+**🎵 Built with ❤️ by the RevPlay Team 🎵**
+
+[⬆ Back to Top](#-revplay--music-streaming-web-application)
+
 </div>
