@@ -92,6 +92,51 @@
             </a>
         </div>
     </div>
+    <!-- Navbar Search Handler -->
+    <script>
+        (function() {
+            var navInput = document.getElementById('nav-search-input');
+            if (!navInput) return;
+
+            navInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    e.preventDefault();
+                    var q = navInput.value.trim();
+                    if (!q) return;
+                    var url = '/search?q=' + encodeURIComponent(q);
+                    if (window.PjaxRouter && window.PjaxRouter.navigate) {
+                        window.PjaxRouter.navigate(url);
+                    } else {
+                        window.location.href = url;
+                    }
+                }
+            });
+
+            // Re-bind after PJAX navigation
+            if (window.addEventListener) {
+                document.addEventListener('pjax:complete', function() {
+                    var inp = document.getElementById('nav-search-input');
+                    if (inp && !inp.dataset.bound) {
+                        inp.dataset.bound = '1';
+                        inp.addEventListener('keydown', function(e) {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                var q = inp.value.trim();
+                                if (!q) return;
+                                var url = '/search?q=' + encodeURIComponent(q);
+                                if (window.PjaxRouter && window.PjaxRouter.navigate) {
+                                    window.PjaxRouter.navigate(url);
+                                } else {
+                                    window.location.href = url;
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+        })();
+    </script>
+
 </nav>
 
 </body>
