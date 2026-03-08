@@ -25,14 +25,12 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class PlaylistServiceTest {
 
-    // ── All dependencies that PlaylistService injects ──
-    // NOTE: No UserRepository — service constructor does not take it.
-    //       All user resolution goes through SecurityUtils.getCurrentUser().
     @Mock private PlaylistRepository       playlistRepository;
     @Mock private PlaylistSongRepository   playlistSongRepository;
     @Mock private PlaylistFollowRepository playlistFollowRepository;
     @Mock private SongRepository           songRepository;
     @Mock private SecurityUtils            securityUtils;
+    @Mock private FileStorageService       fileStorageService;
 
     @InjectMocks
     private PlaylistService playlistService;
@@ -48,7 +46,6 @@ class PlaylistServiceTest {
 
     @BeforeEach
     void setUp() {
-        // ── Users ──
         currentUser = User.builder()
                 .id(1L)
                 .username("alice")
@@ -65,7 +62,6 @@ class PlaylistServiceTest {
                 .role(Role.LISTENER)
                 .build();
 
-        // ── Artist & Song ──
         testArtist = new Artist();
         testArtist.setId(1L);
         testArtist.setArtistName("Test Artist");
@@ -78,7 +74,6 @@ class PlaylistServiceTest {
                 .visibility(Song.Visibility.PUBLIC)
                 .build();
 
-        // ── Playlists ──
         ownedPlaylist = new Playlist();
         ownedPlaylist.setId(1L);
         ownedPlaylist.setName("My Playlist");
@@ -104,10 +99,6 @@ class PlaylistServiceTest {
         otherPrivatePlaylist.setCreatedAt(LocalDateTime.of(2024, 6, 15, 10, 0));
         otherPrivatePlaylist.setUpdatedAt(LocalDateTime.of(2024, 6, 15, 10, 0));
 
-        // ── Single mock covers ALL service methods ──
-        // Every method in PlaylistService calls securityUtils.getCurrentUser().
-        // No SecurityContextHolder setup needed — that was for the old private
-        // getCurrentUser() that read from SecurityContextHolder + UserRepository.
         lenient().when(securityUtils.getCurrentUser())
                 .thenReturn(currentUser);
     }
@@ -137,7 +128,7 @@ class PlaylistServiceTest {
                         return saved;
                     });
 
-            PlaylistDTO result = playlistService.createPlaylist(dto);
+            PlaylistDTO result = playlistService.createPlaylist(dto, null);
 
             assertNotNull(result);
             assertEquals("Road Trip", result.getName());
@@ -165,7 +156,7 @@ class PlaylistServiceTest {
                         return saved;
                     });
 
-            playlistService.createPlaylist(dto);
+            playlistService.createPlaylist(dto, null);
 
             verify(playlistRepository).save(argThat(p -> !p.isPublicPlaylist()));
         }
@@ -185,9 +176,64 @@ class PlaylistServiceTest {
                         return saved;
                     });
 
-            playlistService.createPlaylist(dto);
+            playlistService.createPlaylist(dto, null);
 
             verify(playlistRepository, times(1)).save(any(Playlist.class));
+        }
+
+        @Test
+        @DisplayName("with cover image — stores file and sets coverImageUrl")
+        void createPlaylist_withCoverImage_storesFile() {
+            PlaylistDTO dto = new PlaylistDTO();
+            dto.setName("Cover Test");
+
+            org.springframework.mock.web.MockMultipartFile coverImage =
+                    new org.springframework.mock.web.MockMultipartFile(
+                            "coverImage", "cover.jpg", "image/jpeg", new byte[]{1, 2, 3});
+
+            when(fileStorageService.storeFile(any(), eq("playlist-covers")))
+                    .thenReturn("playlist-covers/123_cover.jpg");
+
+            when(playlistRepository.save(any(Playlist.class)))
+                    .thenAnswer(invocation -> {
+                        Playlist saved = invocation.getArgument(0);
+                        saved.setId(99L);
+                        saved.setCreatedAt(LocalDateTime.now());
+                        saved.setUpdatedAt(LocalDateTime.now());
+                        return saved;
+                    });
+
+            PlaylistDTO result = playlistService.createPlaylist(dto, coverImage);
+
+            assertNotNull(result);
+            verify(fileStorageService).storeFile(any(), eq("playlist-covers"));
+            verify(playlistRepository).save(argThat(p ->
+                    p.getCoverImageUrl() != null
+                            && p.getCoverImageUrl().contains("playlist-covers")
+            ));
+        }
+
+        @Test
+        @DisplayName("without cover image — coverImageUrl remains null")
+        void createPlaylist_withoutCoverImage_noCoverUrl() {
+            PlaylistDTO dto = new PlaylistDTO();
+            dto.setName("No Cover");
+
+            when(playlistRepository.save(any(Playlist.class)))
+                    .thenAnswer(invocation -> {
+                        Playlist saved = invocation.getArgument(0);
+                        saved.setId(99L);
+                        saved.setCreatedAt(LocalDateTime.now());
+                        saved.setUpdatedAt(LocalDateTime.now());
+                        return saved;
+                    });
+
+            playlistService.createPlaylist(dto, null);
+
+            verify(fileStorageService, never()).storeFile(any(), any());
+            verify(playlistRepository).save(argThat(p ->
+                    p.getCoverImageUrl() == null
+            ));
         }
     }
 
@@ -237,9 +283,6 @@ class PlaylistServiceTest {
 
     // ══════════════════════════════════════════════════════════
     //  getPublicPlaylists
-    //
-    //  - null / blank  → findByIsPublicTrueOrderByCreatedAtDesc()
-    //  - keyword       → searchPublicByName(keyword)
     // ══════════════════════════════════════════════════════════
 
     @Nested
@@ -381,13 +424,40 @@ class PlaylistServiceTest {
             dto.setDescription("Updated Desc");
             dto.setPublicPlaylist(false);
 
-            PlaylistDTO result = playlistService.updatePlaylist(1L, dto);
+            PlaylistDTO result = playlistService.updatePlaylist(1L, dto, null);
 
             assertEquals("Updated Name", result.getName());
             verify(playlistRepository).save(argThat(p ->
                     p.getName().equals("Updated Name")
                             && p.getDescription().equals("Updated Desc")
                             && !p.isPublicPlaylist()
+            ));
+        }
+
+        @Test
+        @DisplayName("own playlist with cover image — stores file and updates URL")
+        void update_withCoverImage_storesFile() {
+            when(playlistRepository.findById(1L))
+                    .thenReturn(java.util.Optional.of(ownedPlaylist));
+            when(playlistRepository.save(any(Playlist.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+            when(fileStorageService.storeFile(any(), eq("playlist-covers")))
+                    .thenReturn("playlist-covers/456_new-cover.png");
+
+            PlaylistDTO dto = new PlaylistDTO();
+            dto.setName("Cover Update");
+
+            org.springframework.mock.web.MockMultipartFile coverImage =
+                    new org.springframework.mock.web.MockMultipartFile(
+                            "coverImage", "new-cover.png", "image/png", new byte[]{1, 2, 3});
+
+            PlaylistDTO result = playlistService.updatePlaylist(1L, dto, coverImage);
+
+            assertNotNull(result);
+            verify(fileStorageService).storeFile(any(), eq("playlist-covers"));
+            verify(playlistRepository).save(argThat(p ->
+                    p.getCoverImageUrl() != null
+                            && p.getCoverImageUrl().contains("playlist-covers")
             ));
         }
 
@@ -401,7 +471,7 @@ class PlaylistServiceTest {
             dto.setName("Hacked");
 
             assertThrows(UnauthorizedAccessException.class,
-                    () -> playlistService.updatePlaylist(2L, dto));
+                    () -> playlistService.updatePlaylist(2L, dto, null));
 
             verify(playlistRepository, never()).save(any());
         }
@@ -413,16 +483,61 @@ class PlaylistServiceTest {
                     .thenReturn(java.util.Optional.empty());
 
             assertThrows(ResourceNotFoundException.class,
-                    () -> playlistService.updatePlaylist(99L, new PlaylistDTO()));
+                    () -> playlistService.updatePlaylist(99L, new PlaylistDTO(), null));
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════
+    //  removeCoverImage
+    // ══════════════════════════════════════════════════════════
+
+    @Nested
+    @DisplayName("removeCoverImage")
+    class RemoveCoverImage {
+
+        @Test
+        @DisplayName("own playlist — cover image URL set to null")
+        void removeCover_ownPlaylist_setsNull() {
+            ownedPlaylist.setCoverImageUrl("/uploads/playlist-covers/123_cover.jpg");
+
+            when(playlistRepository.findById(1L))
+                    .thenReturn(java.util.Optional.of(ownedPlaylist));
+            when(playlistRepository.save(any(Playlist.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+
+            PlaylistDTO result = playlistService.removeCoverImage(1L);
+
+            assertNull(result.getCoverImageUrl());
+            verify(playlistRepository).save(argThat(p ->
+                    p.getCoverImageUrl() == null
+            ));
+        }
+
+        @Test
+        @DisplayName("not owner — throws UnauthorizedAccessException")
+        void removeCover_notOwner_throwsUnauthorized() {
+            when(playlistRepository.findById(2L))
+                    .thenReturn(java.util.Optional.of(otherPublicPlaylist));
+
+            assertThrows(UnauthorizedAccessException.class,
+                    () -> playlistService.removeCoverImage(2L));
+
+            verify(playlistRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("playlist not found — throws ResourceNotFoundException")
+        void removeCover_notFound_throwsResourceNotFound() {
+            when(playlistRepository.findById(99L))
+                    .thenReturn(java.util.Optional.empty());
+
+            assertThrows(ResourceNotFoundException.class,
+                    () -> playlistService.removeCoverImage(99L));
         }
     }
 
     // ══════════════════════════════════════════════════════════
     //  deletePlaylist
-    //
-    //  EDGE CASE: playlist_song and playlist_follow hold FK references to
-    //  playlist.id. Must delete children first or DB throws constraint violation.
-    //  Enforced order: songs → follows → playlist.
     // ══════════════════════════════════════════════════════════
 
     @Nested
@@ -472,7 +587,6 @@ class PlaylistServiceTest {
 
             playlistService.deletePlaylist(1L);
 
-            // Enforce strict ordering: songs → follows → playlist
             InOrder order = inOrder(
                     playlistSongRepository,
                     playlistFollowRepository,
@@ -510,10 +624,6 @@ class PlaylistServiceTest {
 
     // ══════════════════════════════════════════════════════════
     //  addSongToPlaylist
-    //
-    //  - Duplicate → silent return (NOT exception)
-    //  - Position = findByPlaylist_IdOrderByPosition().size()
-    //  - Owner check before duplicate check
     // ══════════════════════════════════════════════════════════
 
     @Nested
@@ -530,7 +640,6 @@ class PlaylistServiceTest {
             when(songRepository.findById(10L))
                     .thenReturn(java.util.Optional.of(testSong));
 
-            // 3 songs already exist → new song gets position 3 (0-based)
             PlaylistSong ps1 = new PlaylistSong();
             PlaylistSong ps2 = new PlaylistSong();
             PlaylistSong ps3 = new PlaylistSong();
@@ -589,9 +698,6 @@ class PlaylistServiceTest {
 
     // ══════════════════════════════════════════════════════════
     //  removeSongFromPlaylist
-    //
-    //  - Uses existsByPlaylist_IdAndSong_Id() for check
-    //  - Uses deleteByPlaylist_IdAndSong_Id() to remove
     // ══════════════════════════════════════════════════════════
 
     @Nested
@@ -706,7 +812,6 @@ class PlaylistServiceTest {
 
             playlistService.reorderSongs(1L, List.of(20L, 10L));
 
-            // song 20 → position 1, song 10 → position 2
             verify(playlistSongRepository).saveAll(argThat(songs -> {
                 List<PlaylistSong> list = new ArrayList<>();
                 songs.forEach(list::add);
