@@ -620,6 +620,53 @@
         }
     })();
 
+    // ========================= ADD TO QUEUE — CLICK DELEGATION =========================
+
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('.add-to-queue-btn');
+        if (!btn) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Find parent container with song data
+        var container = btn.closest('.song-card')
+            || btn.closest('.playlist-song-row')
+            || btn.closest('.history-entry');
+
+        if (!container) return;
+
+        var coverEl = container.querySelector('img');
+        var song = {
+            id: container.dataset.id || container.dataset.songId || '',
+            url: container.dataset.url || '',
+            title: container.dataset.title || 'Unknown Title',
+            artist: container.dataset.artist || 'Unknown Artist',
+            cover: container.dataset.cover || (coverEl ? coverEl.src : '')
+        };
+
+        if (!song.url) {
+            if (window.__rpToast) window.__rpToast({ type: 'warning', message: 'No audio available for this song' });
+            return;
+        }
+
+        queue.push(song);
+        updateQueueDisplay();
+
+        if (window.__rpToast) {
+            window.__rpToast({
+                type: 'success',
+                message: '\u201c' + song.title + '\u201d added to queue',
+                duration: 2500
+            });
+        }
+
+        // If nothing is playing yet, start playback
+        if (!audio.src || audio.src === window.location.href) {
+            playSongAtIndex(queue.length - 1);
+        }
+    });
+
     // ========================= INIT =========================
 
     queue = buildQueueFromCards();
@@ -669,6 +716,18 @@
         if (!songs || songs.length === 0) return;
         songs.forEach(function (s) { queue.push(s); });
         updateQueueDisplay();
+
+        if (window.__rpToast) {
+            var msg = songs.length === 1
+                ? '\u201c' + songs[0].title + '\u201d added to queue'
+                : songs.length + ' songs added to queue';
+            window.__rpToast({ type: 'success', message: msg, duration: 2500 });
+        }
+
+        // If nothing is playing, start from first added song
+        if (!audio.src || audio.src === window.location.href) {
+            playSongAtIndex(queue.length - songs.length);
+        }
     };
 
     window.RevPlay.getState = function () {

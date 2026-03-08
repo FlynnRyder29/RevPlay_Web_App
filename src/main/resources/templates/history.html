@@ -19,13 +19,40 @@
         <div th:if="${historyEntries != null and !historyEntries.isEmpty()}"
              class="history-actions" style="display: flex; gap: 12px; margin: 20px 0;">
             <button class="pl-btn pl-btn--primary" id="btn-play-history">
-                ▶ Play All
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                    <polygon points="5,3 19,12 5,21"/>
+                </svg>
+                Play All
             </button>
             <button class="pl-btn pl-btn--secondary" id="btn-shuffle-history">
-                🔀 Shuffle
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="16,3 21,3 21,8"/>
+                    <line x1="4" y1="20" x2="21" y2="3"/>
+                    <polyline points="21,16 21,21 16,21"/>
+                    <line x1="15" y1="15" x2="21" y2="21"/>
+                    <line x1="4" y1="4" x2="9" y2="9"/>
+                </svg>
+                Shuffle
+            </button>
+            <button class="pl-btn pl-btn--secondary" id="btn-queue-history">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round">
+                    <line x1="3" y1="6" x2="17" y2="6"/><line x1="3" y1="12" x2="17" y2="12"/>
+                    <line x1="3" y1="18" x2="11" y2="18"/>
+                    <line x1="16" y1="16" x2="16" y2="22"/><line x1="13" y1="19" x2="19" y2="19"/>
+                </svg>
+                Add to Queue
             </button>
             <button class="pl-btn pl-btn--danger" id="btn-clear-history">
-                🗑️ Clear History
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3,6 5,6 21,6"/>
+                    <path d="M19,6l-1,14H6L5,6"/>
+                    <path d="M10,11v6"/><path d="M14,11v6"/>
+                    <path d="M9,6V4h6v2"/>
+                </svg>
+                Clear History
             </button>
         </div>
 
@@ -64,6 +91,17 @@
                             th:data-song-id="${entry.songId}"
                             title="Add to Favorites"
                             type="button">♡</button>
+                    <button class="add-to-queue-btn"
+                            th:data-song-id="${entry.songId}"
+                            title="Add to Queue"
+                            type="button">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round">
+                            <line x1="3" y1="6" x2="17" y2="6"/><line x1="3" y1="12" x2="17" y2="12"/>
+                            <line x1="3" y1="18" x2="11" y2="18"/>
+                            <line x1="16" y1="16" x2="16" y2="22"/><line x1="13" y1="19" x2="19" y2="19"/>
+                        </svg>
+                    </button>
                     <button class="song-card-add-playlist-btn"
                             th:data-song-id="${entry.songId}"
                             title="Add to Playlist"
@@ -143,6 +181,20 @@
                         if (songs.length > 0 && window.RevPlay && window.RevPlay.shuffleQueue) {
                             window.RevPlay.shuffleQueue(songs);
                             RevPlay.toast({ type: 'info', message: 'Shuffling ' + songs.length + ' songs', duration: 2500 });
+                        }
+                    });
+                }
+
+                // ══════════════════════════════════════════════════════════
+                // ADD ALL TO QUEUE
+                // ══════════════════════════════════════════════════════════
+
+                var queueBtn = document.getElementById('btn-queue-history');
+                if (queueBtn) {
+                    queueBtn.addEventListener('click', function () {
+                        var songs = getHistorySongs();
+                        if (songs.length > 0 && window.RevPlay && window.RevPlay.addToQueue) {
+                            window.RevPlay.addToQueue(songs);
                         }
                     });
                 }
