@@ -253,7 +253,7 @@
 }
 
 [data-theme="light"] .sidebar-icon-img {
-    filter: brightness(0.25);
+    filter: brightness(0.55) saturate(1.2);
 }
 
 [data-theme="light"] .sidebar-item:hover .sidebar-icon-img {

@@ -19,7 +19,11 @@
                          alt="Profile Picture"
                          class="profile-hero-img">
                     <div th:if="${user.profilePictureUrl == null}" class="profile-hero-fallback">
-                        <span th:text="${#strings.substring(user.displayName, 0, 1).toUpperCase()}">U</span>
+                        <span th:text="${user.displayName != null && !user.displayName.isEmpty()
+                            ? #strings.substring(user.displayName, 0, 1).toUpperCase()
+                            : (user.username != null && !user.username.isEmpty()
+                                ? #strings.substring(user.username, 0, 1).toUpperCase()
+                                : 'U')}">U</span>
                     </div>
                     <label for="profilePicInput" class="profile-hero-camera" title="Change picture">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -31,7 +35,8 @@
                 </div>
                 <div class="profile-hero-info">
                     <span class="profile-hero-role" th:text="${user.role}">LISTENER</span>
-                    <h1 class="profile-hero-name" th:text="${user.displayName}">Display Name</h1>
+                    <h1 class="profile-hero-name"
+                        th:text="${user.displayName != null && !user.displayName.isEmpty() ? user.displayName : user.username}">Display Name</h1>
                     <p class="profile-hero-meta">
                         <span th:text="'@' + ${user.username}">@username</span>
                         <span class="profile-hero-dot">•</span>
@@ -43,11 +48,8 @@
             </div>
         </div>
 
-        <!-- Hidden file input for picture upload -->
-        <form th:action="@{/user/profile/picture}" method="post" enctype="multipart/form-data"
-              id="profilePicForm" style="display:none;">
-            <input type="file" name="profilePicture" id="profilePicInput" accept="image/*">
-        </form>
+        <!-- Hidden file input for picture upload (AJAX) -->
+        <input type="file" name="profilePicture" id="profilePicInput" accept="image/*" style="display:none;">
 
         <div class="profile-body">
 
@@ -91,10 +93,9 @@
                     Edit Profile
                 </h2>
 
-                <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-                <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+                <div id="profile-alert" style="display:none;"></div>
 
-                <form th:action="@{/user/profile}" method="post" class="profile-form">
+                <form id="profile-edit-form" class="profile-form">
                     <div class="profile-form-row">
                         <div class="form-group">
                             <label class="profile-form-label">Email</label>
@@ -116,7 +117,7 @@
                                   placeholder="Tell us about yourself..."></textarea>
                     </div>
 
-                    <button type="submit" class="profile-save-btn">
+                    <button type="submit" class="profile-save-btn" id="profile-save-btn">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
                              stroke="currentColor" stroke-width="2" stroke-linecap="round">
                             <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
@@ -226,7 +227,7 @@
                     <div class="form-group" style="margin-bottom: 16px;">
                         <label class="profile-form-label" for="req-artist-name">Artist / Stage Name *</label>
                         <input type="text" id="req-artist-name" class="profile-form-input"
-                               th:value="${user.displayName}" required
+                               th:value="${user.displayName != null ? user.displayName : user.username}" required
                                placeholder="Your artist name">
                     </div>
 
@@ -273,21 +274,169 @@
         </div>
 
         <!-- ════════════════════════════════════════
-             SCRIPTS
+             SCRIPTS (ALL AJAX — no full page reloads)
              ════════════════════════════════════════ -->
         <script>
             (function () {
-                // Profile picture auto-submit
+                var csrfToken = (document.querySelector('meta[name="_csrf"]') || {}).content || '';
+
+                function showAlert(msg, type) {
+                    var el = document.getElementById('profile-alert');
+                    if (!el) return;
+                    el.className = 'alert ' + (type === 'success' ? 'alert-success' : 'alert-error');
+                    el.textContent = msg;
+                    el.style.display = 'block';
+                    setTimeout(function () { el.style.display = 'none'; }, 4000);
+                }
+
+                // ══════════════════════════════════════
+                //  PROFILE PICTURE UPLOAD (AJAX)
+                // ══════════════════════════════════════
+
                 var fileInput = document.getElementById('profilePicInput');
                 if (fileInput) {
                     fileInput.addEventListener('change', function (e) {
                         var file = e.target.files[0];
                         if (!file || !file.type.startsWith('image/')) return;
-                        document.getElementById('profilePicForm').submit();
+
+                        var formData = new FormData();
+                        formData.append('profilePicture', file);
+
+                        fetch('/user/profile/picture', {
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': csrfToken },
+                            body: formData
+                        })
+                            .then(function (res) {
+                                if (!res.ok) throw new Error('Upload failed');
+                                return res.text();
+                            })
+                            .then(function () {
+                                // Update the avatar image without page reload
+                                var heroImg = document.querySelector('.profile-hero-img');
+                                var heroFallback = document.querySelector('.profile-hero-fallback');
+                                var reader = new FileReader();
+                                reader.onload = function (ev) {
+                                    if (heroImg) {
+                                        heroImg.src = ev.target.result;
+                                        heroImg.style.display = '';
+                                    } else {
+                                        // Create img element
+                                        var img = document.createElement('img');
+                                        img.src = ev.target.result;
+                                        img.alt = 'Profile Picture';
+                                        img.className = 'profile-hero-img';
+                                        var avatar = document.querySelector('.profile-hero-avatar');
+                                        if (avatar) avatar.insertBefore(img, avatar.firstChild);
+                                    }
+                                    if (heroFallback) heroFallback.style.display = 'none';
+                                };
+                                reader.readAsDataURL(file);
+
+                                // Also update navbar avatar
+                                if (window.PjaxRouter && window.PjaxRouter.invalidateCache) {
+                                    window.PjaxRouter.invalidateCache('/profile');
+                                    window.PjaxRouter.invalidateCache('/');
+                                }
+
+                                if (window.RevPlay && window.RevPlay.toast) {
+                                    RevPlay.toast({ type: 'success', message: 'Profile picture updated!' });
+                                } else {
+                                    showAlert('Profile picture updated!', 'success');
+                                }
+                            })
+                            .catch(function (err) {
+                                if (window.RevPlay && window.RevPlay.toast) {
+                                    RevPlay.toast({ type: 'error', message: 'Failed to upload picture' });
+                                } else {
+                                    showAlert('Failed to upload picture', 'error');
+                                }
+                            });
+
+                        // Reset input so same file can be re-selected
+                        fileInput.value = '';
                     });
                 }
 
-                // ── Artist Request Modal ──
+                // ══════════════════════════════════════
+                //  PROFILE EDIT FORM (AJAX)
+                // ══════════════════════════════════════
+
+                var editForm = document.getElementById('profile-edit-form');
+                if (editForm) {
+                    editForm.addEventListener('submit', function (e) {
+                        e.preventDefault();
+
+                        var btn = document.getElementById('profile-save-btn');
+                        if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+
+                        var displayName = document.getElementById('displayName').value;
+                        var bio = document.getElementById('bio').value;
+
+                        // Send as form-urlencoded (same as original form POST)
+                        var params = new URLSearchParams();
+                        params.append('displayName', displayName);
+                        params.append('bio', bio);
+
+                        fetch('/user/profile', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'X-CSRF-TOKEN': csrfToken
+                            },
+                            body: params.toString()
+                        })
+                            .then(function (res) {
+                                if (!res.ok) throw new Error('Update failed');
+                                return res.text();
+                            })
+                            .then(function () {
+                                // Update hero name in-place
+                                var heroName = document.querySelector('.profile-hero-name');
+                                if (heroName) heroName.textContent = displayName || '';
+
+                                // Update avatar fallback letter
+                                var fallbackSpan = document.querySelector('.profile-hero-fallback span');
+                                if (fallbackSpan && displayName) {
+                                    fallbackSpan.textContent = displayName.charAt(0).toUpperCase();
+                                }
+
+                                // Invalidate PJAX cache
+                                if (window.PjaxRouter && window.PjaxRouter.invalidateCache) {
+                                    window.PjaxRouter.invalidateCache('/profile');
+                                    window.PjaxRouter.invalidateCache('/');
+                                }
+
+                                if (window.RevPlay && window.RevPlay.toast) {
+                                    RevPlay.toast({ type: 'success', message: 'Profile updated!' });
+                                } else {
+                                    showAlert('Profile updated!', 'success');
+                                }
+                            })
+                            .catch(function (err) {
+                                if (window.RevPlay && window.RevPlay.toast) {
+                                    RevPlay.toast({ type: 'error', message: 'Failed to update profile' });
+                                } else {
+                                    showAlert('Failed to update profile', 'error');
+                                }
+                            })
+                            .finally(function () {
+                                if (btn) {
+                                    btn.disabled = false;
+                                    btn.innerHTML =
+                                        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">' +
+                                        '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>' +
+                                        '<polyline points="17 21 17 13 7 13 7 21"/>' +
+                                        '<polyline points="7 3 7 8 15 8"/>' +
+                                        '</svg> Save Profile';
+                                }
+                            });
+                    });
+                }
+
+                // ══════════════════════════════════════
+                //  ARTIST REQUEST MODAL
+                // ══════════════════════════════════════
 
                 var modal = document.getElementById('artist-request-modal');
                 var openBtn = document.getElementById('btn-open-artist-modal');
@@ -329,8 +478,6 @@
                         submitBtn.textContent = 'Submitting...';
                         hideError();
 
-                        var csrfToken = (document.querySelector('meta[name="_csrf"]') || {}).content || '';
-
                         fetch('/user/api/artist-request', {
                             method: 'POST',
                             headers: {
@@ -350,7 +497,6 @@
                                 return res.json().then(function (d) { throw new Error(d.error || 'Request failed'); });
                             })
                             .then(function (data) {
-                                // Success — replace the upgrade card with pending state
                                 if (modal) modal.style.display = 'none';
                                 replaceWithPendingState(data.artistName, data.genre);
                             })

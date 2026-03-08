@@ -3,32 +3,31 @@
 
 <body>
 
-     <div th:fragment="card(song)" class="song-card" th:data-id="${song?.id}" th:data-url="${song?.audioUrl}"
-          th:data-title="${song?.title}" th:data-artist="${song?.artistName}">
+<div th:fragment="card(song)" class="song-card" th:data-id="${song?.id}" th:data-url="${song?.audioUrl}"
+     th:data-title="${song?.title}" th:data-artist="${song?.artistName}">
 
-          <img th:src="${song?.coverImageUrl != null ? song.coverImageUrl : 'https://www.shutterstock.com/shutterstock/photos/2626947211/display_1500/stock-vector-jazz-music-poster-design-template-2626947211.jpg'}"
-               alt="Cover">
+     <img th:src="${song?.coverImageUrl != null ? song.coverImageUrl : 'https://www.shutterstock.com/shutterstock/photos/2626947211/display_1500/stock-vector-jazz-music-poster-design-template-2626947211.jpg'}"
+          alt="Cover">
 
-          <div class="play-button-overlay">
-               <img th:src="@{/images/icons/play.png}" alt="▶" class="card-play-icon"
-                    onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
-               <span class="icon-fallback card-play-fallback" style="display:none;">▶</span>
-          </div>
-
-          <!-- Action buttons (Favorite & Add to Playlist) -->
-          <div class="song-card-actions" sec:authorize="isAuthenticated()">
-               <button class="song-card-fav-btn" th:data-song-id="${song?.id}" title="Add to Favorites"
-                    type="button">♡</button>
-               <button class="song-card-add-playlist-btn" th:data-song-id="${song?.id}" title="Add to Playlist"
-                    type="button">+</button>
-          </div>
-
-          <a th:href="@{'/songs/' + ${song?.id}}" class="song-title song-title-link"
-             th:text="${song?.title != null ? song.title : 'Unknown Title'}"
-             onclick="event.stopPropagation();">Song Title</a>
-          <div class="song-artist" th:text="${song?.artistName != null ? song.artistName : 'Unknown Artist'}">Artist
-               Name</div>
+     <div class="play-button-overlay">
+          <img th:src="@{/images/icons/play.png}" alt="▶" class="card-play-icon"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+          <span class="icon-fallback card-play-fallback" style="display:none;">▶</span>
      </div>
+
+     <!-- Action buttons (Favorite & Add to Playlist) -->
+     <div class="song-card-actions" sec:authorize="isAuthenticated()">
+          <button class="song-card-fav-btn" th:data-song-id="${song?.id}" title="Add to Favorites"
+                  type="button">♡</button>
+          <button class="song-card-add-playlist-btn" th:data-song-id="${song?.id}" title="Add to Playlist"
+                  type="button">+</button>
+     </div>
+
+     <a th:href="@{'/songs/' + ${song?.id}}" class="song-title song-title-link"
+        th:text="${song?.title != null ? song.title : 'Unknown Title'}">Song Title</a>
+     <div class="song-artist" th:text="${song?.artistName != null ? song.artistName : 'Unknown Artist'}">Artist
+          Name</div>
+</div>
 
 </body>
 
