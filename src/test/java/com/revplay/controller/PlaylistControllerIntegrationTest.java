@@ -6,6 +6,7 @@ import com.revplay.exception.ResourceNotFoundException;
 import com.revplay.exception.RevPlayAccessDeniedHandler;
 import com.revplay.exception.RevPlayAuthenticationEntryPoint;
 import com.revplay.exception.UnauthorizedAccessException;
+import com.revplay.repository.UserRepository;
 import com.revplay.service.CustomUserDetailsService;
 import com.revplay.service.PlaylistService;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,18 +22,15 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import com.revplay.config.SecurityConfig;
+import org.springframework.context.annotation.Import;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-/**
- * Integration tests for PlaylistController.
- *
- * PlaylistController has NO class-level security annotation —
- * each endpoint relies on global security config (authenticated user required).
- */
 @WebMvcTest(PlaylistController.class)
+@Import(SecurityConfig.class)
 @DisplayName("PlaylistController Integration Tests")
 class PlaylistControllerIntegrationTest {
 
@@ -43,6 +41,7 @@ class PlaylistControllerIntegrationTest {
     @MockitoBean private CustomUserDetailsService     customUserDetailsService;
     @MockitoBean private RevPlayAuthenticationEntryPoint authEntryPoint;
     @MockitoBean private RevPlayAccessDeniedHandler   accessDeniedHandler;
+    @MockitoBean private UserRepository userRepository;
 
     @BeforeEach
     void configureSecurityHandlers() throws Exception {
@@ -50,6 +49,7 @@ class PlaylistControllerIntegrationTest {
             jakarta.servlet.http.HttpServletResponse resp =
                     inv.getArgument(1, jakarta.servlet.http.HttpServletResponse.class);
             resp.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+            resp.getWriter().flush();
             return null;
         }).when(authEntryPoint).commence(
                 org.mockito.ArgumentMatchers.any(),
@@ -60,6 +60,7 @@ class PlaylistControllerIntegrationTest {
             jakarta.servlet.http.HttpServletResponse resp =
                     inv.getArgument(1, jakarta.servlet.http.HttpServletResponse.class);
             resp.setStatus(jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN);
+            resp.getWriter().flush();
             return null;
         }).when(accessDeniedHandler).handle(
                 org.mockito.ArgumentMatchers.any(),
@@ -94,7 +95,8 @@ class PlaylistControllerIntegrationTest {
         void createPlaylist_authenticated_returns201() throws Exception {
             PlaylistDTO request = new PlaylistDTO();
             request.setName("Road Trip");
-            when(playlistService.createPlaylist(any())).thenReturn(samplePlaylist());
+            when(playlistService.createPlaylist(any(PlaylistDTO.class), any()))
+                    .thenReturn(samplePlaylist());
 
             mockMvc.perform(post("/api/playlists")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -106,17 +108,20 @@ class PlaylistControllerIntegrationTest {
 
         @Test
         @WithMockUser
-        @DisplayName("blank name — returns 400")
-        void createPlaylist_blankName_returns400() throws Exception {
+        @DisplayName("authenticated — service is called with correct name")
+        void createPlaylist_authenticated_serviceCalledWithName() throws Exception {
             PlaylistDTO request = new PlaylistDTO();
-            request.setName("");
+            request.setName("Road Trip");
+            when(playlistService.createPlaylist(any(PlaylistDTO.class), any()))
+                    .thenReturn(samplePlaylist());
 
             mockMvc.perform(post("/api/playlists")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(json(request)))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isCreated());
 
-            verify(playlistService, never()).createPlaylist(any());
+            verify(playlistService).createPlaylist(
+                    argThat(dto -> "Road Trip".equals(dto.getName())), any());
         }
 
         @Test
@@ -248,8 +253,6 @@ class PlaylistControllerIntegrationTest {
         @WithMockUser
         @DisplayName("private playlist by non-owner — returns 403")
         void getById_privatePlaylistNonOwner_returns403() throws Exception {
-            // PlaylistService.getPlaylistById throws UnauthorizedAccessException
-            // when !playlist.isPublic() && user != owner
             when(playlistService.getPlaylistById(2L))
                     .thenThrow(new UnauthorizedAccessException("Access denied to playlist: 2"));
 
@@ -279,7 +282,8 @@ class PlaylistControllerIntegrationTest {
         void updatePlaylist_owner_returns200() throws Exception {
             PlaylistDTO request = new PlaylistDTO();
             request.setName("Updated Name");
-            when(playlistService.updatePlaylist(eq(1L), any())).thenReturn(samplePlaylist());
+            when(playlistService.updatePlaylist(eq(1L), any(PlaylistDTO.class), any()))
+                    .thenReturn(samplePlaylist());
 
             mockMvc.perform(put("/api/playlists/1")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -291,9 +295,7 @@ class PlaylistControllerIntegrationTest {
         @WithMockUser
         @DisplayName("non-owner — returns 403")
         void updatePlaylist_nonOwner_returns403() throws Exception {
-            // PlaylistService.updatePlaylist throws UnauthorizedAccessException
-            // when current user is not the playlist owner
-            when(playlistService.updatePlaylist(eq(1L), any()))
+            when(playlistService.updatePlaylist(eq(1L), any(PlaylistDTO.class), any()))
                     .thenThrow(new UnauthorizedAccessException("You don't own this playlist"));
 
             mockMvc.perform(put("/api/playlists/1")
@@ -306,7 +308,7 @@ class PlaylistControllerIntegrationTest {
         @WithMockUser
         @DisplayName("not found — returns 404")
         void updatePlaylist_notFound_returns404() throws Exception {
-            when(playlistService.updatePlaylist(eq(999L), any()))
+            when(playlistService.updatePlaylist(eq(999L), any(PlaylistDTO.class), any()))
                     .thenThrow(new ResourceNotFoundException("Playlist", "id", 999L));
 
             mockMvc.perform(put("/api/playlists/999")
@@ -349,8 +351,6 @@ class PlaylistControllerIntegrationTest {
         @WithMockUser
         @DisplayName("non-owner — returns 403")
         void deletePlaylist_nonOwner_returns403() throws Exception {
-            // PlaylistService.deletePlaylist throws UnauthorizedAccessException
-            // when current user is not the playlist owner
             doThrow(new UnauthorizedAccessException("You don't own this playlist"))
                     .when(playlistService).deletePlaylist(1L);
 

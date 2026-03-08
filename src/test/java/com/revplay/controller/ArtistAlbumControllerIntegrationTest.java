@@ -3,17 +3,22 @@ package com.revplay.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.revplay.dto.AlbumDTO;
 import com.revplay.dto.SongDTO;
+import com.revplay.config.SecurityConfig;
 import com.revplay.exception.BadRequestException;
+import com.revplay.exception.UnauthorizedAccessException;
 import com.revplay.exception.ResourceNotFoundException;
 import com.revplay.exception.RevPlayAccessDeniedHandler;
 import com.revplay.exception.RevPlayAuthenticationEntryPoint;
+import com.revplay.repository.UserRepository;
 import com.revplay.service.AlbumService;
 import com.revplay.service.CustomUserDetailsService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -37,6 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * All endpoints require ARTIST role — class-level @PreAuthorize("hasRole('ARTIST')").
  */
 @WebMvcTest(ArtistAlbumController.class)
+@Import(SecurityConfig.class)
 @DisplayName("ArtistAlbumController Integration Tests")
 class ArtistAlbumControllerIntegrationTest {
 
@@ -47,6 +53,30 @@ class ArtistAlbumControllerIntegrationTest {
     @MockitoBean private CustomUserDetailsService   customUserDetailsService;
     @MockitoBean private RevPlayAuthenticationEntryPoint authEntryPoint;
     @MockitoBean private RevPlayAccessDeniedHandler accessDeniedHandler;
+    @MockitoBean private UserRepository userRepository;
+
+    @BeforeEach
+    void configureSecurityHandlers() throws Exception {
+        org.mockito.Mockito.doAnswer(inv -> {
+            jakarta.servlet.http.HttpServletResponse resp =
+                    inv.getArgument(1, jakarta.servlet.http.HttpServletResponse.class);
+            resp.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+            return null;
+        }).when(authEntryPoint).commence(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any());
+
+        org.mockito.Mockito.doAnswer(inv -> {
+            jakarta.servlet.http.HttpServletResponse resp =
+                    inv.getArgument(1, jakarta.servlet.http.HttpServletResponse.class);
+            resp.setStatus(jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN);
+            return null;
+        }).when(accessDeniedHandler).handle(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any());
+    }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -152,15 +182,16 @@ class ArtistAlbumControllerIntegrationTest {
 
         @Test
         @WithMockUser(roles = "ARTIST")
-        @DisplayName("ARTIST — album owned by other artist returns 400")
-        void updateAlbum_wrongOwner_returns400() throws Exception {
+        @DisplayName("ARTIST — album owned by other artist returns 403")
+        void updateAlbum_wrongOwner_returns403() throws Exception {
             when(albumService.updateAlbum(eq(1L), any()))
-                    .thenThrow(new BadRequestException("Album does not belong to the logged-in artist"));
+                    .thenThrow(new UnauthorizedAccessException(
+                            "Album id=1 does not belong to the logged-in artist"));
 
             mockMvc.perform(put("/api/artists/albums/1")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(json(AlbumDTO.builder().build())))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isForbidden());
         }
 
         @Test
@@ -510,13 +541,14 @@ class ArtistAlbumControllerIntegrationTest {
 
         @Test
         @WithMockUser(roles = "ARTIST")
-        @DisplayName("ARTIST — album owned by other artist returns 400")
-        void getMyAlbumById_wrongOwner_returns400() throws Exception {
+        @DisplayName("ARTIST — album owned by other artist returns 403")
+        void getMyAlbumById_wrongOwner_returns403() throws Exception {
             when(albumService.getMyAlbumById(1L))
-                    .thenThrow(new BadRequestException("Album does not belong to the logged-in artist"));
+                    .thenThrow(new UnauthorizedAccessException(
+                            "Album id=1 does not belong to the logged-in artist"));
 
             mockMvc.perform(get("/api/artists/albums/1"))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isForbidden());
         }
 
         @Test

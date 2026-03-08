@@ -4,6 +4,7 @@ import com.revplay.dto.SongDTO;
 import com.revplay.exception.ResourceNotFoundException;
 import com.revplay.exception.RevPlayAccessDeniedHandler;
 import com.revplay.exception.RevPlayAuthenticationEntryPoint;
+import com.revplay.repository.UserRepository;
 import com.revplay.service.CustomUserDetailsService;
 import com.revplay.service.SongService;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,7 +57,7 @@ class SongControllerIntegrationTest {
     @MockitoBean private CustomUserDetailsService customUserDetailsService;
     @MockitoBean private RevPlayAuthenticationEntryPoint authEntryPoint;
     @MockitoBean private RevPlayAccessDeniedHandler accessDeniedHandler;
-
+    @MockitoBean private UserRepository userRepository;
     @BeforeEach
     void configureAuthEntryPoint() throws Exception {
         org.mockito.Mockito.doAnswer(inv -> {
