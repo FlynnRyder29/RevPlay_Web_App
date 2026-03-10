@@ -6,7 +6,7 @@
 
 [![Java](https://img.shields.io/badge/Java-17+-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://openjdk.org/)
 [![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.4-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
-[![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
+[![MySQL/Oracle](https://img.shields.io/badge/MySQL%2FOracle%2FPLSQL-DB-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
 [![Thymeleaf](https://img.shields.io/badge/Thymeleaf-3.x-005F0F?style=for-the-badge&logo=thymeleaf&logoColor=white)](https://www.thymeleaf.org/)
 [![Tests](https://img.shields.io/badge/Tests-35_passing-22c55e?style=for-the-badge&logo=junit5&logoColor=white)](#testing)
 [![Coverage](https://img.shields.io/badge/Coverage-≥70%25-4ade80?style=for-the-badge)](docs/architecture.md)
@@ -125,7 +125,7 @@ graph LR
     end
 
     subgraph DB["💾 Database"]
-        MY["MySQL 8"]
+        MY["MySQL 8/PLSQL/Oracle"]
     end
 
     subgraph Test["🧪 Testing"]
@@ -159,7 +159,7 @@ graph LR
 | **Web** | Spring MVC | — |
 | **Security** | Spring Security + BCrypt | — |
 | **ORM** | Spring Data JPA / Hibernate | — |
-| **Database** | MySQL | 8.0+ |
+| **Database** | MySQL / Oracle / PLSQL | 8.0+ |
 | **Migrations** | Flyway | Community |
 | **Templating** | Thymeleaf | 3.x |
 | **Frontend** | Vanilla JS + HTML5 + CSS3 | — |
@@ -194,7 +194,7 @@ graph LR
 │                   📦 Data Access Layer                           │
 │     12 JPA Repositories  ·  SongSpecification  ·  SongMapper    │
 ├──────────────────────────────────────────────────────────────────┤
-│               💾 MySQL 8 (12 tables, Flyway)                    │
+│           💾 MySQL / Oracle / PLSQL (12 tables, Flyway)         │
 │               📁 Local Filesystem (/uploads/)                    │
 └──────────────────────────────────────────────────────────────────┘
 ```
@@ -207,7 +207,7 @@ graph LR
 |:---------|:--------|:---------|
 | ☕ Java JDK | 17+ | ✅ |
 | 📦 Maven | 3.9+ | ✅ |
-| 🐬 MySQL | 8.0+ | ✅ |
+| 🐬 Database | MySQL / Oracle | ✅ |
 | 🔀 Git | Latest | ✅ |
 | 💻 IDE | IntelliJ IDEA (recommended) | Optional |
 
