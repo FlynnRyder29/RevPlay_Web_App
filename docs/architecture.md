@@ -344,7 +344,7 @@ graph TB
 
     subgraph Storage["💾 Persistence"]
         direction LR
-        DB[("🐬 MySQL 8<br/>revplay_db<br/>12 tables")]
+        DB[("🐬 MySQL / Oracle / PLSQL<br/>revplay_db<br/>12 tables")]
         FW["🔄 Flyway<br/>5 migrations"]
         FS2[("📁 Filesystem<br/>/uploads/<br/>audio + images")]
     end
@@ -376,7 +376,7 @@ sequenceDiagram
     participant Controller as 🎯 Controller
     participant Service as ⚙️ Service
     participant Repository as 📦 Repository
-    participant MySQL as 🐬 MySQL
+    participant MySQL as 🐬 Database (MySQL/Oracle)
 
     User->>Browser: Click / Navigate
     Browser->>Security: HTTP Request
